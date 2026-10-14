@@ -18,6 +18,7 @@ from offline_studio.services import TaskPool
 from offline_studio.config import atomic_json
 from offline_studio.hardware import detect, format_time
 from offline_studio.media import scan
+from offline_studio.process import binary
 from offline_studio.cancellation import TaskCancelled, check_cancelled
 from .render import DEFAULTS, normalize, render
 from .version import VERSION
@@ -272,7 +273,7 @@ class Controller(QObject):
     def hardware_ready(self, info):
         self._nvenc = info['nvenc']
         gpu = ', '.join(g['name'] for g in info['gpus'])
-        self._hardware = (gpu + ' · NVENC' if self._nvenc else info['cpu'] + ' · CPU')
+        self._hardware = ((gpu or info['cpu']) + ' · NVENC' if self._nvenc else info['cpu'] + ' · CPU')
         self.changed.emit()
 
     def save(self):
@@ -522,7 +523,10 @@ def main(root, home):
                     errors.append('Không lưu được ảnh kiểm tra.')
             if not controller.mediaReady:
                 errors.append('FFmpeg chưa sẵn sàng.')
-            print(json.dumps(dict(ok=not errors, errors=errors, hardware=controller.hardware), ensure_ascii=False))
+            diagnostic = dict(ok=not errors, errors=errors, hardware=controller.hardware,
+                              mediaReady=controller.mediaReady, ffmpeg=binary('ffmpeg') if controller.mediaReady else '')
+            atomic_json(home / 'check-result.json', diagnostic)
+            print(json.dumps(diagnostic, ensure_ascii=False))
             app.exit(1 if errors else 0)
         QTimer.singleShot(1500, finish)
     return app.exec()

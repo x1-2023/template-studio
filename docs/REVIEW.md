@@ -21,6 +21,7 @@ Phần lớn bản ghi là thao tác điều chỉnh khi playhead ở đầu cli
 
 - **P1 – Khởi động EXE:** thư mục dữ liệu chưa được tạo trước khi tạo lock; thư mục xuất mặc định lấy từ bundle. Đã tạo dữ liệu trước khi khóa và chuyển đầu ra mặc định vào thư mục dữ liệu có thể ghi.
 - **P1 – QtQuick trên Windows:** Qt tải plugin động nhưng chưa có DLL directory của wheel trên đường tìm thư viện. Đã thêm DLL directory trong launcher và entry EXE; kiểm tra QML thực.
+- **P1 – DLL từ môi trường build:** PyInstaller có thể gom nhầm ICU của Poppler từ PATH, khiến QtCore lỗi trong EXE. Đã giới hạn PATH và đường dẫn Qt của tiến trình build vào Python, wheel PySide6 và thư mục hệ thống; kiểm tra lại EXE với PATH sạch.
 - **P1 – Đổi cấu hình nhưng không xuất lại:** hàng đợi bỏ qua mọi dòng “Hoàn tất”, dù vừa đổi filter. Đã đưa các dòng này về chờ xử lý khi cấu hình thay đổi; giữ đường dẫn bản xuất cũ.
 - **P1 – Phát hành:** chưa có version, repository, pipeline hay updater. Đã thêm manifest, workflow Windows, checksum và bộ kiểm thử cập nhật.
 - **P2 – Độ giống effect:** hàm texture tạo ảnh lục giác tĩnh, overlay chỉ fade. Thư viện filter mới giúp tạo nhiều phong cách, chưa thay thế shader khúc xạ của CapCut.

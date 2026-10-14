@@ -69,6 +69,15 @@ def main():
             str(ROOT / 'template_studio/frozen_entry.py')]
     env = os.environ.copy()
     env.update(TEMP=str(cache), TMP=str(cache), PYINSTALLER_CONFIG_DIR=str(cache / 'pyinstaller'))
+    # Không lấy DLL từ PATH của ứng dụng khác (ví dụ ICU của Poppler không tương thích Qt).
+    import PySide6
+    runtime_paths = [Path(sys.executable).parent, Path(sys.base_prefix), Path(PySide6.__file__).parent,
+                     Path(os.environ.get('SystemRoot', r'C:\Windows')) / 'System32',
+                     Path(os.environ.get('SystemRoot', r'C:\Windows'))]
+    env['PATH'] = os.pathsep.join(str(path) for path in runtime_paths)
+    env['QT_PLUGIN_PATH'] = str(Path(PySide6.__file__).parent / 'plugins')
+    env['QML2_IMPORT_PATH'] = str(Path(PySide6.__file__).parent / 'qml')
+    env['QML_IMPORT_PATH'] = env['QML2_IMPORT_PATH']
     subprocess.run(args, cwd=ROOT, env=env, check=True)
     target = ROOT / 'release' / 'template-studio' / 'TemplateStudio'
     target.parent.mkdir(parents=True, exist_ok=True)
