@@ -1,0 +1,17 @@
+.runtime/
+data/
+release/
+__pycache__/
+*.pyc
+exports/
+offline_studio/assets/bin/
+offline_studio/assets/fonts/*.ttf
+.env
+.env.*
+!.env.example
+*.log
+.venv/
+venv/
+.ruff_cache/
+*.spec
+.updates/

@@ -1,0 +1,3 @@
+-r requirements-template.txt
+PyInstaller==6.22.3
+ruff==0.17.0

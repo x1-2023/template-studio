@@ -1,0 +1,331 @@
+[
+  {
+    "id": "local-7613052884267060498",
+    "name": "Đom đóm sao (Tiny Star Dust)",
+    "category": "Ánh sáng & Hạt",
+    "profile": "sparkle",
+    "description": "Các hạt bụi sao nhỏ li ti, lơ lửng phát sáng tinh tế không che video. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7675835939205287175",
+    "name": "Chòm sao lớn (Constellation Stars)",
+    "category": "Ánh sáng & Hạt",
+    "profile": "sparkle",
+    "description": "Dải chòm sao và ngôi sao 5 cánh lớn chuyển động huyền ảo. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7677975064649796885",
+    "name": "Lấp lánh (Sparkle Glow)",
+    "category": "Ánh sáng & Hạt",
+    "profile": "sparkle",
+    "description": "Hạt bụi lấp lánh ánh kim điện ảnh phủ đều khung hình. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7657040797845458184",
+    "name": "Đốm sao mờ (Soft Star Dust)",
+    "category": "Ánh sáng & Hạt",
+    "profile": "sparkle",
+    "description": "Bụi tinh vân sao mờ lãng mạn, tăng chiều sâu video. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7679412954219007253",
+    "name": "Ánh sáng mượt (Smooth Glow)",
+    "category": "Ánh sáng & Hạt",
+    "profile": "sparkle",
+    "description": "Luồng ánh sáng mềm mại lan tỏa cinematic. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7678405750300921108",
+    "name": "Nhảy bùng nắng (Sun Flare Burst)",
+    "category": "Ánh sáng & Hạt",
+    "profile": "sparkle",
+    "description": "Tia nắng bùng sáng tạo cảm giác ấm áp, tươi mới. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7642399565123030279",
+    "name": "Vũ trụ trừu tượng (Cosmic Space)",
+    "category": "Ánh sáng & Hạt",
+    "profile": "smoke",
+    "description": "Không gian vũ trụ trừu tượng huyền bí, cinematic. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7617821598745103633",
+    "name": "Lấp lánh cổ điển (Classic Sparkle)",
+    "category": "Ánh sáng & Hạt",
+    "profile": "sparkle",
+    "description": "Ánh sao lấp lánh kiểu cổ điển nhẹ nhàng. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7399470231229336838",
+    "name": "Ngọn lửa (Fire Flame)",
+    "category": "Thời tiết & Khí quyển",
+    "profile": "fire",
+    "description": "Ngọn lửa bốc cháy rực rỡ, phù hợp nhạc sôi động / rap. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7665927601499688208",
+    "name": "Bừng lên trong than hồng (Ember Burst)",
+    "category": "Thời tiết & Khí quyển",
+    "profile": "fire",
+    "description": "Đốm lửa tàn than hồng bốc bay cuồn cuộn. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7612051239978765575",
+    "name": "Tuyết mùa đông (Winter Snow)",
+    "category": "Thời tiết & Khí quyển",
+    "profile": "snow",
+    "description": "Bông tuyết trắng rơi chậm chuyển động tự nhiên. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7613057255059098898",
+    "name": "Ngày tuyết rơi (Snowy Day)",
+    "category": "Thời tiết & Khí quyển",
+    "profile": "snow",
+    "description": "Cơn mưa tuyết mùa đông lãng mạn. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7676410157496077576",
+    "name": "Khói hồng (Pink Smoke Mist)",
+    "category": "Thời tiết & Khí quyển",
+    "profile": "smoke",
+    "description": "Làn sương khói hồng mờ ảo trôi ngang màn hình. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7676108681888484629",
+    "name": "Mưa sắc màu (Prism Rain)",
+    "category": "Thời tiết & Khí quyển",
+    "profile": "snow",
+    "description": "Vệt mưa lăng kính sắc màu chiếu qua ống kính. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7660564214800534805",
+    "name": "Sao chổi tím (Purple Comet)",
+    "category": "Tia sáng & Năng lượng",
+    "profile": "sparkle",
+    "description": "Tia sáng sao chổi tím quét ngang màn hình cực bắt mắt. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7664871326607281426",
+    "name": "Ánh chớp nhạt màu (Soft Lightning Flash)",
+    "category": "Tia sáng & Năng lượng",
+    "profile": "sparkle",
+    "description": "Hiệu ứng chớp sáng điện ảnh theo nhịp. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7511267138485767477",
+    "name": "Khối lập phương tia lửa (Spark Cube)",
+    "category": "Tia sáng & Năng lượng",
+    "profile": "fire",
+    "description": "Khối tia lửa sci-fi chuyển động công nghệ cao. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7512488287714561333",
+    "name": "Vụ nổ màu vàng (Golden Explosion)",
+    "category": "Tia sáng & Năng lượng",
+    "profile": "sparkle",
+    "description": "Chùm hạt vàng bùng nổ sang trọng. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7591942365263170832",
+    "name": "Pháo hoa hình chữ (Text Fireworks)",
+    "category": "Tia sáng & Năng lượng",
+    "profile": "fire",
+    "description": "Chùm pháo hoa tỏa sáng rực rỡ. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7658984064136826113",
+    "name": "CRT noir (Vintage CRT Noir)",
+    "category": "Retro & Điện ảnh",
+    "profile": "sparkle",
+    "description": "Vạch quét màn hình TV CRT cổ điển và viền mờ điện ảnh. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7677904078302661908",
+    "name": "Trò chơi điện tử retro (Retro Arcade)",
+    "category": "Retro & Điện ảnh",
+    "profile": "glitch",
+    "description": "Phong cách trò chơi điện tử máy gạt cổ điển. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7678450186342960405",
+    "name": "Nhịp phim (Film Reel Rhythm)",
+    "category": "Retro & Điện ảnh",
+    "profile": "sparkle",
+    "description": "Chuyển động cuộn phim nhựa cổ điển. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7678448350139665685",
+    "name": "Màn hình cổ điển (Vintage Screen)",
+    "category": "Retro & Điện ảnh",
+    "profile": "sparkle",
+    "description": "Hiệu ứng màn hình máy quay phim xưa. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7677555476464209172",
+    "name": "Sóng sọc (Striped Waves Glitch)",
+    "category": "Glitch & Cyberpunk",
+    "profile": "glitch",
+    "description": "Nhiễu sóng scanline ngang chuyển động liên tục. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7665974987978722580",
+    "name": "Quét dây (Scanline Glitch)",
+    "category": "Glitch & Cyberpunk",
+    "profile": "glitch",
+    "description": "Hiệu ứng quét sóng điện tử cyberpunk. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7606931439862435090",
+    "name": "Kỳ dị 8 bit (8-Bit Glitch FX)",
+    "category": "Glitch & Cyberpunk",
+    "profile": "glitch",
+    "description": "Nhiễu hạt pixel số 8-bit hiện đại. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7668649738417294600",
+    "name": "Vệt xung (Pulse Glitch)",
+    "category": "Glitch & Cyberpunk",
+    "profile": "glitch",
+    "description": "Xung nhịp giật mờ màn hình. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7663052971227270408",
+    "name": "Tín hiệu nhiễu (Signal Interference)",
+    "category": "Glitch & Cyberpunk",
+    "profile": "glitch",
+    "description": "Nhiễu sóng tín hiệu truyền hình gián đoạn. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7677866220128849153",
+    "name": "Hộp đêm laser (Laser Nightclub)",
+    "category": "Party & Hộp đêm",
+    "profile": "sparkle",
+    "description": "Chùm tia laser quét phong cách bar / club. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7625337762262158600",
+    "name": "Vũ điệu cầu vồng (Rainbow Dance)",
+    "category": "Party & Hộp đêm",
+    "profile": "snow",
+    "description": "Vệt quang phổ cầu vồng rực rỡ đổi màu. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7675900132633677077",
+    "name": "Bánh xe neon (Neon Wheel)",
+    "category": "Party & Hộp đêm",
+    "profile": "sparkle",
+    "description": "Vòng xoay neon phát quang huyền ảo. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7676835680458132757",
+    "name": "Nháy sáng rực (Vibrant Strobe)",
+    "category": "Party & Hộp đêm",
+    "profile": "sparkle",
+    "description": "Nháy chớp vũ trường sôi động. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7677956245290028295",
+    "name": "Nhịp RGB (RGB Rhythm)",
+    "category": "Party & Hộp đêm",
+    "profile": "glitch",
+    "description": "Đảo sắc màu RGB theo giai điệu. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7408393507246755077",
+    "name": "Ánh sao (Star Glow)",
+    "category": "Ánh sáng & Hạt",
+    "profile": "sparkle",
+    "description": "Hạt và chuyển động local theo chủ đề Ánh sao. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7408393532802731270",
+    "name": "Chòm sao (Constellation)",
+    "category": "Ánh sáng & Hạt",
+    "profile": "sparkle",
+    "description": "Hạt và chuyển động local theo chủ đề Chòm sao. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7408393578776481030",
+    "name": "Mưa kim tuyến (Glitter Rain)",
+    "category": "Ánh sáng & Hạt",
+    "profile": "snow",
+    "description": "Hạt và chuyển động local theo chủ đề Mưa kim tuyến. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7408393594375064837",
+    "name": "Tinh không dịu nhẹ (Soft Galaxy)",
+    "category": "Ánh sáng & Hạt",
+    "profile": "smoke",
+    "description": "Hạt và chuyển động local theo chủ đề Tinh không dịu nhẹ. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7408393601262177541",
+    "name": "Tia lửa mờ (Soft Sparks)",
+    "category": "Ánh sáng & Hạt",
+    "profile": "fire",
+    "description": "Hạt và chuyển động local theo chủ đề Tia lửa mờ. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7408393608132300038",
+    "name": "Mảnh sao (Star Shards)",
+    "category": "Ánh sáng & Hạt",
+    "profile": "sparkle",
+    "description": "Hạt và chuyển động local theo chủ đề Mảnh sao. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7408393651212258565",
+    "name": "Hạt mờ (Bokeh Particles)",
+    "category": "Ánh sáng & Hạt",
+    "profile": "sparkle",
+    "description": "Hạt và chuyển động local theo chủ đề Hạt mờ. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7399465653700234502",
+    "name": "Sương mù (Mystic Fog)",
+    "category": "Thời tiết & Khí quyển",
+    "profile": "smoke",
+    "description": "Hạt và chuyển động local theo chủ đề Sương mù. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7446316654000099856",
+    "name": "Biến hình tuyết (Snow Transform)",
+    "category": "Thời tiết & Khí quyển",
+    "profile": "snow",
+    "description": "Hạt và chuyển động local theo chủ đề Biến hình tuyết. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7409872890478202118",
+    "name": "Trong mây (Dreamy Clouds)",
+    "category": "Thời tiết & Khí quyển",
+    "profile": "sparkle",
+    "description": "Hạt và chuyển động local theo chủ đề Trong mây. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7399466782085500165",
+    "name": "Mùa mưa 2 (Rain Season 2)",
+    "category": "Thời tiết & Khí quyển",
+    "profile": "snow",
+    "description": "Hạt và chuyển động local theo chủ đề Mùa mưa 2. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7409872299135962374",
+    "name": "Hạt mưa (Raindrops)",
+    "category": "Thời tiết & Khí quyển",
+    "profile": "snow",
+    "description": "Hạt và chuyển động local theo chủ đề Hạt mưa. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7399469933865815301",
+    "name": "Mưa bão (Storm Rain)",
+    "category": "Thời tiết & Khí quyển",
+    "profile": "snow",
+    "description": "Hạt và chuyển động local theo chủ đề Mưa bão. Bản dựng offline riêng."
+  },
+  {
+    "id": "local-7408393562729106693",
+    "name": "Viền lấp lánh (Sparkle Border)",
+    "category": "Viền & Khung hình",
+    "profile": "sparkle",
+    "description": "Hạt và chuyển động local theo chủ đề Viền lấp lánh. Bản dựng offline riêng."
+  }
+]
