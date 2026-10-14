@@ -45,10 +45,16 @@ jobs:
       - name: Tạo GitHub Release
         shell: pwsh
         run: |
-          gh release view $env:RELEASE_TAG --repo '${{ github.repository }}' *> $null
+          $draft = gh release view $env:RELEASE_TAG --repo '${{ github.repository }}' --json isDraft --jq .isDraft 2>$null
+          if ($LASTEXITCODE -eq 0 -and $draft -eq 'false') {
+            Write-Output 'Bản này đã public; không ghi đè asset đã phát hành.'
+            exit 0
+          }
           if ($LASTEXITCODE -ne 0) {
-            gh release create $env:RELEASE_TAG --target '${{ github.sha }}' --title "Template Studio $env:RELEASE_TAG" --notes-file docs/RELEASE_NOTES.md
+            gh release create $env:RELEASE_TAG --draft --target '${{ github.sha }}' --title "Template Studio $env:RELEASE_TAG" --notes-file docs/RELEASE_NOTES.md
             if ($LASTEXITCODE -ne 0) { throw 'Không tạo được release.' }
           }
           gh release upload $env:RELEASE_TAG release/template-studio/TemplateStudio-windows-x64.zip release/template-studio/TemplateStudio-windows-x64.zip.sha256 --clobber
           if ($LASTEXITCODE -ne 0) { throw 'Không tải được gói phát hành.' }
+          gh release edit $env:RELEASE_TAG --draft=false
+          if ($LASTEXITCODE -ne 0) { throw 'Không public được release đã tải đủ asset.' }
