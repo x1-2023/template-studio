@@ -44,6 +44,9 @@ python render.py source.mp4 masked.mp4 --skin mask --skin-mask segmentation.mp4 
 python render.py source.mp4 layout.mp4 --no-effect --no-filter --seconds 3
 python render.py source.mp4 cpu-encode.mp4 --encoder libx264 --seconds 3
 
+# Giữ bitrate gần bản CapCut tham chiếu; mặc định CQ18 không giới hạn dung lượng.
+python render.py source.mp4 output-9650k.mp4 --video-bitrate 9.65 --full
+
 # Batch: đường dẫn input/output tương đối tính từ vị trí file JSON.
 python render.py --batch batch.example.json --seconds 3
 
@@ -53,11 +56,14 @@ python render.py source.mp4 full.mp4 --full
 
 `--skin mask` nhận PNG grayscale cố định hoặc video mask đúng kích thước **canvas đầu ra**, trắng=da, đen=nền, theo timeline đầu ra 30 fps. Nếu segmenter tạo mask trong tọa độ nguồn, cần biến đổi mask cùng layout trước. Mask thiếu frame sẽ báo lỗi, không im lặng thay bằng mask rỗng.
 
+`--video-bitrate` dùng đơn vị Mb/s và VBR theo ngân sách bitrate; NVENC dùng multipass quarter resolution. Dung lượng dự kiến xấp xỉ `(bitrate video + bitrate audio) × thời lượng / 8`, không phải cam kết đúng số byte. Bỏ tùy chọn này để giữ chế độ chất lượng CQ/CRF 18 ban đầu.
+
 Mặc định xuất thử 3 giây, từ chối ghi đè file có sẵn trừ `--overwrite`, từ chối đầu ra trùng nguồn. File `.partial.mp4` chỉ đổi thành đầu ra sau khi FFmpeg thành công. Audio dùng cùng source offset, `atempo=playback_rate` và reset PTS, rồi encode AAC cùng một lượt mux. Output SAR=1:1. Chỉ hỗ trợ SDR; không dùng flag HDR để giả vờ tái tạo HDR.
 
 ## Kiểm chứng và giao nộp
 
 - [Báo cáo kết quả](REPORT.md): đo định lượng, benchmark, giới hạn và các giả thuyết.
+- [Đối chiếu dung lượng bản full](ENCODING_REPORT.md): nguồn / CapCut / GPU, profile VBR 9.65 Mb/s và video ba cột đủ thời lượng.
 - [Đồ thị pass](PASS_GRAPH.md): input/FBO/uniform và mức chắc chắn của từng phần.
 - `artifacts/preview_compare_3s.mp4`: CapCut thật / v7 đã căn / GPU mới.
 - `artifacts/gpu_final_1080_3s.mp4`: preview 1080×1440 có audio.

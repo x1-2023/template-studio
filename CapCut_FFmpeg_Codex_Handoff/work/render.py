@@ -56,6 +56,32 @@ def load_preset(name):
     return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
+def video_encoder_args(encoder, bitrate_mbps=None):
+    """Chọn chất lượng cố định hoặc bitrate mục tiêu; không giả định CQ là giới hạn dung lượng."""
+    if bitrate_mbps is not None:
+        if not math.isfinite(bitrate_mbps) or not 0.1 <= bitrate_mbps <= 200:
+            raise ValueError("Bitrate video phải trong [0.1, 200] Mb/s")
+        bitrate = round(bitrate_mbps * 1_000_000)
+        budget = [
+            "-b:v",
+            str(bitrate),
+            "-maxrate",
+            str(round(bitrate * 1.5)),
+            "-bufsize",
+            str(bitrate * 3),
+        ]
+    else:
+        budget = []
+    if encoder == "h264_nvenc":
+        base = ["-c:v", "h264_nvenc", "-preset", "p5", "-tune", "hq", "-rc", "vbr"]
+        return base + (
+            budget + ["-multipass", "qres"] if budget else ["-cq", "18", "-b:v", "0"]
+        )
+    return ["-c:v", "libx264", "-preset", "fast"] + (
+        budget if budget else ["-crf", "18"]
+    )
+
+
 def render(source, output, config, args):
     source, output = Path(source).resolve(), Path(output).resolve()
     if source == output:
@@ -80,6 +106,8 @@ def render(source, output, config, args):
     video = next(s for s in info["streams"] if s["codec_type"] == "video")
     audio = any(s["codec_type"] == "audio" for s in info["streams"])
     rate, offset = float(config["playback_rate"]), float(config.get("source_offset", 0))
+    bitrate_mbps = args.video_bitrate
+    encoder_options = video_encoder_args(args.encoder, bitrate_mbps)
     if not 0.5 <= rate <= 2 or offset < 0:
         raise ValueError("playback_rate phải trong [0.5,2]; source_offset >= 0")
     seconds = (float(video.get("duration", info["format"]["duration"])) - offset) / rate
@@ -164,23 +192,7 @@ def render(source, output, config, args):
                     "-b:a",
                     "192k",
                 ]
-            if args.encoder == "h264_nvenc":
-                encode += [
-                    "-c:v",
-                    "h264_nvenc",
-                    "-preset",
-                    "p5",
-                    "-tune",
-                    "hq",
-                    "-rc",
-                    "vbr",
-                    "-cq",
-                    "18",
-                    "-b:v",
-                    "0",
-                ]
-            else:
-                encode += ["-c:v", "libx264", "-preset", "fast", "-crf", "18"]
+            encode += encoder_options
             encode += [
                 "-vf",
                 "setsar=1",
@@ -298,6 +310,14 @@ def render(source, output, config, args):
             "skin": args.skin,
             "gpu": gpu_name,
             "encoder": args.encoder,
+            "target_video_bitrate_mbps": bitrate_mbps,
+            "estimated_size_mib": (bitrate_mbps + (0.192 if audio else 0))
+            * 1_000_000
+            * seconds
+            / 8
+            / 1024**2
+            if bitrate_mbps
+            else None,
             "frames": frame_count,
             "seconds": frame_count / fps,
             "wall_seconds": elapsed,
@@ -367,6 +387,12 @@ def parser():
     p.add_argument("--height", type=int)
     p.add_argument("--set", action="append", default=[], metavar="KEY=JSON")
     p.add_argument("--encoder", choices=("h264_nvenc", "libx264"), default="h264_nvenc")
+    p.add_argument(
+        "--video-bitrate",
+        type=float,
+        metavar="MBPS",
+        help="Bitrate video mục tiêu, đơn vị Mb/s; bỏ qua để dùng CQ/CRF 18",
+    )
     p.add_argument("--skin", choices=("none", "chroma", "mask"), default="none")
     p.add_argument("--skin-mask", type=Path)
     p.add_argument(
