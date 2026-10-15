@@ -1,0 +1,20 @@
+{
+  "case": "B: tham chiếu CapCut 3:4; layout và thời gian đo từ cặp video",
+  "width": 1080,
+  "height": 1440,
+  "fps": 30,
+  "flip": true,
+  "scale": 1.0513,
+  "offset": [0, 0],
+  "playback_rate": 1.02,
+  "source_offset": 0,
+  "background_sigma_ratio": 0.041666666666667,
+  "effect_start": 0,
+  "effect_end": 2.166667,
+  "effect_slider": 0.33333333333333,
+  "ae_time_scale": 1,
+  "bokeh_size": 0.7,
+  "filter_stage": "after",
+  "filter_start": 0,
+  "filter_intensity": 1
+}

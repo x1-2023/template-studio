@@ -17,6 +17,10 @@ Video-FX có các nhóm glitch, VHS, màu điện ảnh, camera/ống kính, án
 
 Hiệu ứng pha lê hiện là mô phỏng PNG/blur/fade, **chưa khớp chính xác effect CapCut trong video tham chiếu**.
 
+## CLI GPU cho cache effect local
+
+Đã có [bản port OpenGL chạy offline](CapCut_FFmpeg_Codex_Handoff/work/README.md) cho effect ngũ giác và filter từ cache người dùng, hỗ trợ preview, batch, NVENC, preset 3:4/9:16 và skin mask ngoài. CLI hoạt động độc lập với GUI/EXE hiện tại. [Báo cáo thực nghiệm](CapCut_FFmpeg_Codex_Handoff/work/REPORT.md) ghi metric, benchmark và phần còn thiếu; không tuyên bố tái tạo CapCut 1:1. Repository công khai mã port do dự án viết; người dùng tự cung cấp cache, không phân phối kèm shader/LUT hay video của bên khác.
+
 ## Dữ liệu và cập nhật
 
 - Dữ liệu mặc định: data/template-studio/ cạnh EXE. Nếu không ghi được, app dùng %LOCALAPPDATA%/TemplateStudio. Có thể chỉ định bằng TEMPLATE_STUDIO_HOME.

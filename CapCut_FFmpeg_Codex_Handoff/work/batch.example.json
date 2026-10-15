@@ -1,0 +1,12 @@
+[
+  {
+    "input": "../02_REFERENCE_MEDIA/source_original_compre_juguetes.mp4",
+    "output": "artifacts/batch_3x4.mp4",
+    "preset": "capcut-pentagon"
+  },
+  {
+    "input": "D:/video/nguon-9x16.mp4",
+    "output": "artifacts/batch_9x16.mp4",
+    "preset": "draft-9x16"
+  }
+]

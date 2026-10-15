@@ -1,0 +1,22 @@
+{
+  "case": "A: draft 9:16; thiếu source snaptik nên chưa đối chiếu",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "flip": false,
+  "scale": 0.8877484472049693,
+  "offset": [0.03188405797101446, 0],
+  "playback_rate": 1,
+  "source_offset": 0,
+  "background_sigma_ratio": 0.041666666666667,
+  "background_note": "Giá trị draft blur=0.0625 chưa có mapping sigma; đang dùng xấp xỉ",
+  "effect_start": 0,
+  "effect_end": 2.166667,
+  "effect_slider": 0.33333333333333,
+  "ae_time_scale": 1,
+  "bokeh_size": 0.7,
+  "filter_stage": "after",
+  "filter_start": 0.233333,
+  "filter_intensity": 1,
+  "limitations": ["Thiếu stabilization matrix mức 2", "Chưa port motion blur bilateral", "Chỉ xử lý SDR", "Thiếu tt_skin_seg"]
+}

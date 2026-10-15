@@ -15,3 +15,14 @@ venv/
 .ruff_cache/
 *.spec
 .updates/
+# Chỉ công khai mã port tự viết; cache CapCut và media bàn giao giữ local.
+/CapCut_FFmpeg_Codex_Handoff/*
+!/CapCut_FFmpeg_Codex_Handoff/work/
+/CapCut_FFmpeg_Codex_Handoff/work/*
+!/CapCut_FFmpeg_Codex_Handoff/work/*.py
+!/CapCut_FFmpeg_Codex_Handoff/work/*.md
+!/CapCut_FFmpeg_Codex_Handoff/work/*.ps1
+!/CapCut_FFmpeg_Codex_Handoff/work/*.bat
+!/CapCut_FFmpeg_Codex_Handoff/work/requirements.txt
+!/CapCut_FFmpeg_Codex_Handoff/work/batch.example.json
+!/CapCut_FFmpeg_Codex_Handoff/work/presets/
