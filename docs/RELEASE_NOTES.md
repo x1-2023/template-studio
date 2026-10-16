@@ -1,8 +1,8 @@
-Template Studio 1.1.2 sửa màu sắc và nhãn trong GUI.
+Template Studio 1.1.3 sửa lỗi thêm video trong vùng trống bên trái.
 
-- Combobox có màu riêng cho mục đang chọn và mục đang hover. Chữ tối trên nền xanh; chữ sáng trên nền tối. Chọn bằng chuột và bàn phím đều được kiểm tra.
-- Đồng nhất nút, ô nhập, checkbox và thanh kéo. Chừa chỗ cho scrollbar; sửa chiều cao thanh cuộn và căn lề các nhóm cấu hình.
-- Dùng nhãn ngắn hơn: Xuất video, Tạm dừng, Phóng to, Độ mờ nền, Cài đặt. Bỏ câu khẩu hiệu và thông báo lặp lại; đổi tên preset cho dễ đọc.
-- Gộp thao tác xem thử vào một nút, giữ lựa chọn thời điểm bắt đầu. Escape đóng combobox khi rảnh và dừng tác vụ khi đang chạy.
+- Nút Thêm video không còn bị ListView rỗng che. Có thể bấm nút, dấu cộng hoặc vùng trống để mở chọn file.
+- Kéo thả video/thư mục nhận đúng URL local, kể cả đường dẫn có dấu, khoảng trắng và ký tự #. Khi thả trên video đã có trong danh sách vẫn thêm được file mới.
+- Vùng nhận file có viền sáng khi kéo vào; nhận thao tác Copy để giữ nguyên nguồn. Bỏ qua URL không phải file local và không nhập giữa lúc đang chạy tác vụ.
+- Thêm 8 bài kiểm thử qua sự kiện click/drag/drop của GUI, gồm hủy hộp chọn, kéo thư mục, file trùng và đường dẫn Unicode.
 
-Giữ preset, hàng đợi, cache, thư mục xuất và engine GPU. Cập nhật qua GitHub Releases như các bản trước.
+Giữ nguyên preset, hàng đợi, cache và video đã xuất. Cập nhật qua GitHub Releases như các bản trước.

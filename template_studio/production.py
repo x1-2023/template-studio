@@ -470,7 +470,15 @@ class Production(QObject):
 
     @Slot("QVariantList")
     def dropFiles(self, urls):
-        self.add_paths([QUrl(str(url)).toLocalFile() for url in urls])
+        if self.host.busy:
+            return
+        paths = []
+        for value in urls:
+            url = value if isinstance(value, QUrl) else QUrl(str(value))
+            if url.isValid() and url.isLocalFile() and url.toLocalFile():
+                paths.append(url.toLocalFile())
+        if paths:
+            self.add_paths(paths)
 
     def add_paths(self, paths):
         if self.host.busy or not paths:

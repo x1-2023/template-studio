@@ -138,7 +138,19 @@ ApplicationWindow {
     Shortcut { sequence: "Escape"; enabled: studio.busy; onActivated: studio.stop() }
     onClosing: function(event) { event.accepted = studio.requestClose() }
     Connections { target: studio; function onCloseReady() { Qt.quit() } }
-    DropArea { anchors.fill: parent; onDropped: function(drop) { if (drop.hasUrls) p.dropFiles(drop.urls) } }
+    DropArea {
+        id: videoDropArea; objectName: "fileDropArea"; anchors.fill: parent; z: 10
+        onEntered: function(drag) {
+            if (drag.hasUrls && !studio.busy) drag.accept(Qt.CopyAction)
+            else drag.accepted = false
+        }
+        onDropped: function(drop) {
+            if (drop.hasUrls && !studio.busy) {
+                p.dropFiles(drop.urls)
+                drop.accept(Qt.CopyAction)
+            } else drop.accepted = false
+        }
+    }
 
     ColumnLayout {
         anchors.fill: parent; anchors.margins: 20; spacing: 14
@@ -160,27 +172,34 @@ ApplicationWindow {
             Rectangle {
                 objectName: "videoPanel"
                 Layout.preferredWidth: 286; Layout.minimumWidth: 260; Layout.maximumWidth: 286
-                Layout.fillHeight: true; radius: 14; color: "#151d2a"; border.color: "#263246"
+                Layout.fillHeight: true; radius: 14; color: "#151d2a"; border.color: videoDropArea.containsDrag ? accent : "#263246"
                 ColumnLayout {
                     anchors.fill: parent; anchors.margins: 14; spacing: 12
                     Label { text: "Danh sách video"; color: ink; font.pixelSize: 18; font.bold: true }
                     RowLayout { Layout.fillWidth: true
-                        Action { text: "Thêm video"; Layout.fillWidth: true; enabled: !studio.busy; onClicked: p.importFiles() }
+                        Action { objectName: "topImportButton"; text: "Thêm video"; Layout.fillWidth: true; enabled: !studio.busy; onClicked: p.importFiles() }
                         Action { text: "Thêm thư mục"; Layout.fillWidth: true; enabled: !studio.busy; onClicked: p.importFolder() }
                     }
                     Item {
+                        objectName: "videoListArea"
                         Layout.fillWidth: true; Layout.fillHeight: true
+                        MouseArea {
+                            anchors.fill: parent; enabled: p.rows.length===0 && !studio.busy
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: p.importFiles()
+                        }
                         ColumnLayout {
+                            z: 1
                             anchors.centerIn: parent; width: parent.width; spacing: 14; visible: p.rows.length === 0
                             Rectangle { Layout.alignment: Qt.AlignHCenter; width: 64; height: 64; radius: 18; color: "#223328"
                                 Text { anchors.centerIn: parent; text: "+"; color: accent; font.pixelSize: 38; font.weight: Font.Light }
                             }
                             Label { text: "Kéo video vào đây"; color: ink; font.pixelSize: 17; horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true }
                             Caption { text: "Hoặc thêm cả thư mục."; horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true }
-                            Action { text: "Thêm video"; primary: true; Layout.alignment: Qt.AlignHCenter; enabled: !studio.busy; onClicked: p.importFiles() }
+                            Action { objectName: "emptyImportButton"; text: "Thêm video"; primary: true; Layout.alignment: Qt.AlignHCenter; enabled: !studio.busy; onClicked: p.importFiles() }
                         }
                         ListView {
-                            id: queue; anchors.fill: parent; model: p.rows; clip: true; spacing: 8
+                            id: queue; anchors.fill: parent; model: p.rows; visible: p.rows.length>0; clip: true; spacing: 8
                             ScrollBar.vertical: Scroller {}
                             delegate: Rectangle {
                                 required property var modelData
