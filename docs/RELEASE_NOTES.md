@@ -1,9 +1,9 @@
-Beta Render 1.1.6 làm rõ preset kết hợp hiệu ứng và bộ lọc.
+Beta Render 1.1.7 mặc định xuất video dọc cho TikTok.
 
-- **Ngũ giác + Camera độ nét cao 2 · 3:4/9:16** bật cả hiệu ứng và bộ lọc trong cùng một cấu hình.
-- **Theo video mẫu CapCut · 3:4** dùng cả hai, kèm lật ngang và tốc độ 1,02× đã đo từ cặp nguồn–CapCut. Bản 9:16 dựa trên draft, chưa có cặp video gốc để đối chiếu.
-- Ghi rõ **Chỉ Camera…** và **Chỉ nền mờ…** cho các lựa chọn tắt bớt thành phần.
-- Mỗi mục có mô tả ngay trong danh sách. Tóm tắt cấu hình ghi riêng trạng thái Hiệu ứng và Bộ lọc đang dùng.
-- Không đổi thông số render hay ID preset. Xem thử tiếp tục phát một lần rồi dừng như bản 1.1.5.
+- Màn hình chính chỉ còn ba preset TikTok 9:16: **Ngũ giác + Camera**, **Chỉ bộ lọc Camera**, **Chỉ nền mờ**, cùng các preset tự lưu.
+- Mặc định 1080 × 1920, 30 FPS, MP4/H.264; bật chung hiệu ứng ngũ giác và bộ lọc Camera, tốc độ 1×, không lật ngang.
+- Cấu hình 3:4 của video CapCut mẫu được chuyển vào **Cài đặt → Dùng cấu hình video mẫu 3:4**.
+- Cấu hình cũ và video chưa xuất được chuyển khung sang 9:16 một lần; giữ thông số đã chỉnh, lưu bản sao `production-before-tiktok.json`. Giữ nguyên cấu hình video hoàn tất và preset tự lưu.
+- Xem thử phát một lần rồi dừng, giữ khung hình cuối.
 
 Tên ứng dụng tiếp tục là **Beta Render**; cập nhật qua GitHub Releases như các bản trước.

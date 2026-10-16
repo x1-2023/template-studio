@@ -13,10 +13,11 @@ Mã nguồn [công khai GPL-3.0-only](https://github.com/x1-2023/template-studio
 
 ## Preset và cấu hình
 
-- Một preset lưu **chung hiệu ứng, bộ lọc, bố cục và thiết lập xuất**. Hai preset **Ngũ giác + Camera độ nét cao 2 · 3:4/9:16** bật đồng thời **Lớp phủ ngũ giác lấp lánh** (`7491138615477685505`) và **Camera độ nét cao 2** (`7514206177195068689`); mặc định tốc độ 1×, không lật ngang.
-- **Theo video mẫu CapCut · 3:4** cũng dùng cả hai, với bố cục 3:4, lật ngang và tốc độ 1.02× đã đối chiếu từ cặp nguồn–CapCut. Đây là cấu hình riêng của clip mẫu. Bản 9:16 dựa trên draft, chưa có cặp video gốc để đối chiếu.
-- **Chỉ Camera độ nét cao 2 · 3:4** tắt hiệu ứng mở đầu; **Chỉ nền mờ · 9:16** tắt cả hiệu ứng và bộ lọc. Mô tả ngay trong danh sách cho biết từng preset dùng những phần nào.
-- Profile Tiêu chuẩn 3:4 dùng H.264 VBR 9.65 Mb/s; Tiết kiệm dùng 60% bitrate đã chọn; Chất lượng cao dùng CQ18, dung lượng tùy nội dung. Preset 9:16 dùng 12 Mb/s đề xuất, chưa được chấm với source draft gốc.
+- Màn hình chính dành cho **TikTok: video dọc 9:16, 1080 × 1920, 30 FPS**, MP4/H.264 và âm thanh AAC. [TikTok khuyến nghị video dọc 9:16 và xuất 1080 × 1920](https://ads.tiktok.com/business/en/guides/video-advertising-guide).
+- Mặc định **TikTok · Ngũ giác + Camera** bật đồng thời **Lớp phủ ngũ giác lấp lánh** (`7491138615477685505`) và **Camera độ nét cao 2** (`7514206177195068689`), tốc độ 1×, không lật ngang. Một preset lưu chung hiệu ứng, bộ lọc, bố cục và thiết lập xuất.
+- **TikTok · Chỉ bộ lọc Camera** tắt hiệu ứng mở đầu; **TikTok · Chỉ nền mờ** tắt cả hiệu ứng và bộ lọc. Cả ba đều dùng 9:16. Preset tự lưu vẫn được giữ.
+- Profile Tiêu chuẩn TikTok dùng H.264 VBR 12 Mb/s; Tiết kiệm dùng 60% bitrate đã chọn; Chất lượng cao dùng CQ18, dung lượng tùy nội dung.
+- **Cài đặt → Dùng cấu hình video mẫu 3:4** mở cấu hình đối chiếu riêng: 1080 × 1440, lật ngang, 1.02× và 9.65 Mb/s theo cặp nguồn–CapCut. Mẫu này được giữ để kiểm tra kết quả, không nằm trong danh sách TikTok chính. Bố cục 9:16 dựa trên draft, chưa có cặp video draft gốc để chấm độ giống.
 - Giao diện gồm **Nguồn video → Cấu hình chung → Xem trước**. Bấm **Chỉnh cấu hình…** để mở cửa sổ lớn với các nhóm thu gọn; chỉnh bằng thanh kéo hoặc nhập số. **Lưu thay đổi** áp dụng cho video chưa xuất; **Hủy** bỏ lần chỉnh đó. Preview nằm bên phải; lưu preset và nhập/xuất JSON ngay trong cột cấu hình.
 - Shader chạy GPU; NVENC tăng tốc mã hóa. Chọn mã hóa CPU vẫn cần OpenGL cho shader.
 
@@ -29,6 +30,8 @@ Nhập tối đa 200 video; chạy một job/lần, hiện tiến độ và ETA.
 **Dừng sau video này** hoàn tất video hiện tại; **Dừng** hủy worker/FFmpeg và dọn partial của tác vụ. Mở lại app tiếp tục ở cấp file, không nối từ frame đang dở. Cấu hình của file đã hoàn tất được giữ khi đổi preset cho file đang chờ. Báo cáo JSON/CSV nằm cạnh video đầu ra; nhật ký worker có nút mở trong Cài đặt.
 
 `production.json` lưu preset, cấu hình và hàng đợi mới; `session.json` của GUI cũ được giữ và sao lưu khi nhập sang giao diện mới. Dữ liệu mặc định trong `data/template-studio/` cạnh EXE; nếu không ghi được thì dùng `%LOCALAPPDATA%/TemplateStudio`. Có thể đặt `TEMPLATE_STUDIO_HOME`. Cache effect trong `runtime/capcut-cache/` của thư mục dữ liệu; `TEMPLATE_STUDIO_CAPCUT_CACHE` cho phép chỉ định cache để app nhập bản sao.
+
+Lần đầu dùng bản mặc định TikTok, cấu hình hiện tại và video chưa xuất được chuyển sang khung 9:16, giữ các thông số hiệu ứng, âm thanh, tốc độ và vị trí đã chỉnh. `production-before-tiktok.json` giữ bản sao trước khi chuyển. Cấu hình của video hoàn tất và các preset tự lưu không bị ghi đè. Cấu hình đối chiếu 3:4 được chọn sau đó vẫn giữ qua các lần mở app.
 
 GUI thư viện Video-FX cũ vẫn mở được từ source bằng `python template_gui.py --library`; không ghép 150 filter CPU vào chuỗi GPU mới trong phiên bản này.
 

@@ -19,7 +19,10 @@ from offline_studio.config import atomic_json
 from offline_studio.process import probe
 
 from .assets_local import discover, import_cache, validate
-from .presets import EFFECT_NAME, FILTER_NAME, LEGACY_NAMES, catalog, normalize, safe_name
+from .presets import (
+    DEFAULT_PRESET_ID, EFFECT_NAME, FILTER_NAME, LEGACY_NAMES,
+    catalog, main_catalog, normalize, safe_name, tiktok_config, tiktok_name,
+)
 from .version import VERSION
 from .worker_client import run_worker
 
@@ -48,8 +51,8 @@ class Production(QObject):
         self.pool = host.pool
         self._rows = []
         self._custom = []
-        self._config = normalize({})
-        self._preset = "pentagon-3x4"
+        self._config = main_catalog()[0]["config"]
+        self._preset = DEFAULT_PRESET_ID
         self._output = str(self.home / "exports")
         self._index = -1
         self._preview = ""
@@ -70,7 +73,7 @@ class Production(QObject):
             if saved.get("schema") != 1:
                 raise ValueError("Phiên bản dữ liệu không được hỗ trợ.")
             self._config = normalize(saved["config"])
-            self._preset = saved.get("preset", "pentagon-3x4")
+            self._preset = saved.get("preset", DEFAULT_PRESET_ID)
             self._output = str(saved["output"])
             self._custom = [
                 dict(
@@ -90,11 +93,13 @@ class Production(QObject):
                         percent=0,
                         detail="Chạy tiếp để xuất lại file này.",
                     )
-                if not Path(row["path"]).is_file():
+                if row["status"] != "Hoàn tất" and not Path(row["path"]).is_file():
                     row.update(status="Thiếu nguồn", detail="Nguồn đã bị dời hoặc xóa.")
                 row.setdefault("config", copy.deepcopy(self._config))
                 row.setdefault("presetName", self.presetName)
             self._index = 0 if self._rows else -1
+            if saved.get("production_defaults") != "tiktok":
+                self.migrate_tiktok_defaults()
         except FileNotFoundError:
             if host._rows:
                 legacy = self.home / "session.json"
@@ -140,6 +145,7 @@ class Production(QObject):
             self._state,
             dict(
                 schema=1,
+                production_defaults="tiktok",
                 config=self._config,
                 preset=self._preset,
                 output=self._output,
@@ -147,6 +153,30 @@ class Production(QObject):
                 rows=self._rows,
             ),
         )
+
+    def migrate_tiktok_defaults(self):
+        backup = self.home / "production-before-tiktok.json"
+        if not backup.exists():
+            shutil.copy2(self._state, backup)
+        self._config = tiktok_config(self._config)
+        self._preset = {
+            "pentagon-3x4": DEFAULT_PRESET_ID,
+            "reference": DEFAULT_PRESET_ID,
+            "color": "color-9x16",
+        }.get(self._preset, self._preset)
+        custom_names = {p["name"] for p in self._custom}
+        system_names = set(LEGACY_NAMES) | set(LEGACY_NAMES.values()) | {p["name"] for p in catalog()}
+        for row in self._rows:
+            if row["status"] == "Hoàn tất":
+                continue
+            try:
+                row["config"] = tiktok_config(row["config"])
+                if row["presetName"] in system_names and row["presetName"] not in custom_names:
+                    row["presetName"] = tiktok_name(row["config"])
+            except (ValueError, TypeError, KeyError) as error:
+                row.update(status="Lỗi", detail="Cần chỉnh lại cấu hình: " + str(error))
+        self.save()
+        self.host.message("Đã chuyển cấu hình sang khung dọc 9:16 cho TikTok. Cấu hình cũ đã được sao lưu.")
 
     @Property("QVariantList", notify=changed)
     def rows(self):
@@ -170,6 +200,10 @@ class Production(QObject):
     @Property("QVariantList", notify=changed)
     def presets(self):
         return catalog(self._custom)
+
+    @Property("QVariantList", notify=changed)
+    def mainPresets(self):
+        return main_catalog(self._custom)
 
     @Property("QVariantMap", notify=changed)
     def config(self):

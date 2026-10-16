@@ -43,6 +43,8 @@ Khu vực Cấu hình nâng cao mở khi cần; trang Thiết lập quản lý r
 
 ## Bộ preset ban đầu
 
+Từ 1.1.7, màn hình chính dùng ba preset TikTok 9:16: **Ngũ giác + Camera**, **Chỉ bộ lọc Camera**, **Chỉ nền mờ**. Mặc định 1080×1920/30 FPS. Cấu hình 3:4 bên dưới là lịch sử đối chiếu; mẫu CapCut 3:4 được mở qua Cài đặt. Khi nâng cấp, chuyển canvas của cấu hình hiện tại và job chưa hoàn tất sang 9:16 một lần, giữ thông số đã chỉnh và sao lưu trạng thái trước khi chuyển; không sửa preset tự lưu hay cấu hình của job hoàn tất.
+
 | Preset | Thiết lập chính | Ghi chú |
 |---|---|---|
 | Ngũ giác + Camera độ nét cao 2 · 3:4 | 1080×1440, 30 fps, bật cả hiệu ứng và bộ lọc, playback 1× | Mặc định sản xuất; không tự lật ngang. Dựa trên renderer đã thử nhưng không tự áp thông số thời gian của clip mẫu |

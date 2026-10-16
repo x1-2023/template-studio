@@ -28,6 +28,7 @@ from PySide6.QtWidgets import QApplication  # noqa: E402
 from shiboken6 import getCppPointer, wrapInstance  # noqa: E402
 
 from template_studio.app import Controller  # noqa: E402
+from template_studio.presets import DEFAULT_PRESET_ID  # noqa: E402
 
 
 def main():
@@ -46,7 +47,7 @@ def main():
     p.checkRuntime()
     wait()
     p._rows = []
-    p.choosePreset("reference")
+    p.choosePreset(DEFAULT_PRESET_ID)
     p.add_paths(
         [
             str(
@@ -161,17 +162,18 @@ def main():
 
     # Kiểm tra cả model preset dạng object và danh sách chuỗi của combobox.
     preset = window.findChild(QQuickItem, "presetSelect")
+    assert preset.property("displayText") == p.presetName
     click(preset)
     ratios = verify_popup(preset)
     QTest.mouseMove(window, QPoint(15, 15))
     settle()
     capture("production-combobox")
     QTest.keyClick(window, Qt.Key_End)
-    QTest.keyClick(window, Qt.Key_Up)
     QTest.keyClick(window, Qt.Key_Return)
     settle()
     assert p.presetId == "layout", p.presetId
-    p.choosePreset("reference")
+    assert preset.property("displayText") == p.presetName
+    p.choosePreset(DEFAULT_PRESET_ID)
     settle()
     click(window.findChild(QQuickItem, "editConfigButton"))
     dialog = window.findChild(QObject, "configDialog")
@@ -250,7 +252,7 @@ def main():
     settle()
     assert number.property("value") == 5
     number.setProperty("value", 0)
-    p.choosePreset("reference")
+    p.choosePreset(DEFAULT_PRESET_ID)
     QTest.mouseMove(window, QPoint(15, 15))
     settle()
     panels = [window.findChild(QQuickItem, name) for name in
