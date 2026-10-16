@@ -1,4 +1,6 @@
-Template Studio 1.1.0 có GUI sản xuất mới: thả video vào, chọn preset và bấm Chạy. Nhớ preset/thư mục xuất; cấu hình nâng cao nằm trong Thiết lập.
+Template Studio 1.1.1 mở rộng khu vực chỉnh cấu hình ngay trên màn hình chính. Danh sách video gọn thành một cột bên trái; cấu hình chia nhóm ở giữa và preview ở bên phải. Chữ và điều khiển lớn hơn; nhóm cấu hình tự xếp một cột khi cửa sổ hẹp. Tài nguyên/GPU/updater nằm trong mục Tài nguyên & cập nhật. Giữ preset, hàng đợi, engine GPU và dữ liệu của bản 1.1.0.
+
+Các chức năng từ bản 1.1.0:
 
 - Engine OpenGL nhiều pass dùng chung với CLI, H.264 NVENC hoặc mã hóa CPU; preset ngũ giác 3:4/9:16, màu/nét, chỉ bố cục và đối chiếu mẫu. Preset sản xuất mặc định 1×, không tự lật ngang.
 - Preview 3 giây hoặc từ thời điểm tùy chọn, xem nguồn/kết quả và mở file xuất. Có VBR theo ngân sách bitrate hoặc CQ18; profile 3:4 tiêu chuẩn dùng 9.65 Mb/s.

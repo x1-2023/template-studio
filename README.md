@@ -8,7 +8,7 @@ Mã nguồn [công khai GPL-3.0-only](https://github.com/x1-2023/template-studio
 
 1. Tải `TemplateStudio-windows-x64.zip` trong [GitHub Releases](https://github.com/x1-2023/template-studio/releases/latest), giải nén toàn bộ rồi chạy `TemplateStudio.exe`.
 2. Lần đầu app kiểm tra GPU/FFmpeg. Nếu thiếu FFmpeg, app tải runtime Gyan đã xác minh SHA256; sau đó dùng offline. Cần Windows 10/11 x64 và driver OpenGL 3.3 trở lên.
-3. Trong **Thiết lập**, nhập cache effect từ RAR/thư mục local một lần. Bản EXE công khai không chứa shader/LUT hay video CapCut. Trong workspace phát triển, app tự nhận cache handoff đã có và sao chép vào dữ liệu riêng.
+3. Trong **Tài nguyên & cập nhật**, nhập cache effect từ RAR/thư mục local một lần. Bản EXE công khai không chứa shader/LUT hay video CapCut. Trong workspace phát triển, app tự nhận cache handoff đã có và sao chép vào dữ liệu riêng.
 4. Thêm video hoặc thư mục, chọn mẫu, bấm **Chạy**. Có thể xem thử trước bằng **Preview 3 giây**. **Đổi** để chọn thư mục xuất.
 
 ## Preset và cấu hình
@@ -16,7 +16,7 @@ Mã nguồn [công khai GPL-3.0-only](https://github.com/x1-2023/template-studio
 - Ngũ giác 3:4, ngũ giác 9:16, màu/nét, chỉ bố cục; mặc định tốc độ 1× và không tự lật ngang.
 - Preset **Đối chiếu mẫu** tái lập clip thử: 3:4, hflip, 1.02×. Đây là cấu hình riêng của clip tham chiếu.
 - Profile Tiêu chuẩn 3:4 dùng H.264 VBR 9.65 Mb/s; Tiết kiệm dùng 60% bitrate đã chọn; Chất lượng cao dùng CQ18, dung lượng tùy nội dung. Preset 9:16 dùng 12 Mb/s đề xuất, chưa được chấm với source draft gốc.
-- Thiết lập cho chỉnh tỷ lệ/độ phân giải, bitrate/encoder, scale/vị trí/nền mờ, intro, khẩu độ, màu, sharpen, hflip, tốc độ và audio. Lưu mẫu riêng, nhập/xuất JSON.
+- Cột trái là danh sách video; khu vực cấu hình lớn ở giữa cho chỉnh tỷ lệ/độ phân giải, bitrate/encoder, scale/vị trí/nền mờ, intro, khẩu độ, màu, sharpen, hflip, tốc độ và audio. Các nhóm tự chuyển từ hai cột sang một cột khi thu nhỏ cửa sổ. Preview nằm bên phải. Lưu mẫu riêng, nhập/xuất JSON ngay dưới các nhóm cấu hình.
 - Shader chạy GPU; NVENC tăng tốc mã hóa. Chọn mã hóa CPU vẫn cần OpenGL cho shader.
 
 Preview và xuất dùng cùng engine. Preview 540px giúp xem nhanh; chất lượng ở kích thước full có thể khác do nội suy và sharpen phụ thuộc kích thước. Xem [báo cáo port GPU](CapCut_FFmpeg_Codex_Handoff/work/REPORT.md) và [đối chiếu dung lượng](CapCut_FFmpeg_Codex_Handoff/work/ENCODING_REPORT.md). Không tuyên bố tái tạo CapCut 1:1; chưa có model segmentation/stabilization/HDR gốc.
@@ -33,7 +33,7 @@ GUI thư viện Video-FX cũ vẫn mở được từ source bằng `python temp
 
 ## Updater
 
-App kiểm tra GitHub Releases khi mở, hoặc bấm **Thiết lập → Kiểm tra cập nhật → Cài và khởi động lại**. Chỉ cập nhật lúc rảnh; kiểm tra SHA256 và cấu trúc ZIP trước khi thay EXE/thư viện. Giữ preset, queue, cache, runtime và video xuất. Helper giữ backup và phục hồi nếu bản mới không khởi động được; nhật ký nằm trong `.updates/` cạnh EXE.
+App kiểm tra GitHub Releases khi mở, hoặc bấm **Tài nguyên & cập nhật → Kiểm tra cập nhật → Cài và khởi động lại**. Chỉ cập nhật lúc rảnh; kiểm tra SHA256 và cấu trúc ZIP trước khi thay EXE/thư viện. Giữ preset, queue, cache, runtime và video xuất. Helper giữ backup và phục hồi nếu bản mới không khởi động được; nhật ký nằm trong `.updates/` cạnh EXE.
 
 EXE chưa ký Authenticode. SHA256 xác minh toàn vẹn gói tải xuống; nguồn phát hành cố định trong `template_studio/version.py`.
 

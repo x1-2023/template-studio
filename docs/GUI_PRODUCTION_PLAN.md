@@ -2,7 +2,7 @@
 
 Ngày lập: 16/10/2026. GUI mới và EXE 1.1.0 đã triển khai, kiểm định local; kế hoạch dưới đây được giữ để tra cứu định hướng ban đầu.
 
-Theo yêu cầu đơn giản hóa sau đó, bản thực tế dùng một màn hình: danh sách video bên trái, preview bên phải, preset phía trên và nút Chạy phía dưới. Cấu hình nâng cao nằm trong ngăn Thiết lập. Chưa thêm thẻ preset/thumbnail, tìm kiếm, giữ tỷ lệ nguồn, mẫu tên tùy chỉnh, giữ cây thư mục, HEVC hay mask ngoài vào GUI.
+Theo yêu cầu đơn giản hóa sau đó, bản thực tế dùng một màn hình. Bản 1.1.1 thu danh sách video thành một cột gọn bên trái, đưa cấu hình preset ra khu vực lớn ở giữa, preview bên phải và nút Chạy phía dưới. Ngăn Tài nguyên & cập nhật chỉ dành cho cache/GPU/runtime/updater. Chưa thêm thẻ preset/thumbnail, tìm kiếm, giữ tỷ lệ nguồn, mẫu tên tùy chỉnh, giữ cây thư mục, HEVC hay mask ngoài vào GUI.
 
 Đã kiểm tra 22 bài unittest, regression GPU/CLI, batch thật 20 clip (18 hợp lệ, 2 nguồn hỏng), preview, hủy/dọn partial, khôi phục hàng đợi, EXE render trên RTX 2070 Super và nâng cấp EXE thật 1.0.0 → 1.1.0 giữ preset/cache/output. Các checklist dưới đây là phạm vi dự kiến, không phải danh sách tính năng đã nghiệm thu toàn bộ. Xem README và release notes cho hành vi đã phát hành.
 

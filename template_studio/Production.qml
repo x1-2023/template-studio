@@ -6,7 +6,7 @@ import QtMultimedia
 ApplicationWindow {
     id: win
     visible: true
-    width: 1260; height: 820; minimumWidth: 1000; minimumHeight: 690
+    width: 1440; height: 900; minimumWidth: 1100; minimumHeight: 720
     title: "Template Studio · Sản xuất video"
     color: "#0c1018"
     property var p: studio.production
@@ -18,6 +18,7 @@ ApplicationWindow {
     palette.base: "#0e1420"; palette.button: "#263246"; palette.buttonText: ink
     palette.highlight: accent; palette.highlightedText: "#0c1710"
     font.family: "Segoe UI"
+    font.pixelSize: 14
 
     component Action: Button {
         id: b
@@ -26,8 +27,12 @@ ApplicationWindow {
         contentItem: Text { text: b.text; color: b.primary ? "#15210b" : win.ink; font: b.font; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; opacity: b.enabled ? 1 : .4 }
         background: Rectangle { color: b.primary ? win.accent : (b.hovered ? "#2d3c52" : "#202b3d"); radius: 8; opacity: b.enabled ? 1 : .45 }
     }
-    component Caption: Label { color: win.muted; font.pixelSize: 12 }
-    component Section: Label { color: win.ink; font.bold: true; font.pixelSize: 15; topPadding: 12; bottomPadding: 2 }
+    component Caption: Label { color: win.muted; font.pixelSize: 13 }
+    component Section: Label { color: win.ink; font.bold: true; font.pixelSize: 16; topPadding: 4; bottomPadding: 4 }
+    component SettingsCard: Pane {
+        Layout.fillWidth: true; Layout.alignment: Qt.AlignTop; padding: 16
+        background: Rectangle { color: "#1a2434"; radius: 10; border.color: "#2c3a50" }
+    }
     Shortcut { sequence: "Ctrl+O"; onActivated: p.importFiles() }
     Shortcut { sequence: "Ctrl+Shift+O"; onActivated: p.importFolder() }
     Shortcut { sequence: "Ctrl+Return"; onActivated: p.runBatch() }
@@ -38,7 +43,7 @@ ApplicationWindow {
     DropArea { anchors.fill: parent; onDropped: function(drop) { if (drop.hasUrls) p.dropFiles(drop.urls) } }
 
     ColumnLayout {
-        anchors.fill: parent; anchors.margins: 24; spacing: 18
+        anchors.fill: parent; anchors.margins: 20; spacing: 14
         RowLayout {
             Layout.fillWidth: true; spacing: 14
             Rectangle { width: 42; height: 42; radius: 12; color: accent
@@ -49,35 +54,31 @@ ApplicationWindow {
                 Caption { text: "Thả video vào. Chọn mẫu. Chạy." }
             }
             Item { Layout.fillWidth: true }
-            ComboBox {
-                id: presets; Layout.preferredWidth: 255; enabled: !studio.busy
-                model: p.presets; textRole: "name"; valueRole: "id"
-                currentIndex: { for (var i=0;i<p.presets.length;i++) if(p.presets[i].id===p.presetId)return i; return 0 }
-                onActivated: p.choosePreset(currentValue)
-            }
-            Action { text: "Thiết lập"; onClicked: settings.open() }
+            Action { text: "Tài nguyên & cập nhật"; onClicked: settings.open() }
         }
 
         RowLayout {
-            Layout.fillWidth: true; Layout.fillHeight: true; spacing: 18
+            Layout.fillWidth: true; Layout.fillHeight: true; spacing: 14
             Rectangle {
-                Layout.fillWidth: true; Layout.fillHeight: true; radius: 14; color: "#151d2a"; border.color: "#263246"
+                objectName: "videoPanel"
+                Layout.preferredWidth: 286; Layout.minimumWidth: 260; Layout.maximumWidth: 286
+                Layout.fillHeight: true; radius: 14; color: "#151d2a"; border.color: "#263246"
                 ColumnLayout {
-                    anchors.fill: parent; anchors.margins: 18; spacing: 12
+                    anchors.fill: parent; anchors.margins: 14; spacing: 12
+                    Label { text: "Video của bạn"; color: ink; font.pixelSize: 18; font.bold: true }
                     RowLayout { Layout.fillWidth: true
-                        Label { text: "Video của bạn"; color: ink; font.pixelSize: 18; font.bold: true; Layout.fillWidth: true }
-                        Action { text: "+ Video"; enabled: !studio.busy; onClicked: p.importFiles() }
-                        Action { text: "+ Thư mục"; enabled: !studio.busy; onClicked: p.importFolder() }
+                        Action { text: "+ Video"; Layout.fillWidth: true; enabled: !studio.busy; onClicked: p.importFiles() }
+                        Action { text: "+ Thư mục"; Layout.fillWidth: true; enabled: !studio.busy; onClicked: p.importFolder() }
                     }
                     Item {
                         Layout.fillWidth: true; Layout.fillHeight: true
                         ColumnLayout {
-                            anchors.centerIn: parent; spacing: 16; visible: p.rows.length === 0
-                            Rectangle { Layout.alignment: Qt.AlignHCenter; width: 94; height: 94; radius: 24; color: "#223328"
-                                Text { anchors.centerIn: parent; text: "+"; color: accent; font.pixelSize: 50; font.weight: Font.Light }
+                            anchors.centerIn: parent; width: parent.width; spacing: 14; visible: p.rows.length === 0
+                            Rectangle { Layout.alignment: Qt.AlignHCenter; width: 64; height: 64; radius: 18; color: "#223328"
+                                Text { anchors.centerIn: parent; text: "+"; color: accent; font.pixelSize: 38; font.weight: Font.Light }
                             }
-                            Label { text: "Kéo video hoặc thư mục vào đây"; color: ink; font.pixelSize: 19; Layout.alignment: Qt.AlignHCenter }
-                            Caption { text: "Mỗi video một file · nguồn giữ nguyên · tối đa 200 video"; Layout.alignment: Qt.AlignHCenter }
+                            Label { text: "Kéo video hoặc\nthư mục vào đây"; color: ink; font.pixelSize: 17; horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true }
+                            Caption { text: "Tối đa 200 video\nNguồn được giữ nguyên"; horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true }
                             Action { text: "Chọn video"; primary: true; Layout.alignment: Qt.AlignHCenter; enabled: !studio.busy; onClicked: p.importFiles() }
                         }
                         ListView {
@@ -86,39 +87,141 @@ ApplicationWindow {
                             delegate: Rectangle {
                                 required property var modelData
                                 required property int index
-                                width: queue.width; height: 91; radius: 10
+                                width: queue.width; height: 126; radius: 10
                                 color: index===p.currentIndex ? "#263449" : "#1a2434"
                                 border.color: index===p.currentIndex ? "#52677c" : "#293448"
                                 MouseArea { anchors.fill: parent; onClicked: p.select(index) }
-                                RowLayout {
-                                    anchors.fill: parent; anchors.margins: 10; spacing: 9
-                                    CheckBox { checked: modelData.selected; enabled: !studio.busy; onClicked: p.toggle(index) }
-                                    ColumnLayout { Layout.fillWidth: true; spacing: 4
-                                        Label { text: modelData.name; color: ink; font.bold: true; elide: Text.ElideMiddle; Layout.fillWidth: true }
-                                        Caption { text: modelData.meta + " · " + modelData.presetName; elide: Text.ElideRight; Layout.fillWidth: true }
-                                        Caption { text: modelData.detail || modelData.status; color: modelData.status==="Lỗi" || modelData.status==="Thiếu nguồn" ? "#ff9c9c" : muted; elide: Text.ElideRight; Layout.fillWidth: true
+                                ColumnLayout {
+                                    anchors.fill: parent; anchors.margins: 10; spacing: 6
+                                    RowLayout { Layout.fillWidth: true; spacing: 4
+                                        CheckBox { checked: modelData.selected; enabled: !studio.busy; onClicked: p.toggle(index) }
+                                        ColumnLayout { Layout.fillWidth: true; spacing: 4
+                                            Label { text: modelData.name; color: ink; font.bold: true; font.pixelSize: 13; elide: Text.ElideMiddle; Layout.fillWidth: true }
+                                            Caption { text: modelData.meta; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
+                                            Caption { text: modelData.presetName; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
+                                        }
+                                    }
+                                    RowLayout { Layout.fillWidth: true
+                                        Caption { text: modelData.detail===modelData.status ? "" : modelData.detail; font.pixelSize: 11; color: modelData.status==="Lỗi" || modelData.status==="Thiếu nguồn" ? "#ff9c9c" : muted; elide: Text.ElideRight; Layout.fillWidth: true
                                             ToolTip.visible: detailMouse.containsMouse; ToolTip.text: modelData.detail || modelData.status
                                             MouseArea { id: detailMouse; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
                                         }
-                                    }
-                                    ColumnLayout { Layout.preferredWidth: 90; spacing: 8
                                         Label { text: modelData.status==="Đang xuất" ? modelData.percent+"%" : modelData.status; color: modelData.status==="Hoàn tất" ? accent : muted; font.pixelSize: 11; Layout.alignment: Qt.AlignRight }
-                                        ProgressBar { from: 0; to: 100; value: modelData.percent; Layout.fillWidth: true }
+                                    }
+                                    ProgressBar { from: 0; to: 100; value: modelData.percent; Layout.fillWidth: true }
+                                }
+                            }
+                        }
+                    }
+                    Caption { text: p.summary; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+                    Action { text: "Bỏ mục chọn"; Layout.fillWidth: true; enabled: !studio.busy && p.rows.length>0; onClicked: p.removeSelected() }
+                    RowLayout { Layout.fillWidth: true; spacing: 8
+                        Action { text: "Chạy lại lỗi"; Layout.fillWidth: true; leftPadding: 10; rightPadding: 10; font.pixelSize: 12; enabled: !studio.busy && p.rows.length>0; onClicked: p.retrySelected() }
+                        Action { text: "Ẩn đã xong"; Layout.fillWidth: true; leftPadding: 10; rightPadding: 10; font.pixelSize: 12; enabled: !studio.busy; onClicked: p.clearDone() }
+                    }
+                }
+            }
+            Rectangle {
+                objectName: "configurationPanel"
+                Layout.fillWidth: true; Layout.minimumWidth: 420; Layout.fillHeight: true
+                color: "#151d2a"; radius: 14; border.color: "#3c4e44"
+                ColumnLayout {
+                    anchors.fill: parent; anchors.margins: 18; spacing: 12
+                    Label { text: "Cấu hình preset"; color: ink; font.pixelSize: 20; font.bold: true }
+                    ComboBox {
+                        id: presets; Layout.fillWidth: true; implicitHeight: 44; enabled: !studio.busy
+                        model: p.presets; textRole: "name"; valueRole: "id"
+                        currentIndex: { for (var i=0;i<p.presets.length;i++) if(p.presets[i].id===p.presetId)return i; return 0 }
+                        onActivated: p.choosePreset(currentValue)
+                    }
+                    Caption { text: "Áp dụng cho video chưa xuất · tự nhớ cấu hình"; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    ScrollView {
+                        id: configurationScroll; objectName: "configurationScroll"
+                        Layout.fillWidth: true; Layout.fillHeight: true; clip: true; contentWidth: availableWidth
+                        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+                        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                        ColumnLayout {
+                            width: configurationScroll.availableWidth; spacing: 12
+                            GridLayout {
+                                objectName: "configurationGrid"
+                                Layout.fillWidth: true; columns: width >= 620 ? 2 : 1; uniformCellWidths: true; columnSpacing: 12; rowSpacing: 12
+                                SettingsCard {
+                                    contentItem: ColumnLayout { spacing: 8
+                                        Section { text: "Xuất video" }
+                                        Caption { text: "Chất lượng" }
+                                        ComboBox { model: ["Tiết kiệm", "Tiêu chuẩn", "Chất lượng cao"]; property var ids: ["small","standard","high"]; currentIndex: ids.indexOf(p.config.quality); enabled: !studio.busy; onActivated: p.configure("quality",ids[currentIndex]); Layout.fillWidth: true }
+                                        Caption { text: p.config.quality==="high" ? "CQ18 · dung lượng theo nội dung" : "Bitrate video (Mb/s)"; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                                        TextField { text: String(p.config.video_bitrate); enabled: !studio.busy && p.config.quality!=="high"; validator: DoubleValidator { bottom: .5; top: 100; locale: "en_US" } onEditingFinished: p.configure("video_bitrate",Number(text)); Layout.fillWidth: true }
+                                        Caption { text: "Bộ mã hóa" }
+                                        ComboBox { model: ["Tự động · ưu tiên NVENC", "NVIDIA NVENC", "Mã hóa CPU"]; property var ids: ["auto","h264_nvenc","libx264"]; currentIndex: ids.indexOf(p.config.encoder); enabled: !studio.busy; onActivated: p.configure("encoder",ids[currentIndex]); Layout.fillWidth: true }
+                                        RowLayout { Layout.fillWidth: true
+                                            ComboBox { model: ["3:4","9:16"]; currentIndex: p.config.height/p.config.width>1.5 ? 1 : 0; enabled: !studio.busy; onActivated: p.configure("aspect",currentText); Layout.fillWidth: true }
+                                            ComboBox { model: ["1080","720"]; currentIndex: p.config.width===1080 ? 0 : 1; enabled: !studio.busy; onActivated: p.configure("resolution",Number(currentText)); Layout.fillWidth: true }
+                                        }
+                                        CheckBox { text: "Tắt âm thanh"; checked: p.config.mute; enabled: !studio.busy; onClicked: p.configure("mute",checked) }
+                                    }
+                                }
+                                SettingsCard {
+                                    contentItem: ColumnLayout { spacing: 8
+                                        Section { text: "Hiệu ứng mở đầu" }
+                                        CheckBox { text: "Ngũ giác mở đầu"; checked: p.config.intro_enabled; enabled: !studio.busy; onClicked: p.configure("intro_enabled",checked) }
+                                        Caption { text: "Đoạn intro · " + (p.config.effect_end-p.config.effect_start).toFixed(2) + " giây" }
+                                        Slider { from: 0; to: 8; value: p.config.effect_end; enabled: !studio.busy; onMoved: p.configure("effect_end",value); Layout.fillWidth: true }
+                                        Caption { text: "Chuyển động · " + Math.round(p.config.effect_slider*100) + "%" }
+                                        Slider { from: 0; to: 1; value: p.config.effect_slider; enabled: !studio.busy; onMoved: p.configure("effect_slider",value); Layout.fillWidth: true }
+                                        Caption { text: "Khẩu độ · " + p.config.bokeh_size.toFixed(2) }
+                                        Slider { from: 0; to: 1.5; value: p.config.bokeh_size; enabled: !studio.busy; onMoved: p.configure("bokeh_size",value); Layout.fillWidth: true }
+                                    }
+                                }
+                                SettingsCard {
+                                    contentItem: ColumnLayout { spacing: 8
+                                        Section { text: "Màu và nét" }
+                                        CheckBox { text: "Bật màu và nét"; checked: p.config.filter_enabled; enabled: !studio.busy; onClicked: p.configure("filter_enabled",checked) }
+                                        Caption { text: "Cường độ màu · " + Math.round(p.config.filter_intensity*100) + "%" }
+                                        Slider { from: 0; to: 1; value: p.config.filter_intensity; enabled: !studio.busy; onMoved: p.configure("filter_intensity",value); Layout.fillWidth: true }
+                                        Caption { text: "Độ nét · " + Math.round(p.config.sharpness*100) + "%" }
+                                        Slider { from: 0; to: 1; value: p.config.sharpness; enabled: !studio.busy; onMoved: p.configure("sharpness",value); Layout.fillWidth: true }
+                                        ComboBox { model: ["Màu thống nhất", "Ước lượng da · chroma"]; currentIndex: p.config.skin==="chroma" ? 1 : 0; enabled: !studio.busy; onActivated: p.configure("skin",currentIndex===1 ? "chroma" : "none"); Layout.fillWidth: true }
+                                    }
+                                }
+                                SettingsCard {
+                                    contentItem: ColumnLayout { spacing: 8
+                                        Section { text: "Bố cục và tốc độ" }
+                                        Caption { text: "Scale clip · " + Math.round(p.config.scale*100) + "%" }
+                                        Slider { from: .3; to: 1.5; value: p.config.scale; enabled: !studio.busy; onMoved: p.configure("scale",value); Layout.fillWidth: true }
+                                        Caption { text: "Vị trí ngang / dọc" }
+                                        Slider { from: -.3; to: .3; value: p.config.offset[0]; enabled: !studio.busy; onMoved: p.configure("offsetX",value); Layout.fillWidth: true }
+                                        Slider { from: -.3; to: .3; value: p.config.offset[1]; enabled: !studio.busy; onMoved: p.configure("offsetY",value); Layout.fillWidth: true }
+                                        Caption { text: "Nền mờ" }
+                                        Slider { from: 0; to: .1; value: p.config.background_sigma_ratio; enabled: !studio.busy; onMoved: p.configure("background_sigma_ratio",value); Layout.fillWidth: true }
+                                        CheckBox { text: "Lật ngang"; checked: p.config.flip; enabled: !studio.busy; onClicked: p.configure("flip",checked) }
+                                        Caption { text: "Tốc độ video (×)" }
+                                        TextField { text: String(p.config.playback_rate); validator: DoubleValidator { bottom: .5; top: 2; locale: "en_US" } enabled: !studio.busy; onEditingFinished: p.configure("playback_rate",Number(text)); Layout.fillWidth: true }
+                                    }
+                                }
+                            }
+                            SettingsCard {
+                                objectName: "customPresetCard"
+                                contentItem: ColumnLayout { spacing: 8
+                                    Section { text: "Preset của bạn" }
+                                    RowLayout { Layout.fillWidth: true
+                                        TextField { id: presetName; placeholderText: "Tên preset của bạn"; Layout.fillWidth: true }
+                                        Action { text: "Lưu mẫu"; enabled: !studio.busy && presetName.text.trim()!==""; onClicked: { p.savePreset(presetName.text);presetName.clear() } }
+                                    }
+                                    RowLayout { Layout.fillWidth: true
+                                        Action { text: "Nhập preset"; enabled: !studio.busy; onClicked: p.importPreset(); Layout.fillWidth: true }
+                                        Action { text: "Xuất preset"; enabled: !studio.busy; onClicked: p.exportPreset(); Layout.fillWidth: true }
                                     }
                                 }
                             }
                         }
                     }
-                    RowLayout { Layout.fillWidth: true
-                        Caption { text: p.summary; Layout.fillWidth: true }
-                        Action { text: "Bỏ mục chọn"; enabled: !studio.busy && p.rows.length>0; onClicked: p.removeSelected() }
-                        Action { text: "Chạy lại lỗi"; enabled: !studio.busy && p.rows.length>0; onClicked: p.retrySelected() }
-                        Action { text: "Ẩn đã xong"; enabled: !studio.busy; onClicked: p.clearDone() }
-                    }
                 }
             }
             Rectangle {
-                Layout.preferredWidth: 354; Layout.fillHeight: true; color: "#151d2a"; radius: 14; border.color: "#263246"
+                objectName: "previewPanel"
+                Layout.preferredWidth: 312; Layout.minimumWidth: 270; Layout.maximumWidth: 350
+                Layout.fillHeight: true; color: "#151d2a"; radius: 14; border.color: "#263246"
                 ColumnLayout {
                     anchors.fill: parent; anchors.margins: 16; spacing: 10
                     RowLayout { Layout.fillWidth: true
@@ -177,56 +280,13 @@ ApplicationWindow {
     }
 
     Drawer {
-        id: settings; edge: Qt.RightEdge; width: 420; height: win.height
+        id: settings; edge: Qt.RightEdge; width: Math.min(660, win.width-80); height: win.height
         background: Rectangle { color: "#151d2a" }
         ScrollView { anchors.fill: parent; clip: true; contentWidth: availableWidth
             ColumnLayout { width: settings.width-42; x: 20; spacing: 8
                 RowLayout { Layout.fillWidth: true
-                    Label { text: "Thiết lập"; color: ink; font.pixelSize: 23; font.bold: true; Layout.fillWidth: true; topPadding: 20 }
+                    Label { text: "Tài nguyên & cập nhật"; color: ink; font.pixelSize: 23; font.bold: true; Layout.fillWidth: true; topPadding: 20 }
                     Action { text: "Đóng"; onClicked: settings.close() }
-                }
-                Caption { text: "Áp dụng cho video chưa xuất. File đã xong được giữ nguyên."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-                Section { text: "Xuất video" }
-                ComboBox { model: ["Tiết kiệm", "Tiêu chuẩn", "Chất lượng cao"]; property var ids: ["small","standard","high"]; currentIndex: ids.indexOf(p.config.quality); enabled: !studio.busy; onActivated: p.configure("quality",ids[currentIndex]); Layout.fillWidth: true }
-                Caption { text: p.config.quality==="high" ? "CQ18 · dung lượng theo nội dung" : "Bitrate video mục tiêu (Mb/s)" }
-                TextField { text: String(p.config.video_bitrate); enabled: !studio.busy && p.config.quality!=="high"; validator: DoubleValidator { bottom: .5; top: 100; locale: "en_US" } onEditingFinished: p.configure("video_bitrate",Number(text)); Layout.fillWidth: true }
-                ComboBox { model: ["Tự động · ưu tiên NVENC", "NVIDIA NVENC", "Mã hóa CPU"]; property var ids: ["auto","h264_nvenc","libx264"]; currentIndex: ids.indexOf(p.config.encoder); enabled: !studio.busy; onActivated: p.configure("encoder",ids[currentIndex]); Layout.fillWidth: true }
-                RowLayout { Layout.fillWidth: true
-                    ComboBox { model: ["3:4","9:16"]; currentIndex: p.config.height/p.config.width>1.5 ? 1 : 0; enabled: !studio.busy; onActivated: p.configure("aspect",currentText); Layout.fillWidth: true }
-                    ComboBox { model: ["1080","720"]; currentIndex: p.config.width===1080 ? 0 : 1; enabled: !studio.busy; onActivated: p.configure("resolution",Number(currentText)); Layout.fillWidth: true }
-                }
-                CheckBox { text: "Tắt âm thanh"; checked: p.config.mute; enabled: !studio.busy; onClicked: p.configure("mute",checked) }
-                Section { text: "Hiệu ứng và bố cục" }
-                CheckBox { text: "Ngũ giác mở đầu"; checked: p.config.intro_enabled; enabled: !studio.busy; onClicked: p.configure("intro_enabled",checked) }
-                Caption { text: "Đoạn intro · " + (p.config.effect_end-p.config.effect_start).toFixed(2) + " giây" }
-                Slider { from: 0; to: 8; value: p.config.effect_end; enabled: !studio.busy; onMoved: p.configure("effect_end",value); Layout.fillWidth: true }
-                Caption { text: "Chuyển động mở đầu" }
-                Slider { from: 0; to: 1; value: p.config.effect_slider; enabled: !studio.busy; onMoved: p.configure("effect_slider",value); Layout.fillWidth: true }
-                Caption { text: "Khẩu độ · " + p.config.bokeh_size.toFixed(2) }
-                Slider { from: 0; to: 1.5; value: p.config.bokeh_size; enabled: !studio.busy; onMoved: p.configure("bokeh_size",value); Layout.fillWidth: true }
-                CheckBox { text: "Màu và nét"; checked: p.config.filter_enabled; enabled: !studio.busy; onClicked: p.configure("filter_enabled",checked) }
-                Caption { text: "Cường độ màu · " + Math.round(p.config.filter_intensity*100) + "%" }
-                Slider { from: 0; to: 1; value: p.config.filter_intensity; enabled: !studio.busy; onMoved: p.configure("filter_intensity",value); Layout.fillWidth: true }
-                Caption { text: "Độ nét · " + Math.round(p.config.sharpness*100) + "%" }
-                Slider { from: 0; to: 1; value: p.config.sharpness; enabled: !studio.busy; onMoved: p.configure("sharpness",value); Layout.fillWidth: true }
-                ComboBox { model: ["Màu thống nhất", "Ước lượng vùng da bằng chroma"]; currentIndex: p.config.skin==="chroma" ? 1 : 0; enabled: !studio.busy; onActivated: p.configure("skin",currentIndex===1 ? "chroma" : "none"); Layout.fillWidth: true }
-                Caption { text: "Scale clip · " + Math.round(p.config.scale*100) + "%" }
-                Slider { from: .3; to: 1.5; value: p.config.scale; enabled: !studio.busy; onMoved: p.configure("scale",value); Layout.fillWidth: true }
-                Caption { text: "Vị trí ngang / dọc" }
-                Slider { from: -.3; to: .3; value: p.config.offset[0]; enabled: !studio.busy; onMoved: p.configure("offsetX",value); Layout.fillWidth: true }
-                Slider { from: -.3; to: .3; value: p.config.offset[1]; enabled: !studio.busy; onMoved: p.configure("offsetY",value); Layout.fillWidth: true }
-                Caption { text: "Nền mờ" }
-                Slider { from: 0; to: .1; value: p.config.background_sigma_ratio; enabled: !studio.busy; onMoved: p.configure("background_sigma_ratio",value); Layout.fillWidth: true }
-                CheckBox { text: "Lật ngang"; checked: p.config.flip; enabled: !studio.busy; onClicked: p.configure("flip",checked) }
-                Caption { text: "Tốc độ video (×)" }
-                TextField { text: String(p.config.playback_rate); validator: DoubleValidator { bottom: .5; top: 2; locale: "en_US" } enabled: !studio.busy; onEditingFinished: p.configure("playback_rate",Number(text)); Layout.fillWidth: true }
-                RowLayout { Layout.fillWidth: true
-                    TextField { id: presetName; placeholderText: "Tên preset của bạn"; Layout.fillWidth: true }
-                    Action { text: "Lưu mẫu"; enabled: !studio.busy && presetName.text.trim()!==""; onClicked: { p.savePreset(presetName.text);presetName.clear() } }
-                }
-                RowLayout { Layout.fillWidth: true
-                    Action { text: "Nhập preset"; enabled: !studio.busy; onClicked: p.importPreset(); Layout.fillWidth: true }
-                    Action { text: "Xuất preset"; enabled: !studio.busy; onClicked: p.exportPreset(); Layout.fillWidth: true }
                 }
                 Section { text: "Tài nguyên và GPU" }
                 Caption { text: p.runtimeNotice; wrapMode: Text.WordWrap; Layout.fillWidth: true }
