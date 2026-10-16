@@ -25,6 +25,7 @@ from .version import VERSION
 from .updater import check_update, prepare_update, launch_update
 from .effects import catalog, thumbnails, effect_name
 from .media_setup import ensure_media
+from .assets_local import discover
 from .production import Production
 
 
@@ -44,6 +45,9 @@ class Controller(QObject):
         self._media_busy, self._media_ready = False, False
         self._update_busy, self._available_update, self._update_plan = False, None, None
         self._update_notice = 'Chưa kiểm tra cập nhật.'
+        self._update_timer = QTimer(self)
+        self._update_timer.setSingleShot(True)
+        self._update_timer.timeout.connect(self.pollAutoUpdates)
         self._library = [dict(entry) for entry in catalog()]
         self._library_candidate, self._library_preview = 'none', ''
         self._candidate_intensity, self._candidate_duration = 65, 0
@@ -211,7 +215,7 @@ class Controller(QObject):
 
     @Slot()
     def checkUpdates(self):
-        if self.busy:
+        if self.busy or self.pool.active:
             return
         self._update_busy = True
         self._update_notice = 'Đang kiểm tra cập nhật…'
@@ -224,6 +228,19 @@ class Controller(QObject):
         def failed(error):
             self._update_notice = error
         self.pool.submit(lambda emit: check_update(), result=ready, error=failed, finished=self.finish_update)
+
+    def startAutoUpdates(self):
+        self._update_timer.start(3500)
+
+    def pollAutoUpdates(self):
+        if self._closing:
+            self._update_timer.stop()
+            return
+        if self.busy or self.pool.active:
+            self._update_timer.start(5000)
+            return
+        self.checkUpdates()
+        self._update_timer.start(4 * 60 * 60 * 1000)
 
     def finish_update(self):
         self._update_busy = False
@@ -483,11 +500,16 @@ def main(root, home):
     os.environ['TEMPLATE_STUDIO_HOME'] = str(home)
     parser = argparse.ArgumentParser(description='Beta Render · xử lý video hàng loạt')
     parser.add_argument('--check', action='store_true')
+    parser.add_argument('--check-gpu', action='store_true', help='Kiểm tra khởi động cùng GPU và gói hiệu ứng.')
     parser.add_argument('--capture')
     parser.add_argument('--input', action='append', default=[])
     parser.add_argument('--update-token')
     parser.add_argument('--library', action='store_true')
     options = parser.parse_args()
+    if options.check_gpu:
+        options.check = True
+        if options.library:
+            parser.error('--check-gpu dành cho màn hình xử lý hàng loạt.')
     # Kiểm tra module worker độc lập trước khi bắt đầu các bước thiết lập dài.
     # Thiếu cache/driver không làm updater hiểu nhầm bản EXE bị hỏng.
     if options.update_token:
@@ -505,7 +527,9 @@ def main(root, home):
     if not options.check and not lock.tryLock(0):
         raise RuntimeError('Beta Render đã mở. Hãy dùng cửa sổ hiện tại.')
     controller = Controller(root, home)
+    runtime_started = False
     def initial_inputs():
+        nonlocal runtime_started
         if controller.busy or controller.pool.active:
             QTimer.singleShot(100, initial_inputs)
             return
@@ -513,11 +537,13 @@ def main(root, home):
             (controller.add_paths if options.library else controller.production.add_paths)(options.input)
         if options.library:
             controller.refreshLibrary()
-        elif not options.check:
+        elif not options.check or options.check_gpu:
             def runtime():
+                nonlocal runtime_started
                 if controller.pool.active or controller.busy:
                     QTimer.singleShot(200,runtime)
                 else:
+                    runtime_started = True
                     controller.production.checkRuntime()
             QTimer.singleShot(200,runtime)
     QTimer.singleShot(0, initial_inputs)
@@ -536,10 +562,10 @@ def main(root, home):
                 if not errors:atomic_json(job / 'healthy.json', {'version': VERSION})
             QTimer.singleShot(1500,report_healthy)
     if getattr(sys, 'frozen', False) and not options.check:
-        QTimer.singleShot(3500, controller.checkUpdates)
+        controller.startAutoUpdates()
     if options.check:
         def finish():
-            if controller.pool.active:
+            if controller.pool.active or (options.check_gpu and not runtime_started):
                 QTimer.singleShot(200, finish)
                 return
             if options.capture:
@@ -552,8 +578,15 @@ def main(root, home):
                 errors.append('FFmpeg chưa sẵn sàng.')
             if app.windowIcon().isNull():
                 errors.append('Không nạp được biểu tượng Beta Render.')
+            effects = discover(root, home)
+            if not effects:
+                errors.append('Không nạp được gói hiệu ứng đóng kèm.')
+            if options.check_gpu and not controller.production.ready:
+                errors.append(controller.production.runtimeNotice)
             diagnostic = dict(ok=not errors, errors=errors, hardware=controller.hardware,
                               iconReady=not app.windowIcon().isNull(),
+                              effectsReady=bool(effects), effects=str(effects or ''),
+                              gpuReady=controller.production.ready,
                               mediaReady=controller.mediaReady, ffmpeg=binary('ffmpeg') if controller.mediaReady else '')
             atomic_json(home / 'check-result.json', diagnostic)
             print(json.dumps(diagnostic, ensure_ascii=False))

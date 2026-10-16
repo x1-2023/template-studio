@@ -429,7 +429,7 @@ def parser():
         "--batch", type=Path, help="JSON [{input,output,preset?,overrides?}]"
     )
     p.add_argument("--preset", default="capcut-pentagon")
-    p.add_argument("--cache", type=Path, default=ROOT / "cache")
+    p.add_argument("--cache", type=Path, default=None)
     p.add_argument(
         "--seconds", type=float, default=3, help="Mặc định 3 giây; --full để xuất hết"
     )

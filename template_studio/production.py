@@ -19,6 +19,7 @@ from offline_studio.config import atomic_json
 from offline_studio.process import probe
 
 from .assets_local import discover, import_cache, validate
+from .gpu.resources import bundled_cache
 from .presets import (
     DEFAULT_PRESET_ID, EFFECT_NAME, FILTER_NAME, LEGACY_NAMES,
     catalog, main_catalog, normalize, safe_name, tiktok_config, tiktok_name,
@@ -342,6 +343,7 @@ class Production(QObject):
             if (
                 cache
                 and cache.resolve() != (self.home / "runtime/capcut-cache").resolve()
+                and cache.resolve() != bundled_cache(self.root).resolve()
             ):
                 cache = import_cache(cache, self.home)
             health = run_worker(

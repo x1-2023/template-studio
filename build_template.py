@@ -48,6 +48,9 @@ def collect_licenses(target):
 
 def main():
     from template_studio.version import VERSION, ASSET_NAME
+    from template_studio.assets_local import validate
+    from template_studio.gpu.resources import bundled_cache
+    validate(bundled_cache(ROOT))
     for stream in (sys.stdout, sys.stderr):
         if stream is not None and hasattr(stream, 'reconfigure'):
             stream.reconfigure(encoding='utf-8', errors='replace')

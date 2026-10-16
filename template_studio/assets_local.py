@@ -1,6 +1,7 @@
-"""Nhập bản sao cache local đã kiểm tra; không đưa tài nguyên lên GitHub."""
+"""Kiểm tra tài nguyên đóng kèm và nhập cache tùy chọn."""
 
 import hashlib
+import json
 import os
 import shutil
 import subprocess
@@ -10,13 +11,53 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 from offline_studio.cancellation import check_cancelled, managed_process
 from offline_studio.process import NO_WINDOW
 
-from .gpu.resources import resources, shader_map
+from .gpu.resources import bundled_cache, resources, shader_map
 
 RAR_SHA256 = "0ab5b75f72ada6132f7e6dd3812b950934e1608bb724dc98e764978c0503cf47"
 IDS = ("7491138615477685505", "7514206177195068689")
 
 
 def validate(cache):
+    cache = Path(cache)
+    manifest = cache / "runtime-manifest.json"
+    if manifest.is_file():
+        if manifest.stat().st_size > 64 * 1024:
+            raise ValueError("Manifest gói hiệu ứng quá lớn.")
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        if (
+            not isinstance(data, dict)
+            or data.get("schema") != 1
+            or data.get("layout") != "bundled-v1"
+            or not isinstance(data.get("files"), dict)
+            or len(data["files"]) != 22
+        ):
+            raise ValueError("Manifest gói hiệu ứng không hợp lệ.")
+        for name, expected in data["files"].items():
+            if (
+                not isinstance(name, str)
+                or not isinstance(expected, str)
+                or len(expected) != 64
+            ):
+                raise ValueError("Checksum tài nguyên không hợp lệ.")
+            relative = PurePosixPath(name)
+            path = cache / relative
+            if (
+                not relative.parts
+                or relative.parts[0] not in {"effect", "tone"}
+                or relative.is_absolute()
+                or ".." in relative.parts
+                or name != relative.as_posix()
+                or "\\" in name
+                or ":" in name
+                or not path.resolve().is_relative_to(cache.resolve())
+            ):
+                raise ValueError("Đường dẫn tài nguyên hiệu ứng không hợp lệ.")
+            if (
+                not path.is_file()
+                or path.stat().st_size > 8 * 1024**2
+                or hashlib.sha256(path.read_bytes()).hexdigest() != expected
+            ):
+                raise ValueError("Gói hiệu ứng thiếu hoặc hỏng: " + name)
     effect, tone = resources(cache)
     shaders = shader_map(effect)
     required = [
@@ -45,6 +86,7 @@ def validate(cache):
 def discover(root, home):
     candidates = [
         home / "runtime/capcut-cache",
+        bundled_cache(root),
         root / "CapCut_FFmpeg_Codex_Handoff/work/cache",
     ]
     if os.environ.get("TEMPLATE_STUDIO_CAPCUT_CACHE"):

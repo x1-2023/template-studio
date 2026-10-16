@@ -218,6 +218,7 @@ ApplicationWindow {
             }
             Item { Layout.fillWidth: true }
             Caption { text: p.ready ? "GPU sẵn sàng" : p.runtimeNotice; color: accent; elide: Text.ElideRight; Layout.maximumWidth: 350 }
+            Action { text: "Cập nhật app"; visible: studio.updateAvailable; enabled: !studio.busy; primary: true; onClicked: studio.installUpdate() }
             Action { text: "Cài đặt"; onClicked: settings.open() }
         }
         RowLayout {
@@ -499,7 +500,7 @@ ApplicationWindow {
                 }
                 Section { text: "GPU và hiệu ứng" }
                 Caption { text: p.runtimeNotice; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-                Caption { text: "Nhập file RAR hoặc thư mục hiệu ứng từ CapCut."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                Caption { text: "Hiệu ứng đã có sẵn trong app. Có thể nhập gói khác để thay thế."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 RowLayout { Layout.fillWidth: true
                     Action { text: "Chọn file RAR"; enabled: !studio.busy; onClicked: p.importAssets(); Layout.fillWidth: true }
                     Action { text: "Chọn thư mục hiệu ứng"; enabled: !studio.busy; onClicked: p.importAssetsFolder(); Layout.fillWidth: true }

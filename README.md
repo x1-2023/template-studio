@@ -11,8 +11,8 @@ Mã nguồn [công khai GPL-3.0-only](https://github.com/x1-2023/template-studio
 ## Dùng EXE
 
 1. Tải `TemplateStudio-windows-x64.zip` trong [GitHub Releases](https://github.com/x1-2023/template-studio/releases/latest), giải nén toàn bộ rồi chạy `TemplateStudio.exe`. Tên file được giữ để tương thích updater; tên ứng dụng là **Beta Render**.
-2. Lần đầu app kiểm tra GPU/FFmpeg. Nếu thiếu FFmpeg, app tải runtime Gyan đã xác minh SHA256; sau đó dùng offline. Cần Windows 10/11 x64 và driver OpenGL 3.3 trở lên.
-3. Trong **Cài đặt**, nhập cache effect từ RAR/thư mục local một lần. Bản EXE công khai không chứa shader/LUT hay video CapCut. Trong workspace phát triển, app tự nhận cache handoff đã có và sao chép vào dữ liệu riêng.
+2. Lần đầu app kiểm tra GPU/FFmpeg. Nếu thiếu FFmpeg, app tự tải runtime Gyan đã xác minh SHA256; cần mạng cho lần chuẩn bị này, sau đó dùng offline. Cần Windows 10/11 x64 và driver OpenGL 3.3 trở lên.
+3. Hiệu ứng ngũ giác và bộ lọc Camera đã có sẵn trong gói app, không cần cài CapCut hay nhập RAR/cache thủ công. Gói chỉ chứa 22 shader/LUT/texture renderer sử dụng, có manifest SHA256; không kèm video, project hoặc dữ liệu người dùng. Mục nhập hiệu ứng trong **Cài đặt** được giữ như tùy chọn nâng cao.
 4. Thêm video hoặc thư mục, chọn mẫu, bấm **Xuất video**. Có thể xem thử trước bằng **Xem thử 3 giây**. **Chọn thư mục** để chọn thư mục xuất.
 
 ## Preset và cấu hình
@@ -33,7 +33,7 @@ Nhập tối đa 200 video; chạy một job/lần, hiện tiến độ và ETA.
 
 **Dừng sau video này** hoàn tất video hiện tại; **Dừng** hủy worker/FFmpeg và dọn partial của tác vụ. Mở lại app tiếp tục ở cấp file, không nối từ frame đang dở. Cấu hình của file đã hoàn tất được giữ khi đổi preset cho file đang chờ. Báo cáo JSON/CSV nằm cạnh video đầu ra; nhật ký worker có nút mở trong Cài đặt.
 
-`production.json` lưu preset, cấu hình và hàng đợi mới; `session.json` của GUI cũ được giữ và sao lưu khi nhập sang giao diện mới. Dữ liệu mặc định trong `data/template-studio/` cạnh EXE; nếu không ghi được thì dùng `%LOCALAPPDATA%/TemplateStudio`. Có thể đặt `TEMPLATE_STUDIO_HOME`. Cache effect trong `runtime/capcut-cache/` của thư mục dữ liệu; `TEMPLATE_STUDIO_CAPCUT_CACHE` cho phép chỉ định cache để app nhập bản sao.
+`production.json` lưu preset, cấu hình và hàng đợi mới; `session.json` của GUI cũ được giữ và sao lưu khi nhập sang giao diện mới. Dữ liệu mặc định trong `data/template-studio/` cạnh EXE; nếu không ghi được thì dùng `%LOCALAPPDATA%/TemplateStudio`. Có thể đặt `TEMPLATE_STUDIO_HOME`. Tài nguyên mặc định nằm trong `template_studio/assets/effects/` của gói app; cache tùy chọn của người dùng nằm trong `runtime/capcut-cache/` của thư mục dữ liệu. `TEMPLATE_STUDIO_CAPCUT_CACHE` cho phép chỉ định cache riêng.
 
 Lần đầu dùng bản mặc định TikTok, cấu hình hiện tại và video chưa xuất được chuyển sang khung 9:16, giữ các thông số hiệu ứng, âm thanh, tốc độ và vị trí đã chỉnh. `production-before-tiktok.json` giữ bản sao trước khi chuyển. Cấu hình của video hoàn tất và các preset tự lưu không bị ghi đè. Cấu hình đối chiếu 3:4 được chọn sau đó vẫn giữ qua các lần mở app.
 
@@ -41,7 +41,7 @@ GUI thư viện Video-FX cũ vẫn mở được từ source bằng `python temp
 
 ## Updater
 
-App kiểm tra GitHub Releases khi mở, hoặc bấm **Cài đặt → Kiểm tra cập nhật → Cập nhật và mở lại**. Chỉ cập nhật lúc rảnh; kiểm tra SHA256 và cấu trúc ZIP trước khi thay EXE/thư viện. Giữ preset, queue, cache, runtime và video xuất. Helper giữ backup và phục hồi nếu bản mới không khởi động được; nhật ký nằm trong `.updates/` cạnh EXE.
+App tự kiểm tra GitHub Releases khi mở và mỗi 4 giờ. Nếu đang tải FFmpeg hoặc xuất video, việc kiểm tra được chờ tới lúc rảnh. Có bản mới sẽ hiện **Cập nhật app** ở màn hình chính; bấm để app tải, xác minh SHA256 và tự cài/mở lại. Cũng có thể kiểm tra thủ công trong **Cài đặt**. Giữ preset, queue, cache riêng, runtime và video xuất. Helper giữ backup và phục hồi nếu bản mới không khởi động được; nhật ký nằm trong `.updates/` cạnh EXE. Tài nguyên mặc định được cập nhật cùng app.
 
 EXE chưa ký Authenticode. SHA256 xác minh toàn vẹn gói tải xuống; nguồn phát hành cố định trong `template_studio/version.py`.
 
@@ -63,7 +63,7 @@ $env:PYTHONUTF8 = '1'
 .runtime/dev/Scripts/python.exe build_template.py
 ```
 
-QA local có GPU/cache: `python tools/qa_production.py`; GUI với preview thật: `python tools/capture_production.py`. Không commit `.runtime`, dữ liệu, cache, video hay binary FFmpeg. CI public kiểm tra GUI/preset/queue/updater và worker đóng gói; GPU/cache được kiểm định trên máy local.
+QA local có GPU: `python template_gui.py --check-gpu`; GUI với preview thật: `python tools/capture_production.py`. Không commit `.runtime`, dữ liệu, cache cá nhân, video hay binary FFmpeg. CI public kiểm tra GUI/preset/queue/updater, gói hiệu ứng và worker đóng gói; render GPU được kiểm định trên máy local. `tools/prepare_effect_assets.py` tái tạo gói 22 file từ cache nguồn khi cần cập nhật tài nguyên.
 
 Đầu ra build: `release/template-studio/TemplateStudio/TemplateStudio.exe` và ZIP/checksum cạnh đó. Engine chung nằm trong `template_studio/gpu`; CLI trong `CapCut_FFmpeg_Codex_Handoff/work` là wrapper tương thích.
 

@@ -1,6 +1,6 @@
 # Thành phần và giấy phép bên thứ ba
 
-Mã nguồn Template Studio do dự án cung cấp được cấp phép GPL-3.0-only; xem `LICENSE`. Không có quan hệ tài trợ hoặc liên kết chính thức với CapCut. Không chứa mã, LUT hoặc tài nguyên độc quyền của CapCut.
+Mã nguồn Beta Render do dự án cung cấp được cấp phép GPL-3.0-only; xem `LICENSE`. Tài nguyên bên thứ ba được ghi riêng bên dưới, không tự động thuộc giấy phép GPL của mã dự án. Không có quan hệ tài trợ hoặc liên kết chính thức với CapCut.
 
 | Thành phần | Phiên bản / nguồn | Giấy phép |
 | --- | --- | --- |
@@ -23,4 +23,4 @@ Catalog gồm 150 preset của Video-FX, nhiều preset dùng chung engine. Khô
 
 Frei0r, GL Transitions, FFmpeg GL Effects, FFmpeg Concat và Crazy Video Glitch Editor đã được xem xét, hiện chưa được đóng kèm hoặc gọi trong pipeline của bản này.
 
-Renderer GPU nhận shader/LUT từ cache local do người dùng cung cấp. Cache, model và video CapCut không được phân phối trong source hoặc ZIP EXE; mã adapter không cấp lại giấy phép cho tài nguyên bên ngoài. Thư mục cache được giữ trong dữ liệu người dùng khi cập nhật.
+Từ bản 1.2.0, `template_studio/assets/effects/` chứa bản sao tối thiểu 22 shader/LUT/texture của hai tài nguyên CapCut `7491138615477685505` và `7514206177195068689`, lấy từ gói cache người dùng cung cấp để app chạy mà không cần nhập thủ công. Manifest lưu SHA256 từng file. Giữ nguyên nội dung các tài nguyên; không kèm model, Lua, scene, project, video hay dữ liệu cá nhân. Các tài nguyên này không được cấp lại GPL bởi dự án; gói cache nguồn không kèm một giấy phép mã nguồn mở riêng cho chúng. Mã adapter và công cụ đóng gói không chuyển quyền sở hữu tài nguyên CapCut. Cache riêng của người dùng vẫn được giữ trong dữ liệu khi cập nhật.

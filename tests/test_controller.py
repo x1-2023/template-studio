@@ -22,6 +22,23 @@ class ControllerTests(unittest.TestCase):
             time.sleep(.01)
         self.assertFalse(controller.pool.active)
 
+    def test_auto_update_waits_for_startup_and_render_then_checks(self):
+        with tempfile.TemporaryDirectory() as folder, patch.dict(os.environ, {'TEMPLATE_STUDIO_HOME': folder}):
+            controller = Controller(Path.cwd(), Path(folder))
+            self.wait(controller)
+            with patch.object(controller, 'checkUpdates') as check:
+                controller._busy = True
+                controller.pollAutoUpdates()
+                check.assert_not_called()
+                self.assertEqual(controller._update_timer.interval(), 5000)
+                controller._busy = False
+                controller.pollAutoUpdates()
+                check.assert_called_once()
+                self.assertEqual(controller._update_timer.interval(), 4 * 60 * 60 * 1000)
+                controller._closing = True
+                controller.pollAutoUpdates()
+                self.assertFalse(controller._update_timer.isActive())
+
     def test_preview_draft_applies_atomically_and_persists(self):
         with tempfile.TemporaryDirectory() as temporary:
             home = Path(temporary)

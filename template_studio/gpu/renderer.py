@@ -1,4 +1,4 @@
-"""Renderer GPU nhiều pass; shader gốc được đọc tại chỗ từ cache của người dùng."""
+"""Renderer GPU nhiều pass; dùng tài nguyên đóng kèm hoặc cache tùy chọn."""
 
 import math
 import re

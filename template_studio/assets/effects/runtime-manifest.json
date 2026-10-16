@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "layout": "bundled-v1",
+  "resource_ids": [
+    "7491138615477685505",
+    "7514206177195068689"
+  ],
+  "files": {
+    "effect/effects/LumiBokehBlur/image/darkFilter.png": "cc6a9ef21a9896a271f99dd9dc16af6fd146b9d0f4b45d6451d63b81f1002910",
+    "effect/effects/LumiBokehBlur/image/noise.png": "c5acc5c9ce78a26fe24cf4bcc7b53022cd7724cf8b3b8954091ed90b626c6d50",
+    "effect/effects/LumiBokehBlur/xshader/gaussBlur0.xshader": "9db4e64f93d4063932ad355d26b499cb0e6c6eaf41f4936d31ae1d4933727234",
+    "effect/effects/LumiBokehBlur/xshader/gaussBlur1.xshader": "763c2e3a70d86a7feff636d3dba98e70838ef5339b3f4512fe9a8bd8426df93d",
+    "effect/effects/LumiBokehBlur/xshader/in2out.xshader": "a4cfa6961a2438eebddfc0ac4798a0e105a23b8003bd6691376b09ab58fbbf41",
+    "effect/effects/LumiBokehBlur/xshader/polygon.xshader": "73b031166545c92c7545f2c898a687ef678916ddeabcc35c0c5b92abeebafc08",
+    "effect/effects/LumiBokehBlur/xshader/shaderLib/shaderGLES/103fe4fa2cd41b88b7928e3c1e99a21c.frag": "1e8215c1e197daa5b1dfbee6c8c3a258a927a98a038a8fe47ed8d7a26b6ebbd7",
+    "effect/effects/LumiBokehBlur/xshader/shaderLib/shaderGLES/19a1f32b0e9dc0a9b2bb21c7d904b4d2.frag": "d7fe8dfe69496b881e69fe60e6fc648456d2a7eda7d48fb1709ab7647150f494",
+    "effect/effects/LumiBokehBlur/xshader/shaderLib/shaderGLES/62098be95c32361124a4da28939149f9.frag": "b1b576b5c4c3aeb096bc3ee087c6d2a0490db3b2e1ca6464bf1e81bce146e53e",
+    "effect/effects/LumiBokehBlur/xshader/shaderLib/shaderGLES/e59110e6ddde61cf6155d558258ba1be.frag": "d891b08ddd1fa844f83dcaa4a831f8c277ba1ba2e3cfe31e0e410372311ccc33",
+    "effect/effects/LumiLayer/xshader/layer.xshader": "177d6231c3eba0172852fd1fdddb6393fd037e4d55a607c12e952b5632dfb9ec",
+    "effect/effects/LumiLayer/xshader/shaderLib/shaderGLES/311011f458f3dd960d75dc31e1ae2f74.frag": "046d08e29661630421ed8791452b73cec9460225ce784cf1e3ff462b6b39a9a1",
+    "effect/effects/LumiOpticsCompensation/xshader/antiAliasing.xshader": "c3cd858869693ecae96f8d0555f7632d037aff8c47f9f2c877124dc02ecdb151",
+    "effect/effects/LumiOpticsCompensation/xshader/opticsCompensation.xshader": "9056d1c46d744c7f7956c66e65e1afe0fed52e89251c45326e60c8833cadbcf0",
+    "effect/effects/LumiOpticsCompensation/xshader/shaderLib/shaderGLES/65da8ec05222aefedb41932e01a70cdf.frag": "de5b811dd983912274941b20956855fd685f691df53716a46823db32a027f153",
+    "effect/effects/LumiOpticsCompensation/xshader/shaderLib/shaderGLES/fecff2914a81d9929af769cf03afda12.frag": "cd6c4cf446c98f9d4902ca9f2702ae4cfe55d0362a74d7e5b3c281d4051c60b5",
+    "effect/effects/LumiRadialBlur/xshader/radialBlurZoom.xshader": "845550e12b822a6b07b05d1d1901d5d1486a07fc74c0df7d0586603156c824ab",
+    "effect/effects/LumiRadialBlur/xshader/shaderLib/shaderGLES/078b41396c1521b926ec401d755e6e20.frag": "c8fddd41df189f97a88e639775cfa09c5682e5818be342a53cfc1a6e0b3e8547",
+    "tone/image/filter_bg.png": "d4aa3dab35a0703a4c290e710ccf661fddfcf9d673fc26d7f78140a9df7e3f05",
+    "tone/image/filter_skin.png": "543455d56376fb7f2fc623f948454238b3be9494157b955adaa8e8fcb55d04b3",
+    "tone/xshader/filter.frag": "da117da6149b7be61ac8903da73f6ff384b10a7f61973ad6feb7c2f519998b2f",
+    "tone/xshader/pass0.frag": "9009cacecb3da16ff72d157f6086c260eede3a982b1d63464ae378a133b36950"
+  }
+}
