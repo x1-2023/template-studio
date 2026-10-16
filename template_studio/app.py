@@ -38,12 +38,12 @@ class Controller(QObject):
         self.pool = TaskPool(self)
         self.pool.pool.setMaxThreadCount(1)
         self._busy, self._closing, self._preview, self._index = False, False, '', -1
-        self._notice = 'Thêm video để bắt đầu · Ctrl+O'
+        self._notice = 'Thêm video để bắt đầu.'
         self._hardware = 'Đang nhận diện phần cứng…'
         self._nvenc = False
         self._media_busy, self._media_ready = False, False
         self._update_busy, self._available_update, self._update_plan = False, None, None
-        self._update_notice = 'Kiểm tra bản mới trên GitHub'
+        self._update_notice = 'Chưa kiểm tra cập nhật.'
         self._library = [dict(entry) for entry in catalog()]
         self._library_candidate, self._library_preview = 'none', ''
         self._candidate_intensity, self._candidate_duration = 65, 0
@@ -84,10 +84,10 @@ class Controller(QObject):
         def ready(info):
             self._media_ready = True
             self.hardware_ready(info)
-            self.message('FFmpeg sẵn sàng · thêm video hoặc mở thư viện filter.')
+            self.message('FFmpeg đã sẵn sàng.')
         def failed(error):
             self._media_ready = False
-            self.message('Không chuẩn bị được FFmpeg: ' + error + ' · bấm Chuẩn bị FFmpeg để thử lại.')
+            self.message('Không cài được FFmpeg: ' + error)
         def finished():
             self._media_busy = False
             self.changed.emit()
@@ -214,11 +214,11 @@ class Controller(QObject):
         if self.busy:
             return
         self._update_busy = True
-        self._update_notice = 'Đang kiểm tra GitHub…'
+        self._update_notice = 'Đang kiểm tra cập nhật…'
         self.changed.emit()
         def ready(release):
             self._available_update = release
-            self._update_notice = ('Có bản ' + release['version'] if release else 'Bạn đang dùng bản mới nhất')
+            self._update_notice = ('Có phiên bản ' + release['version'] if release else 'Đang dùng bản mới nhất.')
             if release and not getattr(sys, 'frozen', False):
                 self._update_notice += ' · bản source cập nhật bằng Git'
         def failed(error):
@@ -459,7 +459,7 @@ class Controller(QObject):
     def stop(self):
         for task in tuple(self.pool.active):
             task.cancel.set()
-        self.message('Đang dừng… giữ các video đã hoàn tất.')
+        self.message('Đang dừng tác vụ…')
 
     @Slot(result=bool)
     def requestClose(self):

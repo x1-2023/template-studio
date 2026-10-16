@@ -36,13 +36,13 @@ BASE = dict(
 SYSTEM = [
     dict(
         id="pentagon-3x4",
-        name="Ngũ giác · 3:4",
+        name="Ngũ giác 3:4",
         description="Ngũ giác mở đầu · màu và nét · 1080 × 1440",
         config={},
     ),
     dict(
         id="pentagon-9x16",
-        name="Ngũ giác · 9:16",
+        name="Ngũ giác 9:16",
         description="Khung dọc · nền mờ · 1080 × 1920",
         config=dict(
             height=1920,
@@ -53,13 +53,13 @@ SYSTEM = [
     ),
     dict(
         id="color",
-        name="Màu và nét · 3:4",
+        name="Màu và nét 3:4",
         description="Màu và chi tiết · không có hiệu ứng mở đầu",
         config=dict(intro_enabled=False),
     ),
     dict(
         id="layout",
-        name="Chỉ bố cục · 9:16",
+        name="Nền mờ 9:16",
         description="Nền mờ · giữ màu gốc",
         config=dict(
             height=1920,
@@ -71,7 +71,7 @@ SYSTEM = [
     ),
     dict(
         id="reference",
-        name="Đối chiếu mẫu · 3:4",
+        name="Đối chiếu CapCut 3:4",
         description="Cấu hình video mẫu: lật ngang, tốc độ 1,02×",
         config=dict(flip=True, playback_rate=1.02),
     ),

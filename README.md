@@ -1,6 +1,6 @@
 # Template Studio
 
-Ứng dụng Windows xuất video hàng loạt bằng GPU. Luồng chính: **thả video/thư mục → chọn preset → bấm Chạy**. App nhớ preset và nơi lưu; mỗi video xuất thành một file, nguồn được giữ nguyên.
+Ứng dụng Windows xuất video hàng loạt bằng GPU. Luồng chính: **thêm video → chọn preset → Xuất video**. App nhớ preset và nơi lưu; mỗi video xuất thành một file, nguồn được giữ nguyên.
 
 Mã nguồn [công khai GPL-3.0-only](https://github.com/x1-2023/template-studio). Dự án độc lập; xem [giấy phép thành phần](THIRD_PARTY_NOTICES.md).
 
@@ -8,13 +8,13 @@ Mã nguồn [công khai GPL-3.0-only](https://github.com/x1-2023/template-studio
 
 1. Tải `TemplateStudio-windows-x64.zip` trong [GitHub Releases](https://github.com/x1-2023/template-studio/releases/latest), giải nén toàn bộ rồi chạy `TemplateStudio.exe`.
 2. Lần đầu app kiểm tra GPU/FFmpeg. Nếu thiếu FFmpeg, app tải runtime Gyan đã xác minh SHA256; sau đó dùng offline. Cần Windows 10/11 x64 và driver OpenGL 3.3 trở lên.
-3. Trong **Tài nguyên & cập nhật**, nhập cache effect từ RAR/thư mục local một lần. Bản EXE công khai không chứa shader/LUT hay video CapCut. Trong workspace phát triển, app tự nhận cache handoff đã có và sao chép vào dữ liệu riêng.
-4. Thêm video hoặc thư mục, chọn mẫu, bấm **Chạy**. Có thể xem thử trước bằng **Preview 3 giây**. **Đổi** để chọn thư mục xuất.
+3. Trong **Cài đặt**, nhập cache effect từ RAR/thư mục local một lần. Bản EXE công khai không chứa shader/LUT hay video CapCut. Trong workspace phát triển, app tự nhận cache handoff đã có và sao chép vào dữ liệu riêng.
+4. Thêm video hoặc thư mục, chọn mẫu, bấm **Xuất video**. Có thể xem thử trước bằng **Xem thử 3 giây**. **Chọn thư mục** để chọn thư mục xuất.
 
 ## Preset và cấu hình
 
 - Ngũ giác 3:4, ngũ giác 9:16, màu/nét, chỉ bố cục; mặc định tốc độ 1× và không tự lật ngang.
-- Preset **Đối chiếu mẫu** tái lập clip thử: 3:4, hflip, 1.02×. Đây là cấu hình riêng của clip tham chiếu.
+- Preset **Đối chiếu CapCut 3:4** tái lập clip thử: 3:4, hflip, 1.02×. Đây là cấu hình riêng của clip tham chiếu.
 - Profile Tiêu chuẩn 3:4 dùng H.264 VBR 9.65 Mb/s; Tiết kiệm dùng 60% bitrate đã chọn; Chất lượng cao dùng CQ18, dung lượng tùy nội dung. Preset 9:16 dùng 12 Mb/s đề xuất, chưa được chấm với source draft gốc.
 - Cột trái là danh sách video; khu vực cấu hình lớn ở giữa cho chỉnh tỷ lệ/độ phân giải, bitrate/encoder, scale/vị trí/nền mờ, intro, khẩu độ, màu, sharpen, hflip, tốc độ và audio. Các nhóm tự chuyển từ hai cột sang một cột khi thu nhỏ cửa sổ. Preview nằm bên phải. Lưu mẫu riêng, nhập/xuất JSON ngay dưới các nhóm cấu hình.
 - Shader chạy GPU; NVENC tăng tốc mã hóa. Chọn mã hóa CPU vẫn cần OpenGL cho shader.
@@ -23,9 +23,9 @@ Preview và xuất dùng cùng engine. Preview 540px giúp xem nhanh; chất lư
 
 ## Hàng đợi và dữ liệu
 
-Nhập tối đa 200 video; chạy một job/lần, hiện tiến độ và ETA. Một nguồn lỗi không chặn các file tiếp theo. Tick checkbox để chạy nhóm chọn. **Bỏ mục chọn** chỉ bỏ khỏi danh sách; **Ẩn đã xong** giữ nguyên file trên đĩa. **Chạy lại lỗi** đặt mục lỗi về hàng chờ; khi có checkbox chọn thì đặt các mục chọn về hàng chờ để xuất lại theo cấu hình hiện tại.
+Nhập tối đa 200 video; chạy một job/lần, hiện tiến độ và ETA. Một nguồn lỗi không chặn các file tiếp theo. Tick checkbox để chạy nhóm chọn. **Bỏ khỏi danh sách** chỉ bỏ khỏi danh sách; **Ẩn video đã xuất** giữ nguyên file trên đĩa. **Xuất lại** đặt mục lỗi về hàng chờ; khi có checkbox chọn thì đặt các mục chọn về hàng chờ để xuất lại theo cấu hình hiện tại.
 
-**Xong file thì dừng** hoàn tất video hiện tại; **Dừng ngay** hủy worker/FFmpeg và dọn partial của tác vụ. Mở lại app tiếp tục ở cấp file, không nối từ frame đang dở. Cấu hình của file đã hoàn tất được giữ khi đổi preset cho file đang chờ. Báo cáo JSON/CSV nằm cạnh video đầu ra; nhật ký worker có nút mở trong Thiết lập.
+**Dừng sau video này** hoàn tất video hiện tại; **Dừng** hủy worker/FFmpeg và dọn partial của tác vụ. Mở lại app tiếp tục ở cấp file, không nối từ frame đang dở. Cấu hình của file đã hoàn tất được giữ khi đổi preset cho file đang chờ. Báo cáo JSON/CSV nằm cạnh video đầu ra; nhật ký worker có nút mở trong Cài đặt.
 
 `production.json` lưu preset, cấu hình và hàng đợi mới; `session.json` của GUI cũ được giữ và sao lưu khi nhập sang giao diện mới. Dữ liệu mặc định trong `data/template-studio/` cạnh EXE; nếu không ghi được thì dùng `%LOCALAPPDATA%/TemplateStudio`. Có thể đặt `TEMPLATE_STUDIO_HOME`. Cache effect trong `runtime/capcut-cache/` của thư mục dữ liệu; `TEMPLATE_STUDIO_CAPCUT_CACHE` cho phép chỉ định cache để app nhập bản sao.
 
@@ -33,7 +33,7 @@ GUI thư viện Video-FX cũ vẫn mở được từ source bằng `python temp
 
 ## Updater
 
-App kiểm tra GitHub Releases khi mở, hoặc bấm **Tài nguyên & cập nhật → Kiểm tra cập nhật → Cài và khởi động lại**. Chỉ cập nhật lúc rảnh; kiểm tra SHA256 và cấu trúc ZIP trước khi thay EXE/thư viện. Giữ preset, queue, cache, runtime và video xuất. Helper giữ backup và phục hồi nếu bản mới không khởi động được; nhật ký nằm trong `.updates/` cạnh EXE.
+App kiểm tra GitHub Releases khi mở, hoặc bấm **Cài đặt → Kiểm tra cập nhật → Cập nhật và mở lại**. Chỉ cập nhật lúc rảnh; kiểm tra SHA256 và cấu trúc ZIP trước khi thay EXE/thư viện. Giữ preset, queue, cache, runtime và video xuất. Helper giữ backup và phục hồi nếu bản mới không khởi động được; nhật ký nằm trong `.updates/` cạnh EXE.
 
 EXE chưa ký Authenticode. SHA256 xác minh toàn vẹn gói tải xuống; nguồn phát hành cố định trong `template_studio/version.py`.
 

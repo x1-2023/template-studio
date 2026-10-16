@@ -217,9 +217,14 @@ class Production(QObject):
     def summary(self):
         done = sum(r["status"] == "Hoàn tất" for r in self._rows)
         errors = sum(r["status"] in ("Lỗi", "Thiếu nguồn") for r in self._rows)
-        return f"{len(self._rows)} video · {done} xong" + (
-            f" · {errors} lỗi" if errors else ""
-        )
+        if not self._rows:
+            return "Chưa có video"
+        parts = [f"{len(self._rows)} video"]
+        if done:
+            parts.append(f"{done} đã xuất")
+        if errors:
+            parts.append(f"{errors} lỗi")
+        return ", ".join(parts)
 
     @Property(float, notify=changed)
     def overall(self):
@@ -237,16 +242,14 @@ class Production(QObject):
             for r in self._rows
             if r["status"] != "Hoàn tất"
         )
+        if not duration:
+            return ""
         if self._config["quality"] == "high":
-            return "Chất lượng cao · dung lượng theo nội dung"
+            return "Dung lượng tùy nội dung video."
         bitrate = self._config["video_bitrate"] * (
             0.6 if self._config["quality"] == "small" else 1
         )
-        return (
-            f"Ước tính ~{duration * (bitrate + 0.192) * 1_000_000 / 8 / 1024**2:.0f} MiB còn lại"
-            if duration
-            else "Dung lượng sẽ hiện sau khi đọc video"
-        )
+        return f"Dung lượng xuất dự kiến: {duration * (bitrate + 0.192) * 1_000_000 / 8 / 1024**2:.0f} MiB"
 
     def preview_signature(self):
         return json.dumps(
@@ -304,12 +307,12 @@ class Production(QObject):
             self._cache = result["cache"]
             self._ready = bool(self._cache)
             self._runtime = (
-                "Sẵn sàng · " + self._gpu
+                "GPU: " + self._gpu
                 if self._ready
-                else "Cần nhập cache effect một lần trong Thiết lập."
+                else "Chưa có hiệu ứng. Mở Cài đặt để nhập gói CapCut."
             )
             self.host.message(
-                "Sẵn sàng · thả video vào rồi bấm Chạy."
+                ("Sẵn sàng xuất video." if self._rows else "Thêm video để bắt đầu.")
                 if self._ready
                 else self._runtime
             )
@@ -326,7 +329,7 @@ class Production(QObject):
         if self.host.busy:
             return
         path, _ = QFileDialog.getOpenFileName(
-            None, "Chọn RAR cache effect", "", "Cache effect (*.rar)"
+            None, "Chọn file hiệu ứng CapCut", "", "File RAR (*.rar)"
         )
         if path:
             self.install_assets(path)
@@ -335,20 +338,23 @@ class Production(QObject):
     def importAssetsFolder(self):
         if self.host.busy:
             return
-        path = QFileDialog.getExistingDirectory(
-            None, "Chọn thư mục chứa hai resource effect"
-        )
+        path = QFileDialog.getExistingDirectory(None, "Chọn thư mục hiệu ứng CapCut")
         if path:
             self.install_assets(path)
 
     def install_assets(self, path):
         self.host._busy = True
-        self.host.message("Đang nhập bản sao tài nguyên local…")
+        self.host.message("Đang nhập hiệu ứng…")
 
         def done(cache):
             self._cache = str(cache)
-            self._runtime = "Đã nhập cache; bấm Kiểm tra GPU."
             self._ready = bool(self._gpu)
+            self._runtime = (
+                "GPU: " + self._gpu
+                if self._ready
+                else "Đã nhập hiệu ứng. Bấm Kiểm tra GPU để tiếp tục."
+            )
+            self.host.message("Đã nhập hiệu ứng." if self._ready else self._runtime)
 
         self.pool.submit(
             lambda emit: import_cache(path, self.home),
@@ -534,7 +540,7 @@ class Production(QObject):
             self._rows.extend(rows)
             if self._index < 0 and self._rows:
                 self._index = 0
-            self.host.message(self.summary + " · bấm Chạy để xuất.")
+            self.host.message("Đã đọc thông tin video.")
 
         self.pool.submit(
             work, result=done, error=self.host.message, finished=self.finish
@@ -683,20 +689,22 @@ class Production(QObject):
         destination = folder / ("gpu-" + uuid.uuid4().hex + ".mp4")
         key = self.preview_signature()
         self.host._busy = True
-        self.host.message("Đang tạo preview 3 giây…")
+        self.host.message("Đang dựng bản xem thử…")
 
         def done(result):
             self._preview = QUrl.fromLocalFile(result["output"]).toString()
             self._preview_key = key
             self._mode = "result"
-            self.host.message("Preview sẵn sàng.")
+            self.host.message("Đã tạo bản xem thử.")
 
         self.pool.submit(
             lambda emit: run_worker(
                 self.root,
                 self.home,
                 self.request(source, destination, config, True, offset),
-                lambda p: emit(dict(notice=f"Preview · {p['percent']:.0f}%")),
+                lambda p: emit(
+                    dict(notice=f"Đang dựng bản xem thử: {p['percent']:.0f}%")
+                ),
             ),
             result=done,
             error=self.host.message,
@@ -857,7 +865,7 @@ class Production(QObject):
                 )
                 writer.writeheader()
                 writer.writerows(results)
-            return f"Đã xuất {done}/{len(pending)} video · {time.monotonic() - began:.0f}s · báo cáo trong thư mục xuất"
+            return f"Đã xuất {done}/{len(pending)} video trong {time.monotonic() - began:.0f} giây."
 
         self.pool.submit(
             work,
