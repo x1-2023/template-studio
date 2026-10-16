@@ -77,6 +77,7 @@ def main():
     version_file.write_text(str(version_info), encoding='utf-8')
     args = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean', '--onedir', '--windowed', '--noupx',
             '--version-file', str(version_file),
+            '--icon', str(ROOT / 'template_studio/assets/beta-render.ico'),
             '--name', 'TemplateStudio', '--distpath', str(dist), '--workpath', str(work), '--specpath', str(spec.parent),
             '--paths', str(ROOT), '--collect-submodules', 'template_studio', '--collect-submodules', 'offline_studio',
             '--collect-all', 'video_fx',
@@ -85,6 +86,7 @@ def main():
             '--exclude-module', 'PySide6.QtWebEngineCore', '--exclude-module', 'PySide6.QtWebEngineQuick',
             '--add-data', f'{ROOT / "template_studio/Main.qml"};template_studio',
             '--add-data', f'{ROOT / "template_studio/Production.qml"};template_studio',
+            '--add-data', f'{ROOT / "template_studio/assets"};template_studio/assets',
             '--add-data', f'{ROOT / "template_studio/apply_update.ps1"};template_studio',
             str(ROOT / 'template_studio/frozen_entry.py')]
     env = os.environ.copy()

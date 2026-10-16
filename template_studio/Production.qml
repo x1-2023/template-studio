@@ -205,6 +205,13 @@ ApplicationWindow {
         anchors.fill: parent; anchors.margins: 12; spacing: 12
         RowLayout {
             Layout.fillWidth: true
+            Image {
+                objectName: "appLogo"
+                source: "assets/beta-render.png"
+                Layout.preferredWidth: 48; Layout.preferredHeight: 48
+                fillMode: Image.PreserveAspectFit; mipmap: true
+                Accessible.name: "Logo Beta Render"
+            }
             ColumnLayout { spacing: 2
                 Label { text: "Beta Render"; color: ink; font.pixelSize: 24; font.bold: true }
                 Caption { text: "Xử lý video hàng loạt" }

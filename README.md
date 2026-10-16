@@ -1,8 +1,12 @@
 # Beta Render
 
+<img src="template_studio/assets/beta-render.png" alt="Logo Beta Render" width="96" height="96">
+
 Ứng dụng Windows xuất video hàng loạt bằng GPU. Luồng chính: **thêm video → chọn preset → Xuất video**. App nhớ preset và nơi lưu; mỗi video xuất thành một file, nguồn được giữ nguyên.
 
 Mã nguồn [công khai GPL-3.0-only](https://github.com/x1-2023/template-studio). Dự án độc lập; xem [giấy phép thành phần](THIRD_PARTY_NOTICES.md).
+
+[Logo gốc và các định dạng sử dụng trong ứng dụng](docs/brand/README.md).
 
 ## Dùng EXE
 

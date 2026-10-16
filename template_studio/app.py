@@ -8,7 +8,7 @@ import time
 import uuid
 from pathlib import Path
 from PySide6.QtCore import QObject, Property, Signal, Slot, QUrl, QTimer, QLockFile
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtGui import QDesktopServices, QIcon
 from PySide6.QtWidgets import QApplication, QFileDialog
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuick import QQuickWindow
@@ -494,8 +494,13 @@ def main(root, home):
         from .worker_client import run_worker
         run_worker(root,home,dict(action='health',structural=True,timeout=120))
     QQuickStyle.setStyle('Basic')
+    if os.name == 'nt':
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('BetaRender.Desktop')
     app = QApplication([])
     app.setApplicationName('Beta Render')
+    app.setApplicationVersion(VERSION)
+    app.setWindowIcon(QIcon(str(root / 'template_studio/assets/beta-render.ico')))
     lock = QLockFile(str(home / 'app.lock'))
     if not options.check and not lock.tryLock(0):
         raise RuntimeError('Beta Render đã mở. Hãy dùng cửa sổ hiện tại.')
@@ -545,7 +550,10 @@ def main(root, home):
                     errors.append('Không lưu được ảnh kiểm tra.')
             if not controller.mediaReady:
                 errors.append('FFmpeg chưa sẵn sàng.')
+            if app.windowIcon().isNull():
+                errors.append('Không nạp được biểu tượng Beta Render.')
             diagnostic = dict(ok=not errors, errors=errors, hardware=controller.hardware,
+                              iconReady=not app.windowIcon().isNull(),
                               mediaReady=controller.mediaReady, ffmpeg=binary('ffmpeg') if controller.mediaReady else '')
             atomic_json(home / 'check-result.json', diagnostic)
             print(json.dumps(diagnostic, ensure_ascii=False))

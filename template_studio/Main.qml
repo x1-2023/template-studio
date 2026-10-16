@@ -54,7 +54,10 @@ ApplicationWindow {
     header: Rectangle {
         height: 58; color: "#10212b"; border.color: border
         RowLayout { anchors.fill: parent; anchors.leftMargin: 20; anchors.rightMargin: 20; spacing: 20
-            Label { text: "✦  TEMPLATE STUDIO"; color: mint; font.pixelSize: 19; font.bold: true }
+            RowLayout { spacing: 10
+                Image { objectName: "appLogo"; source: "assets/beta-render.png"; Layout.preferredWidth: 36; Layout.preferredHeight: 36; fillMode: Image.PreserveAspectFit; mipmap: true; Accessible.name: "Logo Beta Render" }
+                Label { text: "Beta Render"; color: mint; font.pixelSize: 19; font.bold: true }
+            }
             Label { text: "Trong như pha lê · 9:16"; color: "#dce6eb"; font.pixelSize: 14 }
             Item { Layout.fillWidth: true }
             Label { text: studio.hardware; color: muted; font.pixelSize: 12; elide: Text.ElideRight; Layout.maximumWidth: 220 }
