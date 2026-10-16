@@ -32,12 +32,20 @@ jobs:
       - run: python -m ruff check template_studio template_gui.py build_template.py tools tests --select F
       - run: python -m unittest discover -s tests -v
       - run: python template_gui.py --check --library --capture .runtime/gallery.png
+      - run: python template_gui.py --check --capture .runtime/production.png
       - run: python build_template.py
       - name: Kiểm tra EXE đã đóng gói
         shell: pwsh
         run: |
           $app = Start-Process -FilePath release/template-studio/TemplateStudio/TemplateStudio.exe -ArgumentList '--check' -PassThru -Wait -WindowStyle Hidden
           if ($app.ExitCode -ne 0) { throw 'EXE không vượt qua kiểm tra khởi động.' }
+          $worker = Join-Path $env:TEMPLATE_STUDIO_HOME 'worker-ci'
+          New-Item -ItemType Directory -Force -Path $worker | Out-Null
+          @{action='health';structural=$true} | ConvertTo-Json | Set-Content (Join-Path $worker 'request.json') -Encoding utf8
+          $app = Start-Process -FilePath release/template-studio/TemplateStudio/TemplateStudio.exe -ArgumentList @('--render-worker','--request',(Join-Path $worker 'request.json')) -PassThru -Wait -WindowStyle Hidden
+          if ($app.ExitCode -ne 0) { throw 'Worker EXE không khởi động được.' }
+          $result = Get-Content (Join-Path $worker 'result.json') -Raw | ConvertFrom-Json
+          if (-not $result.ok) { throw 'Worker EXE báo lỗi.' }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: TemplateStudio-windows-x64

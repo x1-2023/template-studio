@@ -62,9 +62,11 @@ def main():
             '--name', 'TemplateStudio', '--distpath', str(dist), '--workpath', str(work), '--specpath', str(spec.parent),
             '--paths', str(ROOT), '--collect-submodules', 'template_studio', '--collect-submodules', 'offline_studio',
             '--collect-all', 'video_fx',
+            '--collect-all', 'moderngl', '--collect-all', 'glcontext',
             '--exclude-module', 'tkinter', '--exclude-module', 'PySide6.QtWebEngineWidgets',
             '--exclude-module', 'PySide6.QtWebEngineCore', '--exclude-module', 'PySide6.QtWebEngineQuick',
             '--add-data', f'{ROOT / "template_studio/Main.qml"};template_studio',
+            '--add-data', f'{ROOT / "template_studio/Production.qml"};template_studio',
             '--add-data', f'{ROOT / "template_studio/apply_update.ps1"};template_studio',
             str(ROOT / 'template_studio/frozen_entry.py')]
     env = os.environ.copy()

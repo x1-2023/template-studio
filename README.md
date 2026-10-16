@@ -1,69 +1,64 @@
 # Template Studio
 
-Ứng dụng Windows xử lý video dọc 9:16, nền mờ, hiệu ứng mở đầu mô phỏng pha lê và thư viện 150 preset Video-FX. Nhập tối đa 200 video, dùng chung cấu hình và xuất tuần tự; không ghi đè video nguồn.
+Ứng dụng Windows xuất video hàng loạt bằng GPU. Luồng chính: **thả video/thư mục → chọn preset → bấm Chạy**. App nhớ preset và nơi lưu; mỗi video xuất thành một file, nguồn được giữ nguyên.
 
-Mã nguồn công khai theo **GPL-3.0-only**. Dự án độc lập, không liên kết với CapCut. Xem [đánh giá và cải tiến](docs/REVIEW.md) và [giấy phép thành phần](THIRD_PARTY_NOTICES.md).
+Mã nguồn [công khai GPL-3.0-only](https://github.com/x1-2023/template-studio). Dự án độc lập; xem [giấy phép thành phần](THIRD_PARTY_NOTICES.md).
 
-## Dùng bản EXE
+## Dùng EXE
 
-1. Tải TemplateStudio-windows-x64.zip trong [GitHub Releases](https://github.com/x1-2023/template-studio/releases/latest).
-2. Giải nén toàn bộ thư mục và chạy TemplateStudio.exe; cần Windows 10/11 x64.
-3. Nếu máy chưa có FFmpeg, lần mở đầu app tải bản Gyan 7.1.1 trực tiếp từ nhà phát hành, kiểm tra SHA-256 và chuẩn bị runtime. Cần khoảng 600 MiB trống cho bước này. Sau đó xử lý video offline.
-4. Thêm video → **Thư viện filter** → chọn nhóm/tìm tên → chọn một mục → chỉnh cường độ/thời gian → **Preview video 8 giây** → **Áp dụng vào cấu hình** → **Xuất tất cả**.
+1. Tải `TemplateStudio-windows-x64.zip` trong [GitHub Releases](https://github.com/x1-2023/template-studio/releases/latest), giải nén toàn bộ rồi chạy `TemplateStudio.exe`.
+2. Lần đầu app kiểm tra GPU/FFmpeg. Nếu thiếu FFmpeg, app tải runtime Gyan đã xác minh SHA256; sau đó dùng offline. Cần Windows 10/11 x64 và driver OpenGL 3.3 trở lên.
+3. Trong **Thiết lập**, nhập cache effect từ RAR/thư mục local một lần. Bản EXE công khai không chứa shader/LUT hay video CapCut. Trong workspace phát triển, app tự nhận cache handoff đã có và sao chép vào dữ liệu riêng.
+4. Thêm video hoặc thư mục, chọn mẫu, bấm **Chạy**. Có thể xem thử trước bằng **Preview 3 giây**. **Đổi** để chọn thư mục xuất.
 
-Double click một mục để áp dụng nhanh. Thumbnail dùng cường độ 65%; tạo lại thumbnail để lấy hình từ video đang chọn. Nếu chưa thêm video, thư viện dùng ảnh mẫu. Thay đổi bản nháp trong thư viện chưa đổi cấu hình xuất cho đến khi áp dụng.
+## Preset và cấu hình
 
-Video-FX có các nhóm glitch, VHS, màu điện ảnh, camera/ống kính, ánh sáng/hạt/thời tiết và nghệ thuật. 150 tên preset dùng chung các engine; hiện chọn một filter tại một thời điểm. Các filter xử lý CPU; NVENC hỗ trợ phần mã hóa nếu GPU dùng được.
+- Ngũ giác 3:4, ngũ giác 9:16, màu/nét, chỉ bố cục; mặc định tốc độ 1× và không tự lật ngang.
+- Preset **Đối chiếu mẫu** tái lập clip thử: 3:4, hflip, 1.02×. Đây là cấu hình riêng của clip tham chiếu.
+- Profile Tiêu chuẩn 3:4 dùng H.264 VBR 9.65 Mb/s; Tiết kiệm dùng 60% bitrate đã chọn; Chất lượng cao dùng CQ18, dung lượng tùy nội dung. Preset 9:16 dùng 12 Mb/s đề xuất, chưa được chấm với source draft gốc.
+- Thiết lập cho chỉnh tỷ lệ/độ phân giải, bitrate/encoder, scale/vị trí/nền mờ, intro, khẩu độ, màu, sharpen, hflip, tốc độ và audio. Lưu mẫu riêng, nhập/xuất JSON.
+- Shader chạy GPU; NVENC tăng tốc mã hóa. Chọn mã hóa CPU vẫn cần OpenGL cho shader.
 
-Hiệu ứng pha lê hiện là mô phỏng PNG/blur/fade, **chưa khớp chính xác effect CapCut trong video tham chiếu**.
+Preview và xuất dùng cùng engine. Preview 540px giúp xem nhanh; chất lượng ở kích thước full có thể khác do nội suy và sharpen phụ thuộc kích thước. Xem [báo cáo port GPU](CapCut_FFmpeg_Codex_Handoff/work/REPORT.md) và [đối chiếu dung lượng](CapCut_FFmpeg_Codex_Handoff/work/ENCODING_REPORT.md). Không tuyên bố tái tạo CapCut 1:1; chưa có model segmentation/stabilization/HDR gốc.
 
-## CLI GPU cho cache effect local
+## Hàng đợi và dữ liệu
 
-Đã có [bản port OpenGL chạy offline](CapCut_FFmpeg_Codex_Handoff/work/README.md) cho effect ngũ giác và filter từ cache người dùng, hỗ trợ preview, batch, NVENC, preset 3:4/9:16 và skin mask ngoài. CLI hoạt động độc lập với GUI/EXE hiện tại. [Báo cáo thực nghiệm](CapCut_FFmpeg_Codex_Handoff/work/REPORT.md) ghi metric, benchmark và phần còn thiếu; không tuyên bố tái tạo CapCut 1:1. Repository công khai mã port do dự án viết; người dùng tự cung cấp cache, không phân phối kèm shader/LUT hay video của bên khác.
+Nhập tối đa 200 video; chạy một job/lần, hiện tiến độ và ETA. Một nguồn lỗi không chặn các file tiếp theo. Tick checkbox để chạy nhóm chọn. **Bỏ mục chọn** chỉ bỏ khỏi danh sách; **Ẩn đã xong** giữ nguyên file trên đĩa. **Chạy lại lỗi** đặt mục lỗi về hàng chờ; khi có checkbox chọn thì đặt các mục chọn về hàng chờ để xuất lại theo cấu hình hiện tại.
 
-## Dữ liệu và cập nhật
+**Xong file thì dừng** hoàn tất video hiện tại; **Dừng ngay** hủy worker/FFmpeg và dọn partial của tác vụ. Mở lại app tiếp tục ở cấp file, không nối từ frame đang dở. Cấu hình của file đã hoàn tất được giữ khi đổi preset cho file đang chờ. Báo cáo JSON/CSV nằm cạnh video đầu ra; nhật ký worker có nút mở trong Thiết lập.
 
-- Dữ liệu mặc định: data/template-studio/ cạnh EXE. Nếu không ghi được, app dùng %LOCALAPPDATA%/TemplateStudio. Có thể chỉ định bằng TEMPLATE_STUDIO_HOME.
-- session.json lưu cấu hình, hàng đợi và thư mục xuất; video xuất mặc định trong exports/ của thư mục dữ liệu.
-- Bản EXE kiểm tra GitHub Releases khi mở app; cũng có nút **Kiểm tra cập nhật**.
-- Khi có bản mới: **Cài và khởi động lại**. App chỉ cập nhật khi không có tác vụ đang chạy, xác minh SHA-256 do GitHub công bố và kiểm tra cấu trúc ZIP trước khi thay file.
-- Updater giữ cấu hình, video xuất và runtime FFmpeg. Nếu bản mới không báo khởi động thành công, helper phục hồi bản cũ.
-- Nhật ký và bản sao phục hồi: .updates/ cạnh EXE. Staging cùng ổ với app, kể cả khi dữ liệu ở ổ khác. Có thể xóa các thư mục cập nhật cũ khi đã xác nhận app chạy ổn để thu hồi dung lượng.
-- EXE chưa ký Authenticode. SHA-256 bảo vệ toàn vẹn tải xuống; độ tin cậy phát hành phụ thuộc repository GitHub đã cấu hình.
+`production.json` lưu preset, cấu hình và hàng đợi mới; `session.json` của GUI cũ được giữ và sao lưu khi nhập sang giao diện mới. Dữ liệu mặc định trong `data/template-studio/` cạnh EXE; nếu không ghi được thì dùng `%LOCALAPPDATA%/TemplateStudio`. Có thể đặt `TEMPLATE_STUDIO_HOME`. Cache effect trong `runtime/capcut-cache/` của thư mục dữ liệu; `TEMPLATE_STUDIO_CAPCUT_CACHE` cho phép chỉ định cache để app nhập bản sao.
 
-## Chạy từ source
+GUI thư viện Video-FX cũ vẫn mở được từ source bằng `python template_gui.py --library`; không ghép 150 filter CPU vào chuỗi GPU mới trong phiên bản này.
 
-Khuyến nghị Python 3.14 x64 trên Windows. Launcher hỗ trợ Python 3.11 trở lên với dependency tương thích.
+## Updater
 
-    py -3.14 template_gui.py
+App kiểm tra GitHub Releases khi mở, hoặc bấm **Thiết lập → Kiểm tra cập nhật → Cài và khởi động lại**. Chỉ cập nhật lúc rảnh; kiểm tra SHA256 và cấu trúc ZIP trước khi thay EXE/thư viện. Giữ preset, queue, cache, runtime và video xuất. Helper giữ backup và phục hồi nếu bản mới không khởi động được; nhật ký nằm trong `.updates/` cạnh EXE.
 
-Hoặc chạy run_template.bat. Launcher tự chuẩn bị dependency cục bộ nếu thiếu. Để dùng môi trường riêng và các phiên bản đã kiểm thử:
+EXE chưa ký Authenticode. SHA256 xác minh toàn vẹn gói tải xuống; nguồn phát hành cố định trong `template_studio/version.py`.
 
-    py -3.14 -m venv .runtime/dev
-    .\.runtime\dev\Scripts\python.exe -m pip install -r requirements-lock.txt
-    .\.runtime\dev\Scripts\python.exe template_gui.py
+## Chạy source, kiểm thử và build
 
-Không commit dữ liệu cá nhân, video nguồn, cache hoặc binary FFmpeg. Repository chỉ chứa mã nguồn và cấu hình phát hành.
+```powershell
+py -3.14 -m venv .runtime/dev
+.runtime/dev/Scripts/python.exe -m pip install -r requirements-lock.txt
+.runtime/dev/Scripts/python.exe template_gui.py
+```
 
-## Kiểm thử và build EXE
+Hoặc dùng `run_template.bat`; launcher chuẩn bị các dependency còn thiếu. Bản build được kiểm thử bằng Python 3.14 x64.
 
-    $env:PYTHONUTF8 = "1"
-    .\.runtime\dev\Scripts\python.exe tools/prepare_media.py
-    .\.runtime\dev\Scripts\python.exe -m ruff check template_studio template_gui.py build_template.py tools tests --select F
-    .\.runtime\dev\Scripts\python.exe -m unittest discover -s tests -v
-    .\.runtime\dev\Scripts\python.exe template_gui.py --check --library --capture .runtime/gallery.png
-    .\.runtime\dev\Scripts\python.exe build_template.py
+```powershell
+$env:PYTHONUTF8 = '1'
+.runtime/dev/Scripts/python.exe -m ruff check template_studio template_gui.py build_template.py tools tests --select F
+.runtime/dev/Scripts/python.exe -m unittest discover -s tests -v
+.runtime/dev/Scripts/python.exe template_gui.py --check --capture .runtime/production.png
+.runtime/dev/Scripts/python.exe build_template.py
+```
 
-Kết quả trong release/template-studio/: thư mục portable, ZIP và file .sha256. Gói phát hành không chứa FFmpeg; app tự chuẩn bị nếu máy đích chưa có.
+QA local có GPU/cache: `python tools/qa_production.py`; GUI với preview thật: `python tools/capture_production.py`. Không commit `.runtime`, dữ liệu, cache, video hay binary FFmpeg. CI public kiểm tra GUI/preset/queue/updater và worker đóng gói; GPU/cache được kiểm định trên máy local.
 
-## Phát hành phiên bản mới
+Đầu ra build: `release/template-studio/TemplateStudio/TemplateStudio.exe` và ZIP/checksum cạnh đó. Engine chung nằm trong `template_studio/gpu`; CLI trong `CapCut_FFmpeg_Codex_Handoff/work` là wrapper tương thích.
 
-Sửa VERSION trong template_studio/version.py và cập nhật docs/RELEASE_NOTES.md, commit rồi đẩy tag khớp phiên bản:
+## Phát hành
 
-    git add template_studio/version.py docs/RELEASE_NOTES.md
-    git commit -m "Phát hành phiên bản 1.0.1"
-    git tag v1.0.1
-    git push origin main
-    git push origin v1.0.1
-
-Workflow Windows chạy kiểm thử, build, kiểm tra EXE rồi tải ZIP/checksum lên GitHub Releases. Không nhúng token vào app. Repository cố định cho updater nằm trong template_studio/version.py; nếu fork, đổi REPOSITORY trước khi build.
+Cập nhật `VERSION`, release notes, commit rồi đẩy tag `v<phiên bản>`. Workflow Windows kiểm tra, build, smoke test EXE/worker và public GitHub Release. Giữ tên asset `TemplateStudio-windows-x64.zip` để updater bản cũ nhận được bản mới. Không sửa asset của release đã công bố.

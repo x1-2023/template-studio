@@ -4,8 +4,10 @@ annotated-types==0.8.0
 colorama==0.4.6
 ffmpeg-python==0.2.0
 future==1.0.0
+glcontext==3.1.0
 markdown-it-py==4.2.0
 mdurl==0.1.2
+moderngl==5.13.0
 numpy==2.5.4
 opencv-python-headless==5.0.0.93
 packaging==26.3

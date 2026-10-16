@@ -1,4 +1,4 @@
 """Phiên bản và nguồn phát hành công khai cố định."""
-VERSION = '1.0.0'
+VERSION = '1.1.0'
 REPOSITORY = 'x1-2023/template-studio'
 ASSET_NAME = 'TemplateStudio-windows-x64.zip'

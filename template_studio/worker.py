@@ -1,0 +1,73 @@
+"""Worker không GUI, dùng cùng EXE để render và kiểm tra GPU."""
+
+import argparse
+import json
+import sys
+import traceback
+from pathlib import Path
+from types import SimpleNamespace
+
+from offline_studio.config import atomic_json
+
+
+def execute(request, emit):
+    if request["action"] == "health":
+        import glcontext  # noqa: F401
+        import moderngl
+
+        from .gpu.renderer import Renderer  # noqa: F401
+
+        if request.get("structural"):
+            return dict(ok=True, structural=True)
+        context = moderngl.create_standalone_context(require=330)
+        try:
+            return dict(ok=True, gpu=context.info["GL_RENDERER"])
+        finally:
+            context.release()
+    from .gpu.pipeline import render
+    from .presets import normalize
+
+    config = normalize(request["config"])
+    if request.get("preview"):
+        ratio = config["height"] / config["width"]
+        config.update(width=540, height=round(540 * ratio / 2) * 2)
+    args = SimpleNamespace(
+        seconds=request.get("seconds"),
+        overwrite=False,
+        encoder=request["encoder"],
+        video_bitrate=request.get("bitrate"),
+        skin=config["skin"],
+        skin_mask=None,
+        proxy=bool(request.get("preview")),
+        cache=Path(request["cache"]),
+        no_effect=not config["intro_enabled"],
+        no_filter=not config["filter_enabled"],
+        mute=config["mute"],
+        timeline_offset=request.get("offset", 0),
+    )
+    args.temporary = request.get("temporary")
+    return render(request["source"], request["output"], config, args, progress=emit)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--request", type=Path, required=True)
+    args = parser.parse_args()
+    folder = args.request.resolve().parent
+    with (folder / "worker.log").open("w", encoding="utf-8", buffering=1) as log:
+        sys.stdout = sys.stderr = log
+        try:
+            request = json.loads(args.request.read_text(encoding="utf-8-sig"))
+            result = execute(
+                request, lambda event: atomic_json(folder / "progress.json", event)
+            )
+            atomic_json(folder / "result.json", dict(ok=True, result=result))
+            return 0
+        except Exception as error:
+            traceback.print_exc()
+            atomic_json(folder / "result.json", dict(ok=False, error=str(error)))
+            return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

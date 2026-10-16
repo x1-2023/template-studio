@@ -6,6 +6,10 @@ from template_studio.paths import data_home
 
 
 if __name__ == '__main__':
+    if '--render-worker' in sys.argv:
+        sys.argv.remove('--render-worker')
+        from template_studio.worker import main as worker_main
+        raise SystemExit(worker_main())
     root = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parent))
     app_root = Path(sys.executable).resolve().parent
     home = data_home(app_root)

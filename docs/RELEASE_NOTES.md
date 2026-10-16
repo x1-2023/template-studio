@@ -1,7 +1,12 @@
-Thư viện 150 preset Video-FX theo 6 nhóm, có thumbnail, tìm kiếm, preview video và nút áp dụng vào cấu hình dùng chung. Chỉnh cường độ, áp dụng cả video hoặc chỉ đoạn đầu. Preview và xuất dùng chung pipeline; xử lý tuần tự từng frame để giới hạn RAM.
+Template Studio 1.1.0 có GUI sản xuất mới: thả video vào, chọn preset và bấm Chạy. Nhớ preset/thư mục xuất; cấu hình nâng cao nằm trong Thiết lập.
 
-Updater tích hợp GitHub Releases, xác minh SHA-256, chặn ZIP không an toàn, giữ bản sao trước khi thay app và phục hồi nếu bản mới không khởi động được. Dữ liệu và video xuất được giữ nguyên.
+- Engine OpenGL nhiều pass dùng chung với CLI, H.264 NVENC hoặc mã hóa CPU; preset ngũ giác 3:4/9:16, màu/nét, chỉ bố cục và đối chiếu mẫu. Preset sản xuất mặc định 1×, không tự lật ngang.
+- Preview 3 giây hoặc từ thời điểm tùy chọn, xem nguồn/kết quả và mở file xuất. Có VBR theo ngân sách bitrate hoặc CQ18; profile 3:4 tiêu chuẩn dùng 9.65 Mb/s.
+- Hàng đợi tối đa 200 video, chạy tuần tự, snapshot cấu hình theo file, giữ video đã hoàn tất, tiếp tục sau khi mở lại, chọn mục, chạy lại lỗi, dừng sau file hoặc dừng ngay. Có báo cáo JSON/CSV.
+- Preset riêng: lưu mẫu, nhập/xuất JSON, chỉnh bố cục/màu/nét/tốc độ/audio. Video nguồn không bị ghi đè; đầu ra dùng tên riêng.
+- Worker chạy trong process riêng của EXE, không cần Python. Cache effect nhập một lần từ RAR hoặc thư mục local; ZIP công khai không chứa shader/LUT CapCut. Sau khi chuẩn bị FFmpeg và cache, render offline. Cần driver OpenGL 3.3; mã hóa CPU không thay thế GPU shader.
+- Updater GitHub Releases giữ SHA256, kiểm tra ZIP, backup/rollback và bảo toàn dữ liệu/preset/hàng đợi/runtime/cache.
 
-Giải nén toàn bộ ZIP rồi chạy TemplateStudio.exe. Nếu máy chưa có FFmpeg, cần mạng ở lần đầu để tải runtime đã xác minh; những lần tiếp theo xử lý video offline.
+Đã kiểm thử local: batch 20 clip gồm 18 nguồn hợp lệ và 2 nguồn lỗi; Unicode/tên trùng; snapshot/khôi phục; preview; hủy không còn partial. Kiểm tra GPU shader, GUI, EXE và updater có bài kiểm thử riêng. 9:16 chưa đối chiếu source draft gốc; segmentation, stabilization và HDR của CapCut chưa được tái tạo chính xác.
 
-Mã nguồn GPL-3.0-only. Hiệu ứng pha lê hiện là mô phỏng, chưa khớp chính xác effect CapCut trong video tham chiếu. Bản EXE chưa ký Authenticode.
+Mã nguồn GPL-3.0-only. Bản Windows x64 portable: giải nén toàn bộ ZIP rồi chạy TemplateStudio.exe. EXE chưa ký Authenticode.

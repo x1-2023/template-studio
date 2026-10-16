@@ -25,6 +25,7 @@ from .version import VERSION
 from .updater import check_update, prepare_update, launch_update
 from .effects import catalog, thumbnails, effect_name
 from .media_setup import ensure_media
+from .production import Production
 
 
 class Controller(QObject):
@@ -60,7 +61,12 @@ class Controller(QObject):
             self._index = 0 if self._rows else -1
         except (OSError, ValueError, KeyError, TypeError):
             pass
+        self._production = Production(self)
         self.prepareMedia()
+
+    @Property(QObject, constant=True)
+    def production(self):
+        return self._production
 
     @Property(bool, notify=changed)
     def mediaReady(self):
@@ -278,6 +284,8 @@ class Controller(QObject):
 
     def save(self):
         atomic_json(self.home / 'session.json', dict(settings=self._settings, rows=self._rows, output=self._output))
+        if hasattr(self, '_production'):
+            self._production.save()
 
     def message(self, value):
         self._notice = value
@@ -455,7 +463,7 @@ class Controller(QObject):
 
     @Slot(result=bool)
     def requestClose(self):
-        if self._busy or self.pool.active:
+        if self.busy or self.pool.active:
             self._closing = True
             self.stop()
             QTimer.singleShot(200, self.close_when_ready)
@@ -480,6 +488,11 @@ def main(root, home):
     parser.add_argument('--update-token')
     parser.add_argument('--library', action='store_true')
     options = parser.parse_args()
+    # Kiểm tra module worker độc lập trước khi bắt đầu các bước thiết lập dài.
+    # Thiếu cache/driver không làm updater hiểu nhầm bản EXE bị hỏng.
+    if options.update_token:
+        from .worker_client import run_worker
+        run_worker(root,home,dict(action='health',structural=True,timeout=120))
     QQuickStyle.setStyle('Basic')
     app = QApplication([])
     app.setApplicationName('Template Studio')
@@ -492,22 +505,31 @@ def main(root, home):
             QTimer.singleShot(100, initial_inputs)
             return
         if options.input:
-            controller.add_paths(options.input)
+            (controller.add_paths if options.library else controller.production.add_paths)(options.input)
         if options.library:
             controller.refreshLibrary()
+        elif not options.check:
+            def runtime():
+                if controller.pool.active or controller.busy:
+                    QTimer.singleShot(200,runtime)
+                else:
+                    controller.production.checkRuntime()
+            QTimer.singleShot(200,runtime)
     QTimer.singleShot(0, initial_inputs)
     engine = QQmlApplicationEngine()
     errors = []
     engine.warnings.connect(lambda messages: errors.extend(m.toString() for m in messages))
     engine.rootContext().setContextProperty('studio', controller)
     engine.rootContext().setContextProperty('startInLibrary', options.library)
-    engine.load(QUrl.fromLocalFile(str(root / 'template_studio/Main.qml')))
+    engine.load(QUrl.fromLocalFile(str(root / ('template_studio/Main.qml' if options.library else 'template_studio/Production.qml'))))
     if not engine.rootObjects():
         raise RuntimeError('Không nạp được giao diện: ' + '\n'.join(errors))
     if options.update_token and re.fullmatch(r'[a-f0-9]{32}', options.update_token):
         job = Path(sys.executable).resolve().parent / '.updates' / options.update_token
         if job.is_dir():
-            QTimer.singleShot(1500, lambda: atomic_json(job / 'healthy.json', {'version': VERSION}) if not errors else None)
+            def report_healthy():
+                if not errors:atomic_json(job / 'healthy.json', {'version': VERSION})
+            QTimer.singleShot(1500,report_healthy)
     if getattr(sys, 'frozen', False) and not options.check:
         QTimer.singleShot(3500, controller.checkUpdates)
     if options.check:

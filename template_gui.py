@@ -43,7 +43,8 @@ def main():
         os.environ['QT_PLUGIN_PATH'] = str(pyside / 'plugins')
     if (pyside / 'qml').is_dir():
         os.environ['QML2_IMPORT_PATH'] = str(pyside / 'qml')
-    missing = [req for module, req in [('PySide6', 'PySide6==6.11.2'), ('PIL', 'Pillow==12.2.0')]
+    missing = [req for module, req in [('PySide6', 'PySide6==6.11.2'), ('PIL', 'Pillow==12.2.0'),
+                                      ('moderngl', 'moderngl==5.13.0'), ('glcontext', 'glcontext==3.1.0')]
                if importlib.util.find_spec(module) is None]
     if importlib.util.find_spec('video_fx') is None:
         missing.append('video-fx @ https://github.com/tomastimelock/video-fx/archive/751315965bc5e740b62136153ec4a9bf4e21ea20.zip')

@@ -43,6 +43,9 @@ class TransactionTests(unittest.TestCase):
         target.mkdir(parents=True)
         home.mkdir(parents=True)
         (home / 'session.json').write_text('cấu hình giữ nguyên', encoding='utf-8')
+        (home / 'production.json').write_text('preset và hàng đợi mới', encoding='utf-8')
+        (home / 'runtime/capcut-cache').mkdir(parents=True)
+        (home / 'runtime/capcut-cache/marker.txt').write_text('cache local giữ nguyên',encoding='utf-8')
         (target / 'exports').mkdir()
         (target / 'exports/video.mp4').write_bytes(b'original-export')
         (target / 'runtime').mkdir()
@@ -67,6 +70,8 @@ class TransactionTests(unittest.TestCase):
                                 creationflags=subprocess.CREATE_NO_WINDOW)
         parent.wait(timeout=5)
         self.assertEqual((home / 'session.json').read_text(encoding='utf-8'), 'cấu hình giữ nguyên')
+        self.assertEqual((home / 'production.json').read_text(encoding='utf-8'), 'preset và hàng đợi mới')
+        self.assertEqual((home / 'runtime/capcut-cache/marker.txt').read_text(encoding='utf-8'), 'cache local giữ nguyên')
         self.assertEqual((target / 'exports/video.mp4').read_bytes(), b'original-export')
         self.assertEqual((target / 'runtime/ffmpeg.exe').read_bytes(), b'original-media')
         return result, target, home, job

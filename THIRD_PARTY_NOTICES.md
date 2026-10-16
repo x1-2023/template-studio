@@ -8,6 +8,8 @@ Mã nguồn Template Studio do dự án cung cấp được cấp phép GPL-3.0-
 | PySide6 / Shiboken6 / Qt | 6.11.2, [mã nguồn Qt for Python](https://code.qt.io/cgit/pyside/pyside-setup.git/), [mã nguồn Qt](https://code.qt.io/cgit/qt/) | Các lựa chọn GPL/LGPL và thông báo riêng của Qt |
 | Pillow | 12.2.0, [mã nguồn](https://github.com/python-pillow/Pillow) | HPND và giấy phép của thư viện đi kèm |
 | NumPy | Xem requirements-lock.txt, [mã nguồn](https://github.com/numpy/numpy) | BSD và giấy phép của thư viện đi kèm |
+| ModernGL | 5.13.0, [mã nguồn](https://github.com/moderngl/moderngl) | MIT |
+| glcontext | 3.1.0, [mã nguồn](https://github.com/moderngl/glcontext) | MIT |
 | OpenCV headless | Xem requirements-lock.txt, [mã nguồn](https://github.com/opencv/opencv-python), [OpenCV](https://github.com/opencv/opencv) | Apache-2.0 và giấy phép của thư viện đi kèm |
 | Pydantic | Xem requirements-lock.txt, [mã nguồn](https://github.com/pydantic/pydantic) | MIT |
 | Python | 3.14 khi build bản Windows, [mã nguồn](https://www.python.org/downloads/source/) | PSF và giấy phép kèm theo |
@@ -20,3 +22,5 @@ FFmpeg không được commit vào Git và không nằm trong ZIP phát hành c�
 Catalog gồm 150 preset của Video-FX, nhiều preset dùng chung engine. Không đồng nghĩa có 150 thuật toán khác nhau. Adapter của Template Studio xử lý tuần tự từng frame, bổ sung trạng thái cho các preset giữ/đóng băng frame để không nạp toàn bộ video vào RAM. Không sửa source package upstream.
 
 Frei0r, GL Transitions, FFmpeg GL Effects, FFmpeg Concat và Crazy Video Glitch Editor đã được xem xét, hiện chưa được đóng kèm hoặc gọi trong pipeline của bản này.
+
+Renderer GPU nhận shader/LUT từ cache local do người dùng cung cấp. Cache, model và video CapCut không được phân phối trong source hoặc ZIP EXE; mã adapter không cấp lại giấy phép cho tài nguyên bên ngoài. Thư mục cache được giữ trong dữ liệu người dùng khi cập nhật.
