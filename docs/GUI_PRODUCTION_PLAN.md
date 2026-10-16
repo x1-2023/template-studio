@@ -45,11 +45,11 @@ Khu vực Cấu hình nâng cao mở khi cần; trang Thiết lập quản lý r
 
 | Preset | Thiết lập chính | Ghi chú |
 |---|---|---|
-| Lớp phủ ngũ giác lấp lánh · 3:4 | 1080×1440, 30 fps, hiệu ứng và Camera độ nét cao 2, playback 1× | Mặc định sản xuất; không tự lật ngang. Dựa trên renderer đã thử nhưng không tự áp thông số thời gian của clip mẫu |
-| Lớp phủ ngũ giác lấp lánh · 9:16 | 1080×1920, 30 fps, hiệu ứng và Camera độ nét cao 2, playback 1× | Kế thừa layout draft, cho sửa scale/offset; đánh dấu chưa đối chiếu source case A |
-| Camera độ nét cao 2 · 3:4 | Hiệu ứng mở đầu tắt, LUT/sharpen bật, playback 1× | Chọn 3:4 hoặc 9:16 |
-| Chỉ bố cục | Nền mờ và clip chính, intro/LUT tắt | Phù hợp tạo hàng loạt bản có cùng bố cục |
-| Đối chiếu mẫu 3:4 | hflip, playback 1.02×, scale 1.0513, VBR 9.65 Mb/s | Preset riêng để tái lập kết quả tham chiếu; không dùng làm mặc định cho video mới |
+| Ngũ giác + Camera độ nét cao 2 · 3:4 | 1080×1440, 30 fps, bật cả hiệu ứng và bộ lọc, playback 1× | Mặc định sản xuất; không tự lật ngang. Dựa trên renderer đã thử nhưng không tự áp thông số thời gian của clip mẫu |
+| Ngũ giác + Camera độ nét cao 2 · 9:16 | 1080×1920, 30 fps, bật cả hiệu ứng và bộ lọc, playback 1× | Kế thừa layout draft, cho sửa scale/offset; đánh dấu chưa đối chiếu source case A |
+| Chỉ Camera độ nét cao 2 · 3:4 | Hiệu ứng mở đầu tắt, LUT/sharpen bật, playback 1× | Chọn 3:4 hoặc 9:16 |
+| Chỉ nền mờ · 9:16 | Nền mờ và clip chính, intro/LUT tắt | Phù hợp tạo hàng loạt bản có cùng bố cục |
+| Theo video mẫu CapCut · 3:4 | Bật cả hai, hflip, playback 1.02×, scale 1.0513, VBR 9.65 Mb/s | Preset riêng để tái lập cặp video nguồn–CapCut; không dùng làm mặc định cho video mới |
 
 Ba lựa chọn xuất: **Tiết kiệm**, **Tiêu chuẩn**, **Chất lượng cao**. Tiêu chuẩn 3:4 dùng H.264 VBR 9.65 Mb/s đã đo; preset 9:16 cần thử bitrate riêng vì số pixel cao hơn. Tiết kiệm sẽ được chốt sau thử nén; Chất lượng cao dùng CQ18 và ghi rõ dung lượng thay đổi theo nội dung. H.264 mặc định; HEVC chỉ bật khi phát hiện encoder tương ứng và có kiểm thử. Không tự chuyển codec để đạt đúng một kích thước file.
 

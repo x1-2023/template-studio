@@ -13,8 +13,9 @@ Mã nguồn [công khai GPL-3.0-only](https://github.com/x1-2023/template-studio
 
 ## Preset và cấu hình
 
-- Hiệu ứng **Lớp phủ ngũ giác lấp lánh** (`7491138615477685505`) và bộ lọc **Camera độ nét cao 2** (`7514206177195068689`) dùng tên theo tài liệu bàn giao CapCut. Preset có hậu tố 3:4/9:16 để phân biệt khung hình; mặc định tốc độ 1× và không tự lật ngang. **Nền mờ 9:16** chỉ xử lý bố cục.
-- Preset **Lớp phủ ngũ giác lấp lánh · Đối chiếu 3:4** tái lập clip thử: 3:4, hflip, 1.02×. Đây là cấu hình riêng của clip tham chiếu.
+- Một preset lưu **chung hiệu ứng, bộ lọc, bố cục và thiết lập xuất**. Hai preset **Ngũ giác + Camera độ nét cao 2 · 3:4/9:16** bật đồng thời **Lớp phủ ngũ giác lấp lánh** (`7491138615477685505`) và **Camera độ nét cao 2** (`7514206177195068689`); mặc định tốc độ 1×, không lật ngang.
+- **Theo video mẫu CapCut · 3:4** cũng dùng cả hai, với bố cục 3:4, lật ngang và tốc độ 1.02× đã đối chiếu từ cặp nguồn–CapCut. Đây là cấu hình riêng của clip mẫu. Bản 9:16 dựa trên draft, chưa có cặp video gốc để đối chiếu.
+- **Chỉ Camera độ nét cao 2 · 3:4** tắt hiệu ứng mở đầu; **Chỉ nền mờ · 9:16** tắt cả hiệu ứng và bộ lọc. Mô tả ngay trong danh sách cho biết từng preset dùng những phần nào.
 - Profile Tiêu chuẩn 3:4 dùng H.264 VBR 9.65 Mb/s; Tiết kiệm dùng 60% bitrate đã chọn; Chất lượng cao dùng CQ18, dung lượng tùy nội dung. Preset 9:16 dùng 12 Mb/s đề xuất, chưa được chấm với source draft gốc.
 - Giao diện gồm **Nguồn video → Cấu hình chung → Xem trước**. Bấm **Chỉnh cấu hình…** để mở cửa sổ lớn với các nhóm thu gọn; chỉnh bằng thanh kéo hoặc nhập số. **Lưu thay đổi** áp dụng cho video chưa xuất; **Hủy** bỏ lần chỉnh đó. Preview nằm bên phải; lưu preset và nhập/xuất JSON ngay trong cột cấu hình.
 - Shader chạy GPU; NVENC tăng tốc mã hóa. Chọn mã hóa CPU vẫn cần OpenGL cho shader.

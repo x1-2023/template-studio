@@ -8,6 +8,14 @@ import re
 EFFECT_NAME = "Lớp phủ ngũ giác lấp lánh"  # 7491138615477685505
 FILTER_NAME = "Camera độ nét cao 2"  # 7514206177195068689
 
+PRESET_NAMES = {
+    "pentagon-3x4": f"Ngũ giác + {FILTER_NAME} · 3:4",
+    "pentagon-9x16": f"Ngũ giác + {FILTER_NAME} · 9:16",
+    "color": f"Chỉ {FILTER_NAME} · 3:4",
+    "layout": "Chỉ nền mờ · 9:16",
+    "reference": "Theo video mẫu CapCut · 3:4",
+}
+
 BASE = dict(
     width=1080,
     height=1440,
@@ -40,14 +48,14 @@ BASE = dict(
 SYSTEM = [
     dict(
         id="pentagon-3x4",
-        name=f"{EFFECT_NAME} · 3:4",
-        description=f"{FILTER_NAME} · 1080 × 1440",
+        name=PRESET_NAMES["pentagon-3x4"],
+        description=f"{EFFECT_NAME} + {FILTER_NAME}. Tốc độ 1×, không lật ngang.",
         config={},
     ),
     dict(
         id="pentagon-9x16",
-        name=f"{EFFECT_NAME} · 9:16",
-        description=f"{FILTER_NAME} · 1080 × 1920",
+        name=PRESET_NAMES["pentagon-9x16"],
+        description=f"{EFFECT_NAME} + {FILTER_NAME}. Bố cục theo draft 9:16, chưa có cặp video gốc để đối chiếu.",
         config=dict(
             height=1920,
             scale=0.8877484472,
@@ -57,14 +65,14 @@ SYSTEM = [
     ),
     dict(
         id="color",
-        name=f"{FILTER_NAME} · 3:4",
-        description="Màu và chi tiết · không có hiệu ứng mở đầu",
+        name=PRESET_NAMES["color"],
+        description="Chỉ bộ lọc màu và độ nét; tắt hiệu ứng ngũ giác mở đầu.",
         config=dict(intro_enabled=False),
     ),
     dict(
         id="layout",
-        name="Nền mờ 9:16",
-        description="Nền mờ · giữ màu gốc",
+        name=PRESET_NAMES["layout"],
+        description="Chỉ bố cục nền mờ; tắt hiệu ứng ngũ giác và bộ lọc Camera.",
         config=dict(
             height=1920,
             scale=0.8877484472,
@@ -75,18 +83,23 @@ SYSTEM = [
     ),
     dict(
         id="reference",
-        name=f"{EFFECT_NAME} · Đối chiếu 3:4",
-        description=f"{FILTER_NAME} · lật ngang · 1,02×",
+        name=PRESET_NAMES["reference"],
+        description=f"{EFFECT_NAME} + {FILTER_NAME}. Lật ngang, tốc độ 1,02× theo cặp nguồn–CapCut đã đối chiếu.",
         config=dict(flip=True, playback_rate=1.02),
     ),
 ]
 
 # Đổi nhãn snapshot cũ; giữ cấu hình và tên preset tự đặt.
 LEGACY_NAMES = {
-    "Ngũ giác 3:4": f"{EFFECT_NAME} · 3:4",
-    "Ngũ giác 9:16": f"{EFFECT_NAME} · 9:16",
-    "Màu và nét 3:4": f"{FILTER_NAME} · 3:4",
-    "Đối chiếu CapCut 3:4": f"{EFFECT_NAME} · Đối chiếu 3:4",
+    "Ngũ giác 3:4": PRESET_NAMES["pentagon-3x4"],
+    "Ngũ giác 9:16": PRESET_NAMES["pentagon-9x16"],
+    "Màu và nét 3:4": PRESET_NAMES["color"],
+    "Đối chiếu CapCut 3:4": PRESET_NAMES["reference"],
+    f"{EFFECT_NAME} · 3:4": PRESET_NAMES["pentagon-3x4"],
+    f"{EFFECT_NAME} · 9:16": PRESET_NAMES["pentagon-9x16"],
+    f"{FILTER_NAME} · 3:4": PRESET_NAMES["color"],
+    "Nền mờ 9:16": PRESET_NAMES["layout"],
+    f"{EFFECT_NAME} · Đối chiếu 3:4": PRESET_NAMES["reference"],
 }
 
 

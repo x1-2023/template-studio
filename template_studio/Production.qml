@@ -38,6 +38,7 @@ ApplicationWindow {
     }
     component Select: ComboBox {
         id: select
+        property bool showDescriptions: false
         implicitHeight: 38; leftPadding: 12; rightPadding: 32; font.pixelSize: 13
         ToolTip.visible: hovered && !popup.visible
         ToolTip.delay: 700; ToolTip.text: displayText
@@ -52,21 +53,21 @@ ApplicationWindow {
             required property var modelData
             required property int index
             property bool selected: select.currentIndex===index
-            width: select.popup.availableWidth; height: 38; leftPadding: 10; rightPadding: 10
+            width: select.popup.availableWidth; height: select.showDescriptions ? Math.max(58,contentItem.implicitHeight+18) : 38; leftPadding: 10; rightPadding: 10
             highlighted: select.highlightedIndex===index
             contentItem: Text {
                 objectName: "optionText"
-                text: select.textRole ? option.modelData[select.textRole] : option.modelData
+                text: (select.textRole ? option.modelData[select.textRole] : option.modelData)+(select.showDescriptions && option.modelData.description ? "\n"+option.modelData.description : "")
                 color: option.selected ? "#09221d" : "#edf2fc"
                 font.pixelSize: 13; font.weight: option.selected ? Font.DemiBold : Font.Normal
-                verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight
+                verticalAlignment: Text.AlignVCenter; wrapMode: select.showDescriptions ? Text.WordWrap : Text.NoWrap; elide: select.showDescriptions ? Text.ElideNone : Text.ElideRight
             }
             background: Rectangle { color: option.selected ? win.accent : (option.hovered || option.highlighted ? "#264857" : "transparent"); radius: 4 }
         }
         popup: Popup {
             objectName: select.objectName+"Popup"
             y: select.height+5; width: select.width; padding: 6
-            implicitHeight: Math.min(contentItem.implicitHeight+12,320)
+            implicitHeight: Math.min(contentItem.implicitHeight+12,select.showDescriptions ? Math.min(460,win.height-200) : 320)
             contentItem: ListView { clip: true; implicitHeight: contentHeight; model: select.popup.visible ? select.delegateModel : null; currentIndex: select.highlightedIndex; ScrollBar.vertical: Scroller {} }
             background: Rectangle { color: "#162b35"; border.color: "#476b7b"; radius: 8 }
         }
@@ -298,17 +299,17 @@ ApplicationWindow {
                     anchors.fill: parent; anchors.margins: 18; spacing: win.height<800 ? 10 : 16
                     Label { text: "02  Cấu hình chung"; color: ink; font.pixelSize: 18; font.bold: true }
                     Select {
-                        id: presets; objectName: "presetSelect"; Layout.fillWidth: true; enabled: !studio.busy
+                        id: presets; objectName: "presetSelect"; Layout.fillWidth: true; enabled: !studio.busy; showDescriptions: true
                         model: p.presets; textRole: "name"; valueRole: "id"
                         currentIndex: {for(var i=0;i<p.presets.length;i++)if(p.presets[i].id===p.presetId)return i;return 0}
                         onActivated: p.choosePreset(currentValue)
                     }
-                    Label { text: p.config.playback_rate.toFixed(2)+"× · "+(p.config.intro_enabled ? p.effectName : "Không có hiệu ứng mở đầu"); color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    Label { text: "Hiệu ứng: "+(p.config.intro_enabled ? p.effectName : "Tắt")+" · "+p.config.playback_rate.toFixed(2)+"×"; color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Label { text: p.config.width+" × "+p.config.height+" · "+p.config.fps+" FPS · "+(p.config.mute ? "Tắt âm thanh" : "Giữ âm thanh gốc"); color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Label { text: "H.264 · "+(p.config.quality==="high" ? "CQ18" : (p.config.video_bitrate*(p.config.quality==="small" ? .6 : 1)).toFixed(2)+" Mb/s")+" · "+(p.config.encoder==="auto" ? "Encoder tự động" : p.config.encoder==="h264_nvenc" ? "NVENC" : "CPU"); color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-                    Label { text: p.config.filter_enabled ? p.filterName+" · "+Math.round(p.config.filter_intensity*100)+"% · Độ nét "+Math.round(p.config.sharpness*100)+"%" : "Giữ màu gốc"; color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    Label { text: "Bộ lọc: "+(p.config.filter_enabled ? p.filterName+" · "+Math.round(p.config.filter_intensity*100)+"% · Độ nét "+Math.round(p.config.sharpness*100)+"%" : "Tắt"); color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Action { objectName: "editConfigButton"; text: "Chỉnh cấu hình…"; primary: true; Layout.fillWidth: true; topPadding: 12; bottomPadding: 12; enabled: !studio.busy; onClicked: configDialog.open() }
-                    Caption { text: "Tốc độ, bố cục, âm thanh, hiệu ứng và chất lượng xuất."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    Caption { text: "Một preset lưu chung hiệu ứng, bộ lọc và thiết lập xuất."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Caption { text: "Áp dụng cho các video chưa xuất."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Item { Layout.preferredHeight: 8 }
                     Label { text: "Lưu cấu hình thành preset"; color: ink; font.pixelSize: 13; font.bold: true }
