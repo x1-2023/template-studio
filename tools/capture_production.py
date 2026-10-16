@@ -20,6 +20,7 @@ DLL_DIRECTORY = (
     else None
 )
 from PySide6.QtCore import QMetaObject, QObject, QPoint, QPointF, Qt, QUrl  # noqa: E402
+from PySide6.QtMultimedia import QMediaPlayer  # noqa: E402
 from PySide6.QtQml import QQmlApplicationEngine  # noqa: E402
 from PySide6.QtQuick import QQuickItem, QQuickWindow  # noqa: E402
 from PySide6.QtTest import QTest  # noqa: E402
@@ -138,6 +139,25 @@ def main():
             assert ratio >= 4.5, (label.property("text"), ratio)
             ratios.append(ratio)
         return ratios
+
+    # Xem thử dừng sau một lượt; chỉ phát lại khi người dùng bấm Phát.
+    player = window.findChild(QObject, "previewPlayer")
+    assert player.property("loops") == 1
+    QMetaObject.invokeMethod(player, "stop")
+    QMetaObject.invokeMethod(player, "play")
+    QTest.qWait(300)
+    assert player.property("playbackState") == QMediaPlayer.PlayingState
+    QTest.qWait(3400)
+    assert player.property("playbackState") == QMediaPlayer.StoppedState
+    position = player.property("position")
+    QTest.qWait(600)
+    assert player.property("playbackState") == QMediaPlayer.StoppedState
+    assert player.property("position") == position
+    play = window.findChild(QQuickItem, "playPreviewButton")
+    click(play)
+    assert player.property("playbackState") == QMediaPlayer.PlayingState
+    click(play)
+    assert player.property("playbackState") == QMediaPlayer.PausedState
 
     # Kiểm tra cả model preset dạng object và danh sách chuỗi của combobox.
     preset = window.findChild(QQuickItem, "presetSelect")

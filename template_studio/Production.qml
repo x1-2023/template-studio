@@ -336,7 +336,7 @@ ApplicationWindow {
                     }
                     Rectangle {
                         Layout.fillWidth: true; Layout.fillHeight: true; color: "#080d15"; radius: 4; clip: true
-                        Video { id: previewPlayer; anchors.fill: parent; source: p.previewUrl; fillMode: VideoOutput.PreserveAspectFit; autoPlay: true; loops: MediaPlayer.Infinite; visible: p.previewUrl!=="" }
+                        Video { id: previewPlayer; objectName: "previewPlayer"; anchors.fill: parent; source: p.previewUrl; fillMode: VideoOutput.PreserveAspectFit; autoPlay: true; loops: 1; endOfStreamPolicy: VideoOutput.KeepLastFrame; visible: p.previewUrl!=="" }
                         Column { anchors.centerIn: parent; width: parent.width-32; spacing: 12; visible: !previewPlayer.visible
                             Text { text: "▶"; color: "#7789a3"; font.pixelSize: 48; width: parent.width; horizontalAlignment: Text.AlignHCenter }
                             Text { text: current ? "Bấm Xem thử để xem hiệu ứng." : "Chọn video trong danh sách."; color: muted; width: parent.width; wrapMode: Text.WordWrap; horizontalAlignment: Text.AlignHCenter }
@@ -346,7 +346,7 @@ ApplicationWindow {
                         }
                     }
                     RowLayout { Layout.fillWidth: true
-                        Action { text: previewPlayer.playbackState===MediaPlayer.PlayingState ? "Tạm dừng" : "Phát"; implicitWidth: 84; enabled: p.previewUrl!==""; onClicked: previewPlayer.playbackState===MediaPlayer.PlayingState ? previewPlayer.pause() : previewPlayer.play() }
+                        Action { objectName: "playPreviewButton"; text: previewPlayer.playbackState===MediaPlayer.PlayingState ? "Tạm dừng" : "Phát"; implicitWidth: 84; enabled: p.previewUrl!==""; onClicked: previewPlayer.playbackState===MediaPlayer.PlayingState ? previewPlayer.pause() : previewPlayer.play() }
                         Range { from: 0; to: Math.max(1,previewPlayer.duration); value: previewPlayer.position; onMoved: previewPlayer.seek(value); Layout.fillWidth: true; enabled: p.previewUrl!=="" }
                     }
                     Caption { text: win.timeText(previewPlayer.position)+" / "+win.timeText(previewPlayer.duration); Layout.alignment: Qt.AlignRight; visible: p.previewUrl!==""; font.pixelSize: 11 }
