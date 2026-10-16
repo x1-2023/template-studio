@@ -19,7 +19,7 @@ from offline_studio.config import atomic_json
 from offline_studio.process import probe
 
 from .assets_local import discover, import_cache, validate
-from .presets import catalog, normalize, safe_name
+from .presets import EFFECT_NAME, FILTER_NAME, LEGACY_NAMES, catalog, normalize, safe_name
 from .version import VERSION
 from .worker_client import run_worker
 
@@ -150,7 +150,22 @@ class Production(QObject):
 
     @Property("QVariantList", notify=changed)
     def rows(self):
-        return [{**r, "selected": r["id"] in self._selected} for r in self._rows]
+        custom_names = {p["name"] for p in self._custom}
+        items = []
+        for row in self._rows:
+            name = row.get("presetName", "")
+            if name not in custom_names:
+                name = LEGACY_NAMES.get(name, name)
+            items.append({**row, "presetName": name, "selected": row["id"] in self._selected})
+        return items
+
+    @Property(str, constant=True)
+    def effectName(self):
+        return EFFECT_NAME
+
+    @Property(str, constant=True)
+    def filterName(self):
+        return FILTER_NAME
 
     @Property("QVariantList", notify=changed)
     def presets(self):

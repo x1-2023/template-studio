@@ -39,6 +39,8 @@ ApplicationWindow {
     component Select: ComboBox {
         id: select
         implicitHeight: 38; leftPadding: 12; rightPadding: 32; font.pixelSize: 13
+        ToolTip.visible: hovered && !popup.visible
+        ToolTip.delay: 700; ToolTip.text: displayText
         contentItem: Text { objectName: select.objectName+"Text"; text: select.displayText; font: select.font; color: select.enabled ? win.ink : "#8290a5"; verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight }
         background: Rectangle { color: "#10232d"; border.color: select.visualFocus || select.popup.visible ? win.accent : (select.hovered ? "#63758e" : "#3c5966"); radius: 6; opacity: select.enabled ? 1 : .5 }
         indicator: Canvas {
@@ -261,7 +263,10 @@ ApplicationWindow {
                                                 MouseArea { id: nameMouse; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
                                             }
                                             Caption { text: modelData.meta; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
-                                            Caption { text: modelData.presetName; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
+                                            Caption { text: modelData.presetName; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true
+                                                ToolTip.visible: presetMouse.containsMouse; ToolTip.text: text
+                                                MouseArea { id: presetMouse; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
+                                            }
                                         }
                                     }
                                     RowLayout { Layout.fillWidth: true
@@ -290,7 +295,7 @@ ApplicationWindow {
                 Layout.fillWidth: true; Layout.minimumWidth: 420; Layout.fillHeight: true
                 color: "#192328"; radius: 5; border.color: "#34474f"
                 ColumnLayout {
-                    anchors.fill: parent; anchors.margins: 18; spacing: 16
+                    anchors.fill: parent; anchors.margins: 18; spacing: win.height<800 ? 10 : 16
                     Label { text: "02  Cấu hình chung"; color: ink; font.pixelSize: 18; font.bold: true }
                     Select {
                         id: presets; objectName: "presetSelect"; Layout.fillWidth: true; enabled: !studio.busy
@@ -298,10 +303,10 @@ ApplicationWindow {
                         currentIndex: {for(var i=0;i<p.presets.length;i++)if(p.presets[i].id===p.presetId)return i;return 0}
                         onActivated: p.choosePreset(currentValue)
                     }
-                    Label { text: p.config.playback_rate.toFixed(2)+"× · "+(p.config.intro_enabled ? "Ngũ giác mở đầu" : "Không có hiệu ứng mở đầu"); color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    Label { text: p.config.playback_rate.toFixed(2)+"× · "+(p.config.intro_enabled ? p.effectName : "Không có hiệu ứng mở đầu"); color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Label { text: p.config.width+" × "+p.config.height+" · "+p.config.fps+" FPS · "+(p.config.mute ? "Tắt âm thanh" : "Giữ âm thanh gốc"); color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Label { text: "H.264 · "+(p.config.quality==="high" ? "CQ18" : (p.config.video_bitrate*(p.config.quality==="small" ? .6 : 1)).toFixed(2)+" Mb/s")+" · "+(p.config.encoder==="auto" ? "Encoder tự động" : p.config.encoder==="h264_nvenc" ? "NVENC" : "CPU"); color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-                    Label { text: p.config.filter_enabled ? "Màu "+Math.round(p.config.filter_intensity*100)+"% · Độ nét "+Math.round(p.config.sharpness*100)+"%" : "Giữ màu gốc"; color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    Label { text: p.config.filter_enabled ? p.filterName+" · "+Math.round(p.config.filter_intensity*100)+"% · Độ nét "+Math.round(p.config.sharpness*100)+"%" : "Giữ màu gốc"; color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Action { objectName: "editConfigButton"; text: "Chỉnh cấu hình…"; primary: true; Layout.fillWidth: true; topPadding: 12; bottomPadding: 12; enabled: !studio.busy; onClicked: configDialog.open() }
                     Caption { text: "Tốc độ, bố cục, âm thanh, hiệu ứng và chất lượng xuất."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Caption { text: "Áp dụng cho các video chưa xuất."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
@@ -311,7 +316,7 @@ ApplicationWindow {
                         Field { id: presetName; placeholderText: "Tên preset"; Layout.fillWidth: true }
                         Action { text: "Lưu preset"; enabled: !studio.busy && presetName.text.trim()!==""; onClicked: {p.savePreset(presetName.text);presetName.clear()} }
                     }
-                    RowLayout { Layout.fillWidth: true
+                    RowLayout { objectName: "presetActions"; Layout.fillWidth: true
                         Action { text: "Nhập preset"; enabled: !studio.busy; onClicked: p.importPreset() }
                         Action { text: "Xuất preset"; enabled: !studio.busy; onClicked: p.exportPreset() }
                         Item { Layout.fillWidth: true }
@@ -430,13 +435,13 @@ ApplicationWindow {
                         Check { text: "Lật ngang"; checked: configDialog.draft.flip; enabled: !studio.busy; onClicked: configDialog.edit("flip",checked) }
                         Check { text: "Giữ âm thanh gốc"; checked: !configDialog.draft.mute; enabled: !studio.busy; onClicked: configDialog.edit("mute",!checked) }
                     }
-                    FoldSection { objectName: "introSection"; title: "Hiệu ứng mở đầu"; expanded: true
-                        Check { objectName: "introCheck"; text: "Bật hiệu ứng ngũ giác"; checked: configDialog.draft.intro_enabled; enabled: !studio.busy; onClicked: configDialog.edit("intro_enabled",checked) }
+                    FoldSection { objectName: "introSection"; title: p.effectName; expanded: true
+                        Check { objectName: "introCheck"; text: "Bật hiệu ứng"; checked: configDialog.draft.intro_enabled; enabled: !studio.busy; onClicked: configDialog.edit("intro_enabled",checked) }
                         SettingRow { label: "Thời lượng"; setting: "effect_duration"; low: 0; high: 8; decimals: 2; unit: "s" }
                         SettingRow { label: "Chuyển động"; setting: "effect_slider"; factor: 100; unit: "%" }
                         SettingRow { label: "Cỡ bokeh"; setting: "bokeh_size"; low: 0; high: 1.5; factor: 100; unit: "%" }
                     }
-                    FoldSection { objectName: "colorSection"; title: "Điều chỉnh màu sắc"
+                    FoldSection { objectName: "colorSection"; title: p.filterName
                         Check { text: "Bật bộ lọc"; checked: configDialog.draft.filter_enabled; enabled: !studio.busy; onClicked: configDialog.edit("filter_enabled",checked) }
                         SettingRow { label: "Độ đậm màu"; setting: "filter_intensity"; factor: 100; unit: "%" }
                         SettingRow { label: "Độ nét"; setting: "sharpness"; factor: 100; unit: "%" }

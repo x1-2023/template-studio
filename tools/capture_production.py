@@ -251,6 +251,8 @@ def main():
         assert sizes[1] > sizes[0], sizes
         assert all(positions[i] + sizes[i] < positions[i + 1] for i in range(2))
         assert positions[2] + sizes[2] <= window.width() - 11
+        actions = window.findChild(QQuickItem, "presetActions")
+        assert actions.mapToScene(QPointF(0, actions.height())).y() <= panels[1].mapToScene(QPointF(0, panels[1].height())).y() - 14
         capture(name)
         click(window.findChild(QQuickItem, "editConfigButton"))
         assert dialog.property("height") <= height - 49

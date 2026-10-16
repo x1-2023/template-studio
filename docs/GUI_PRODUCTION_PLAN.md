@@ -45,9 +45,9 @@ Khu vực Cấu hình nâng cao mở khi cần; trang Thiết lập quản lý r
 
 | Preset | Thiết lập chính | Ghi chú |
 |---|---|---|
-| Ngũ giác 3:4 | 1080×1440, 30 fps, intro ngũ giác và LUT, playback 1× | Mặc định sản xuất; không tự lật ngang. Dựa trên renderer đã thử nhưng không tự áp thông số thời gian của clip mẫu |
-| Ngũ giác 9:16 | 1080×1920, 30 fps, intro/LUT, playback 1× | Kế thừa layout draft, cho sửa scale/offset; đánh dấu chưa đối chiếu source case A |
-| Màu và nét | Intro tắt, LUT/sharpen bật, playback 1× | Chọn 3:4 hoặc 9:16 |
+| Lớp phủ ngũ giác lấp lánh · 3:4 | 1080×1440, 30 fps, hiệu ứng và Camera độ nét cao 2, playback 1× | Mặc định sản xuất; không tự lật ngang. Dựa trên renderer đã thử nhưng không tự áp thông số thời gian của clip mẫu |
+| Lớp phủ ngũ giác lấp lánh · 9:16 | 1080×1920, 30 fps, hiệu ứng và Camera độ nét cao 2, playback 1× | Kế thừa layout draft, cho sửa scale/offset; đánh dấu chưa đối chiếu source case A |
+| Camera độ nét cao 2 · 3:4 | Hiệu ứng mở đầu tắt, LUT/sharpen bật, playback 1× | Chọn 3:4 hoặc 9:16 |
 | Chỉ bố cục | Nền mờ và clip chính, intro/LUT tắt | Phù hợp tạo hàng loạt bản có cùng bố cục |
 | Đối chiếu mẫu 3:4 | hflip, playback 1.02×, scale 1.0513, VBR 9.65 Mb/s | Preset riêng để tái lập kết quả tham chiếu; không dùng làm mặc định cho video mới |
 

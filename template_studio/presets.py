@@ -4,6 +4,10 @@ import copy
 import math
 import re
 
+# Tên và resource đối chiếu trong tài liệu bàn giao CapCut.
+EFFECT_NAME = "Lớp phủ ngũ giác lấp lánh"  # 7491138615477685505
+FILTER_NAME = "Camera độ nét cao 2"  # 7514206177195068689
+
 BASE = dict(
     width=1080,
     height=1440,
@@ -36,14 +40,14 @@ BASE = dict(
 SYSTEM = [
     dict(
         id="pentagon-3x4",
-        name="Ngũ giác 3:4",
-        description="Ngũ giác mở đầu · màu và nét · 1080 × 1440",
+        name=f"{EFFECT_NAME} · 3:4",
+        description=f"{FILTER_NAME} · 1080 × 1440",
         config={},
     ),
     dict(
         id="pentagon-9x16",
-        name="Ngũ giác 9:16",
-        description="Khung dọc · nền mờ · 1080 × 1920",
+        name=f"{EFFECT_NAME} · 9:16",
+        description=f"{FILTER_NAME} · 1080 × 1920",
         config=dict(
             height=1920,
             scale=0.8877484472,
@@ -53,7 +57,7 @@ SYSTEM = [
     ),
     dict(
         id="color",
-        name="Màu và nét 3:4",
+        name=f"{FILTER_NAME} · 3:4",
         description="Màu và chi tiết · không có hiệu ứng mở đầu",
         config=dict(intro_enabled=False),
     ),
@@ -71,11 +75,19 @@ SYSTEM = [
     ),
     dict(
         id="reference",
-        name="Đối chiếu CapCut 3:4",
-        description="Cấu hình video mẫu: lật ngang, tốc độ 1,02×",
+        name=f"{EFFECT_NAME} · Đối chiếu 3:4",
+        description=f"{FILTER_NAME} · lật ngang · 1,02×",
         config=dict(flip=True, playback_rate=1.02),
     ),
 ]
+
+# Đổi nhãn snapshot cũ; giữ cấu hình và tên preset tự đặt.
+LEGACY_NAMES = {
+    "Ngũ giác 3:4": f"{EFFECT_NAME} · 3:4",
+    "Ngũ giác 9:16": f"{EFFECT_NAME} · 9:16",
+    "Màu và nét 3:4": f"{FILTER_NAME} · 3:4",
+    "Đối chiếu CapCut 3:4": f"{EFFECT_NAME} · Đối chiếu 3:4",
+}
 
 
 def normalize(value):
