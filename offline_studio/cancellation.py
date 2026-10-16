@@ -3,7 +3,7 @@ import os
 import signal
 import subprocess
 import threading
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 
 
 class TaskCancelled(Exception):
@@ -121,4 +121,6 @@ def managed_process(*args, **kwargs):
             job.close()
         for stream in (process.stdin, process.stdout, process.stderr):
             if stream is not None:
-                stream.close()
+                # Lỗi flush/đóng pipe khi thu dọn không được che lỗi render gốc.
+                with suppress(OSError):
+                    stream.close()

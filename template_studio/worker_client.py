@@ -12,6 +12,12 @@ from offline_studio.config import atomic_json
 from offline_studio.process import NO_WINDOW
 
 
+class WorkerError(RuntimeError):
+    def __init__(self, message, folder):
+        super().__init__(message)
+        self.log_path = str(Path(folder) / "worker.log")
+
+
 def run_worker(root, home, request, progress=lambda event: None):
     folder = Path(home) / "cache/workers" / uuid.uuid4().hex
     folder.mkdir(parents=True)
@@ -20,7 +26,7 @@ def run_worker(root, home, request, progress=lambda event: None):
         request = {
             **request,
             "temporary": str(
-                output.with_name(output.stem + "." + folder.name + ".partial.mp4")
+                output.with_name(".beta-render-" + folder.name + ".partial.mp4")
             ),
         }
     atomic_json(folder / "request.json", request)
@@ -53,16 +59,13 @@ def run_worker(root, home, request, progress=lambda event: None):
                     if time.monotonic() - began > max(
                         120, request.get("timeout", 7200)
                     ):
-                        raise TimeoutError(
-                            "Worker vượt thời gian chờ; xem "
-                            + str(folder / "worker.log")
-                        )
+                        raise WorkerError("Render vượt thời gian chờ.", folder)
                     try:
                         data = (folder / "progress.json").read_text(encoding="utf-8")
                         if data != last:
                             progress(json.loads(data))
                             last = data
-                    except FileNotFoundError:
+                    except (FileNotFoundError, PermissionError):
                         pass
                     time.sleep(0.1)
                 check_cancelled()
@@ -71,15 +74,9 @@ def run_worker(root, home, request, progress=lambda event: None):
                         (folder / "result.json").read_text(encoding="utf-8")
                     )
                 except (OSError, ValueError) as error:
-                    raise RuntimeError(
-                        "Worker dừng bất thường. Nhật ký: " + str(folder)
-                    ) from error
+                    raise WorkerError("Worker dừng bất thường.", folder) from error
                 if process.returncode or not result.get("ok"):
-                    raise RuntimeError(
-                        result.get("error", "Worker thất bại")
-                        + " · Nhật ký: "
-                        + str(folder)
-                    )
+                    raise WorkerError(result.get("error", "Worker thất bại"), folder)
     finally:
         if request.get("temporary"):
             partial = Path(request["temporary"])

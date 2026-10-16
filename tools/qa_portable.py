@@ -147,7 +147,7 @@ def main():
         preset = next(p for p in catalog() if p["id"] == preset_id)
         job = folder / preset_id
         job.mkdir()
-        output = job / "video.mp4"
+        output = job / "exports/video.mp4"
         encoder = "h264_nvenc" if "NVENC" in first["hardware"] else "libx264"
         request = dict(
             action="render",
@@ -172,6 +172,8 @@ def main():
         result = read_json(job / "result.json")
         assert result["ok"], result
         stats = result["result"]
+        assert list(output.parent.iterdir()) == [output], "Thư mục xuất còn file kỹ thuật."
+        assert all((job / name).is_file() for name in ("decode.log", "encode.log", "render.json"))
         metadata = probe(media / "ffprobe.exe", output, offline)
         video = next(s for s in metadata["streams"] if s["codec_type"] == "video")
         assert (video["width"], video["height"]) == (1080, preset["config"]["height"])

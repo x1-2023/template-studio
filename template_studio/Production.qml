@@ -291,6 +291,7 @@ ApplicationWindow {
                         }
                     }
                     Caption { text: p.summary; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+                    Action { objectName: "errorLogButton"; text: "Nhật ký lỗi"; Layout.fillWidth: true; visible: p.currentIndex>=0 && p.currentIndex<p.rows.length && p.rows[p.currentIndex].status==="Lỗi"; onClicked: p.openErrorLog() }
                     Action { text: "Bỏ khỏi danh sách"; Layout.fillWidth: true; enabled: !studio.busy && p.rows.length>0; onClicked: p.removeSelected(); ToolTip.visible: hovered; ToolTip.text: "Bỏ mục đã chọn, giữ file trên máy." }
                     RowLayout { Layout.fillWidth: true; spacing: 8
                         Action { text: "Xuất lại"; Layout.fillWidth: true; leftPadding: 10; rightPadding: 10; font.pixelSize: 12; enabled: !studio.busy && p.rows.length>0; onClicked: p.retrySelected(); ToolTip.visible: hovered; ToolTip.text: "Xuất lại các mục đã chọn; nếu chưa chọn thì thử lại video lỗi." }

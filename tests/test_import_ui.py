@@ -128,6 +128,20 @@ class ImportUiTests(unittest.TestCase):
         QTest.keyClick(self.window, Qt.Key_Tab)
         self.wait()
 
+    def test_error_log_button_opens_selected_worker_log(self):
+        self.drop([self.source])
+        log = self.home / "cache/workers/test/worker.log"
+        log.parent.mkdir(parents=True)
+        log.write_text("loi-goc")
+        self.p._rows[0].update(status="Lỗi", detail="Lỗi gốc", errorLog=str(log))
+        self.p.changed.emit()
+        QTest.qWait(60)
+        button = self.window.findChild(QQuickItem, "errorLogButton")
+        self.assertTrue(button.isVisible())
+        with patch("template_studio.production.QDesktopServices.openUrl") as opened:
+            self.click("errorLogButton")
+        self.assertEqual(opened.call_args.args[0].toLocalFile(), str(log).replace("\\", "/"))
+
     def test_config_cancel_discards_draft_and_reopens_saved_values(self):
         original = self.p.config
         self.edit_speed("1.25")

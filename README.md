@@ -31,7 +31,9 @@ Preview và xuất dùng cùng engine. Preview 540px giúp xem nhanh; chất lư
 
 Nhập tối đa 200 video; chạy một job/lần, hiện tiến độ và ETA. Một nguồn lỗi không chặn các file tiếp theo. Tick checkbox để chạy nhóm chọn. **Bỏ khỏi danh sách** chỉ bỏ khỏi danh sách; **Ẩn video đã xuất** giữ nguyên file trên đĩa. **Xuất lại** đặt mục lỗi về hàng chờ; khi có checkbox chọn thì đặt các mục chọn về hàng chờ để xuất lại theo cấu hình hiện tại.
 
-**Dừng sau video này** hoàn tất video hiện tại; **Dừng** hủy worker/FFmpeg và dọn partial của tác vụ. Mở lại app tiếp tục ở cấp file, không nối từ frame đang dở. Cấu hình của file đã hoàn tất được giữ khi đổi preset cho file đang chờ. Báo cáo JSON/CSV nằm cạnh video đầu ra; nhật ký worker có nút mở trong Cài đặt.
+**Dừng sau video này** hoàn tất video hiện tại; **Dừng** hủy worker/FFmpeg và dọn partial của tác vụ. Mở lại app tiếp tục ở cấp file, không nối từ frame đang dở. Cấu hình của file đã hoàn tất được giữ khi đổi preset cho file đang chờ.
+
+Thư mục xuất chỉ nhận MP4. Log và thống kê của mỗi video nằm trong `data/template-studio/cache/workers/<mã tác vụ>/`; báo cáo lượt chạy JSON/CSV nằm trong `cache/workers/batches/`. Chọn video bị lỗi rồi bấm **Nhật ký lỗi** để mở log; **Cài đặt → Mở nhật ký** mở toàn bộ. Khi khởi động, app cất các log/báo cáo cũ đã nhận diện sang `cache/workers/archived-exports/`, giữ nguyên video và file không thuộc app. File đang khóa được giữ lại để thử ở lần mở sau.
 
 `production.json` lưu preset, cấu hình và hàng đợi mới; `session.json` của GUI cũ được giữ và sao lưu khi nhập sang giao diện mới. Dữ liệu mặc định trong `data/template-studio/` cạnh EXE; nếu không ghi được thì dùng `%LOCALAPPDATA%/TemplateStudio`. Có thể đặt `TEMPLATE_STUDIO_HOME`. Tài nguyên mặc định nằm trong `template_studio/assets/effects/` của gói app; cache tùy chọn của người dùng nằm trong `runtime/capcut-cache/` của thư mục dữ liệu. `TEMPLATE_STUDIO_CAPCUT_CACHE` cho phép chỉ định cache riêng.
 

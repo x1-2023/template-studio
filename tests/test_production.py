@@ -5,12 +5,14 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication
 
 from template_studio.presets import DEFAULT_PRESET_ID, catalog, main_catalog, normalize
 from template_studio.production import Production, fingerprint
+from template_studio.worker_client import WorkerError
 
 
 class Host(QObject):
@@ -169,3 +171,50 @@ class QueueTests(unittest.TestCase):
             self.assertNotEqual(first, fingerprint(source, normalize({"flip": True})))
             source.write_bytes(b"changed")
             self.assertNotEqual(first, fingerprint(source, normalize({})))
+
+    def test_batch_continues_after_error_and_keeps_reports_outside_exports(self):
+        with tempfile.TemporaryDirectory() as folder:
+            home = Path(folder)
+            source = home / "nguồn.mp4"
+            source.write_bytes(b"source")
+            host = Host(home)
+            host.mediaReady, host._nvenc, host._closing = True, True, False
+            p = Production(host)
+            p._ready, p._cache = True, "cache"
+            p._rows = [dict(
+                id=str(n), path=str(source), name=source.name, status="Chờ xử lý",
+                percent=0, detail="", result="", duration=3, meta="",
+                config=normalize({}), presetName="Mẫu",
+            ) for n in range(2)]
+            p._index = 0
+            log = home / "cache/workers/first/worker.log"
+            log.parent.mkdir(parents=True)
+            log.write_text("traceback")
+            calls = []
+
+            def worker(root, home, request, progress):
+                calls.append(request)
+                if len(calls) == 1:
+                    raise WorkerError("Lỗi gốc\nChi tiết dài", log.parent)
+                Path(request["output"]).write_bytes(b"video")
+                return dict(wall_seconds=1)
+
+            def submit(work, result, error, event, finished):
+                result(work(event))
+                finished()
+
+            from unittest.mock import Mock
+            p.pool = Mock()
+            p.pool.submit.side_effect = submit
+            with patch("template_studio.production.run_worker", side_effect=worker):
+                p.runBatch()
+            self.assertEqual(len(calls), 2)
+            self.assertEqual([r["status"] for r in p._rows], ["Lỗi", "Hoàn tất"])
+            self.assertEqual(p._rows[0]["detail"], "Lỗi gốc")
+            self.assertEqual(p._rows[0]["errorLog"], str(log))
+            self.assertEqual([file.suffix for file in (home / "exports").iterdir()], [".mp4"])
+            self.assertEqual(len(list((home / "cache/workers/batches").glob("*.json"))), 1)
+            self.assertEqual(len(list((home / "cache/workers/batches").glob("*.csv"))), 1)
+            with patch("template_studio.production.QDesktopServices.openUrl") as opened:
+                p.openErrorLog()
+            self.assertEqual(opened.call_args.args[0].toLocalFile(), str(log).replace("\\", "/"))

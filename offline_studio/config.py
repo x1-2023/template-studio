@@ -3,6 +3,8 @@ import copy
 import json
 import os
 import sys
+import tempfile
+import time
 from pathlib import Path
 
 ROOT = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parents[1]))
@@ -48,12 +50,32 @@ def normalize_recipe(value, effects=()):
 def atomic_json(path, value):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    pending = path.with_suffix('.tmp')
-    with pending.open('w', encoding='utf-8') as stream:
-        json.dump(value, stream, ensure_ascii=False, indent=2)
-        stream.flush()
-        os.fsync(stream.fileno())
-    os.replace(pending, path)
+    pending = None
+    try:
+        # Mỗi lần ghi có file riêng; GUI/worker không dùng chung một progress.tmp.
+        with tempfile.NamedTemporaryFile(
+            mode='w', encoding='utf-8', dir=path.parent,
+            prefix=f'.{path.name}.', suffix='.tmp', delete=False,
+        ) as stream:
+            pending = Path(stream.name)
+            json.dump(value, stream, ensure_ascii=False, indent=2)
+            stream.flush()
+            os.fsync(stream.fileno())
+        for attempt in range(6):
+            try:
+                os.replace(pending, path)
+                break
+            except PermissionError:
+                # Windows có thể giữ handle lúc GUI/antivirus đang đọc file đích.
+                if attempt == 5:
+                    raise
+                time.sleep(0.01 * (2 ** attempt))
+    finally:
+        if pending is not None:
+            try:
+                pending.unlink(missing_ok=True)
+            except OSError:
+                pass
 
 
 def effects():

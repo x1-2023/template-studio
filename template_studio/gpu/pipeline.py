@@ -87,13 +87,16 @@ def render(source, output, config, args, progress=lambda event: None):
     protected = {source}
     if args.skin_mask:
         protected.add(args.skin_mask.resolve())
-    sidecars = [
-        output.with_suffix(suffix)
-        for suffix in (".decode.log", ".encode.log", ".render.json")
-    ]
+    diagnostics = getattr(args, "diagnostics", None)
+    sidecars = (
+        [Path(diagnostics).resolve() / name for name in ("decode.log", "encode.log", "render.json")]
+        if diagnostics else
+        [output.with_suffix(suffix) for suffix in (".decode.log", ".encode.log", ".render.json")]
+    )
     if any(path.resolve() in protected for path in [output, *sidecars]):
         raise ValueError("Đầu ra hoặc file phụ trùng với nguồn/skin mask")
     output.parent.mkdir(parents=True, exist_ok=True)
+    sidecars[0].parent.mkdir(parents=True, exist_ok=True)
     info = probe(source)
     video = next(s for s in info["streams"] if s["codec_type"] == "video")
     audio = any(s["codec_type"] == "audio" for s in info["streams"]) and not getattr(
@@ -127,7 +130,7 @@ def render(source, output, config, args, progress=lambda event: None):
         dw, dh = max(2, round(iw * factor / 2) * 2), max(2, round(ih * factor / 2) * 2)
     temporary = Path(
         getattr(args, "temporary", None)
-        or output.with_name(f"{output.stem}.{uuid.uuid4().hex}.partial.mp4")
+        or output.with_name(f".beta-render-{uuid.uuid4().hex}.partial.mp4")
     )
     if (
         temporary.resolve().parent != output.parent
@@ -135,8 +138,7 @@ def render(source, output, config, args, progress=lambda event: None):
         or not temporary.name.endswith(".partial.mp4")
     ):
         raise ValueError("Đường dẫn file dở không hợp lệ.")
-    decode_log = output.with_suffix(".decode.log")
-    encode_log = output.with_suffix(".encode.log")
+    decode_log, encode_log, render_report = sidecars
     started = time.perf_counter()
     renderer = Renderer((dw, dh), (w, h), config, args.skin, args.cache)
     gpu_name = renderer.ctx.info["GL_RENDERER"]
@@ -383,7 +385,7 @@ def render(source, output, config, args, progress=lambda event: None):
             "ffmpeg_encode": encode,
             "output_probe": probe(output),
         }
-        output.with_suffix(".render.json").write_text(
+        render_report.write_text(
             json.dumps(stats, ensure_ascii=False, indent=2), encoding="utf-8"
         )
         print(

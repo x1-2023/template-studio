@@ -10,7 +10,24 @@ from types import SimpleNamespace
 from offline_studio.config import atomic_json
 
 
-def execute(request, emit):
+class ProgressWriter:
+    """Tiến độ chỉ để hiển thị; lỗi ghi tạm thời không được hủy video."""
+
+    def __init__(self, folder):
+        self.path = Path(folder) / "progress.json"
+        self.warned = False
+
+    def __call__(self, event):
+        try:
+            atomic_json(self.path, event)
+            self.warned = False
+        except OSError as error:
+            if not self.warned:
+                print(f"Chưa ghi được tiến độ; render vẫn tiếp tục: {error}", flush=True)
+                self.warned = True
+
+
+def execute(request, emit, diagnostics=None):
     if request["action"] == "health":
         import glcontext  # noqa: F401
         import moderngl
@@ -44,6 +61,7 @@ def execute(request, emit):
         no_filter=not config["filter_enabled"],
         mute=config["mute"],
         timeline_offset=request.get("offset", 0),
+        diagnostics=diagnostics,
     )
     args.temporary = request.get("temporary")
     return render(request["source"], request["output"], config, args, progress=emit)
@@ -59,7 +77,7 @@ def main():
         try:
             request = json.loads(args.request.read_text(encoding="utf-8-sig"))
             result = execute(
-                request, lambda event: atomic_json(folder / "progress.json", event)
+                request, ProgressWriter(folder), diagnostics=folder
             )
             atomic_json(folder / "result.json", dict(ok=True, result=result))
             return 0

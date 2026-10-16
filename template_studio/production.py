@@ -20,6 +20,7 @@ from offline_studio.process import probe
 
 from .assets_local import discover, import_cache, validate
 from .gpu.resources import bundled_cache
+from .output_files import archive_output_artifacts, reports_directory
 from .presets import (
     DEFAULT_PRESET_ID, EFFECT_NAME, FILTER_NAME, LEGACY_NAMES,
     catalog, main_catalog, normalize, safe_name, tiktok_config, tiktok_name,
@@ -339,6 +340,7 @@ class Production(QObject):
         self.host.changed.emit()
 
         def work(emit):
+            archive_output_artifacts(self._output, self.home)
             cache = discover(self.root, self.home)
             if (
                 cache
@@ -857,7 +859,7 @@ class Production(QObject):
                     dict(
                         row=token,
                         values=dict(
-                            status="Đang xuất", percent=0, detail="Đang chuẩn bị"
+                            status="Đang xuất", percent=0, detail="Đang chuẩn bị", errorLog=""
                         ),
                         save=True,
                     )
@@ -909,7 +911,11 @@ class Production(QObject):
                     raise
                 except Exception as error:
                     check_cancelled()
-                    values = dict(status="Lỗi", percent=0, detail=str(error)[-1600:])
+                    values = dict(
+                        status="Lỗi", percent=0,
+                        detail=(str(error).splitlines() or [type(error).__name__])[0][:240],
+                        errorLog=getattr(error, "log_path", ""),
+                    )
                 emit(dict(row=token, values=values, save=True))
                 results.append(
                     dict(
@@ -919,7 +925,7 @@ class Production(QObject):
                         **values,
                     )
                 )
-            report = output / (
+            report = reports_directory(self.home) / (
                 "bao-cao-"
                 + time.strftime("%Y%m%d-%H%M%S")
                 + "-"
@@ -952,3 +958,12 @@ class Production(QObject):
         path = self.home / "cache/workers"
         path.mkdir(parents=True, exist_ok=True)
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
+
+    @Slot()
+    def openErrorLog(self):
+        if self._index >= 0:
+            path = self._rows[self._index].get("errorLog", "")
+            if path and Path(path).is_file():
+                QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+                return
+        self.openLogs()
