@@ -481,7 +481,7 @@ class Controller(QObject):
 def main(root, home):
     home.mkdir(parents=True, exist_ok=True)
     os.environ['TEMPLATE_STUDIO_HOME'] = str(home)
-    parser = argparse.ArgumentParser(description='Template Studio · app riêng xử lý video dọc')
+    parser = argparse.ArgumentParser(description='Beta Render · xử lý video hàng loạt')
     parser.add_argument('--check', action='store_true')
     parser.add_argument('--capture')
     parser.add_argument('--input', action='append', default=[])
@@ -495,10 +495,10 @@ def main(root, home):
         run_worker(root,home,dict(action='health',structural=True,timeout=120))
     QQuickStyle.setStyle('Basic')
     app = QApplication([])
-    app.setApplicationName('Template Studio')
+    app.setApplicationName('Beta Render')
     lock = QLockFile(str(home / 'app.lock'))
     if not options.check and not lock.tryLock(0):
-        raise RuntimeError('Template Studio đã mở. Hãy dùng cửa sổ hiện tại.')
+        raise RuntimeError('Beta Render đã mở. Hãy dùng cửa sổ hiện tại.')
     controller = Controller(root, home)
     def initial_inputs():
         if controller.busy or controller.pool.active:

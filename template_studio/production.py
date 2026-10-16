@@ -404,6 +404,19 @@ class Production(QObject):
         except (ValueError, TypeError) as error:
             self.host.message(str(error))
 
+    @Slot("QVariantMap", result=bool)
+    def applyConfig(self, value):
+        if self.host.busy:
+            return False
+        try:
+            config = normalize(value)
+        except (ValueError, TypeError) as error:
+            self.host.message(str(error))
+            return False
+        self._config = config
+        self.apply_pending()
+        return True
+
     @Slot(str)
     def savePreset(self, name):
         if self.host.busy or not name.strip():

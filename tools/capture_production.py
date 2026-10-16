@@ -153,34 +153,71 @@ def main():
     assert p.presetId == "layout", p.presetId
     p.choosePreset("reference")
     settle()
+    click(window.findChild(QQuickItem, "editConfigButton"))
+    dialog = window.findChild(QObject, "configDialog")
+    assert dialog.property("visible")
+    capture("beta-render-config")
+    scroll = window.findChild(QQuickItem, "configurationScroll")
+    flick = scroll.property("contentItem")
+    output = window.findChild(QQuickItem, "outputSection")
+
+    def show_output():
+        flick.setProperty("contentY", output.y())
+        settle()
+
+    original = p.config
+    show_output()
     quality = window.findChild(QQuickItem, "qualitySelect")
     click(quality)
     ratios.extend(verify_popup(quality))
     QTest.keyClick(window, Qt.Key_Home)
     QTest.keyClick(window, Qt.Key_Return)
     settle()
-    assert p.config["quality"] == "small", p.config
-    p.configure("quality", "standard")
+    assert p.config == original
+    assert quality.property("currentIndex") == 0
     click(quality)
     popup = window.findChild(QObject, "qualitySelectPopup")
     high = next(
-        item
-        for item in walk(popup.property("contentItem"))
+        item for item in walk(popup.property("contentItem"))
         if item.objectName() == "optionText"
         and item.property("text") == "Chất lượng cao"
     )
     click(high.parentItem())
-    assert p.config["quality"] == "high", p.config
-    p.configure("quality", "standard")
+    assert quality.property("currentIndex") == 2
+    assert p.config == original
     click(quality)
     QTest.keyClick(window, Qt.Key_Escape)
     settle()
-    assert not window.findChild(QObject, "qualitySelectPopup").property("visible")
-    intro = window.findChild(QQuickItem, "introCheck")
-    click(intro)
-    assert not p.config["intro_enabled"]
-    click(intro)
-    assert p.config["intro_enabled"]
+    assert not popup.property("visible")
+    click(window.findChild(QQuickItem, "cancelConfigButton"))
+    assert p.config == original
+    click(window.findChild(QQuickItem, "editConfigButton"))
+    show_output()
+    bitrate = window.findChild(QQuickItem, "bitrateField")
+    click(bitrate)
+    QTest.keyClick(window, Qt.Key_A, Qt.ControlModifier)
+    for key in (Qt.Key_8, Qt.Key_Period, Qt.Key_5, Qt.Key_Tab):
+        QTest.keyClick(window, key)
+    settle()
+    assert p.config == original
+    flick.setProperty("contentY", 0)
+    settle()
+    slider = window.findChild(QQuickItem, "scaleSlider")
+    click(slider)
+    speed = window.findChild(QQuickItem, "playback_rateField")
+    click(speed)
+    QTest.keyClick(window, Qt.Key_A, Qt.ControlModifier)
+    for char in "1.25":
+        QTest.keyClick(window, Qt.Key(ord(char)))
+    QTest.keyClick(window, Qt.Key_Tab)
+    settle()
+    assert p.config == original
+    capture("beta-render-config-edited")
+    click(window.findChild(QQuickItem, "saveConfigButton"))
+    assert not dialog.property("visible")
+    assert p.config["video_bitrate"] == 8.5, p.config
+    assert p.config["playback_rate"] == 1.25, p.config
+    assert p.config["scale"] != original["scale"], p.config
     number = window.findChild(QQuickItem, "previewOffset")
     click(number, number.width() - 14)
     assert number.property("value") == 1
@@ -191,63 +228,44 @@ def main():
     QTest.keyClick(window, Qt.Key_5)
     QTest.keyClick(window, Qt.Key_Return)
     settle()
-    assert number.property("value") == 5, number.property("value")
+    assert number.property("value") == 5
     number.setProperty("value", 0)
-    bitrate = window.findChild(QQuickItem, "bitrateField")
-    click(bitrate)
-    QTest.keyClick(window, Qt.Key_A, Qt.ControlModifier)
-    for key in (Qt.Key_8, Qt.Key_Period, Qt.Key_5, Qt.Key_Return):
-        QTest.keyClick(window, key)
-    settle()
-    assert p.config["video_bitrate"] == 8.5, p.config
-    p.configure("video_bitrate", 9.65)
+    p.choosePreset("reference")
     QTest.mouseMove(window, QPoint(15, 15))
     settle()
-    panels = [
-        window.findChild(QQuickItem, name)
-        for name in ("videoPanel", "configurationPanel", "previewPanel")
-    ]
-    grid = window.findChild(QQuickItem, "configurationGrid")
-    scroll = window.findChild(QQuickItem, "configurationScroll")
-    custom = window.findChild(QQuickItem, "customPresetCard")
-    assert all(item is not None for item in [*panels, grid, scroll, custom])
+    panels = [window.findChild(QQuickItem, name) for name in
+              ("videoPanel", "configurationPanel", "previewPanel")]
     bar = window.findChild(QQuickItem, "configurationBar")
-    flick = scroll.property("contentItem")
     layouts = []
-    for width, height, name, columns in (
-        (1440, 900, "production-preview", 2),
-        (1100, 720, "production-narrow", 1),
-        (1366, 768, "production-laptop", 2),
-        (1920, 1080, "production-wide", 2),
+    for width, height, name in (
+        (1440, 900, "beta-render-main"),
+        (1100, 720, "beta-render-narrow"),
+        (1366, 768, "beta-render-laptop"),
+        (1920, 1080, "beta-render-wide"),
     ):
         window.resize(width, height)
-        end = time.monotonic() + 0.4
-        while time.monotonic() < end:
-            app.processEvents()
-            time.sleep(0.02)
+        QTest.qWait(400)
         positions = [item.mapToScene(QPointF(0, 0)).x() for item in panels]
         sizes = [item.width() for item in panels]
         assert 260 <= sizes[0] <= 286, sizes
         assert sizes[1] > sizes[0], sizes
         assert all(positions[i] + sizes[i] < positions[i + 1] for i in range(2))
-        assert positions[2] + sizes[2] <= window.width() - 19
-        assert grid.property("columns") == columns, (width, sizes)
-        assert bar.height() > 100 and bar.property("contentItem").height() > 10
-        assert (
-            grid.mapToScene(QPointF(grid.width(), 0)).x()
-            < bar.mapToScene(QPointF(0, 0)).x()
-        )
+        assert positions[2] + sizes[2] <= window.width() - 11
         capture(name)
-        flick.setProperty(
-            "contentY", max(0, flick.property("contentHeight") - flick.height())
-        )
-        app.processEvents()
-        custom_bottom = custom.mapToScene(QPointF(0, custom.height())).y()
+        click(window.findChild(QQuickItem, "editConfigButton"))
+        assert dialog.property("height") <= height - 49
+        assert dialog.property("width") <= width - 59
+        assert bar.height() > 100 and bar.property("contentItem").height() > 10
+        flick.setProperty("contentY", max(0, flick.property("contentHeight") - flick.height()))
+        settle()
+        output_bottom = output.mapToScene(QPointF(0, output.height())).y()
         scroll_bottom = scroll.mapToScene(QPointF(0, scroll.height())).y()
-        assert custom_bottom <= scroll_bottom + 2, (width, custom_bottom, scroll_bottom)
-        assert custom_bottom > scroll.mapToScene(QPointF(0, 0)).y()
+        assert output_bottom <= scroll_bottom + 2, (width, output_bottom, scroll_bottom)
+        if width == 1100:
+            capture("beta-render-config-narrow")
         flick.setProperty("contentY", 0)
-        layouts.append(dict(width=width, height=height, panels=sizes, columns=columns))
+        click(window.findChild(QQuickItem, "cancelConfigButton"))
+        layouts.append(dict(width=width, height=height, panels=sizes))
     (ROOT / ".runtime/production-layout.json").write_text(json.dumps(layouts, indent=2))
     window.resize(1440, 900)
     drawer = window.findChild(QObject, "systemDrawer")
@@ -262,7 +280,8 @@ def main():
                 ok=True,
                 contrast=min(ratios),
                 keyboard=True,
-                checkbox=True,
+                save_cancel=True,
+                slider=True,
                 spinbox=True,
                 input=True,
             ),

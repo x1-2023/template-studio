@@ -16,7 +16,7 @@ DLL_DIRECTORY = (
 )
 os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Basic")
 
-from PySide6.QtCore import QEvent, QMimeData, QPointF, Qt, QUrl  # noqa: E402
+from PySide6.QtCore import QEvent, QMimeData, QObject, QPointF, Qt, QUrl  # noqa: E402
 from PySide6.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent  # noqa: E402
 from PySide6.QtQml import QQmlApplicationEngine  # noqa: E402
 from PySide6.QtQuick import QQuickItem, QQuickWindow  # noqa: E402
@@ -42,7 +42,8 @@ class ImportUiTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.home = Path(self.temp.name)
+        # Windows CI có thể trả TEMP dạng tên ngắn RUNNER~1.
+        self.home = Path(self.temp.name).resolve()
         self.source = self.home / "video thử #1.mp4"
         self.source.write_bytes(b"video")
         with patch.object(Controller, "prepareMedia"):
@@ -117,6 +118,59 @@ class ImportUiTests(unittest.TestCase):
             self.click("emptyImportButton")
         picker.assert_called_once()
         self.assertEqual([row["path"] for row in self.p.rows], [str(self.source)])
+
+    def edit_speed(self, value):
+        self.click("editConfigButton")
+        self.click("playback_rateField")
+        QTest.keyClick(self.window, Qt.Key_A, Qt.ControlModifier)
+        for char in value:
+            QTest.keyClick(self.window, Qt.Key(ord(char)))
+        QTest.keyClick(self.window, Qt.Key_Tab)
+        self.wait()
+
+    def test_config_cancel_discards_draft_and_reopens_saved_values(self):
+        original = self.p.config
+        self.edit_speed("1.25")
+        self.assertEqual(self.p.config, original)
+        self.click("cancelConfigButton")
+        self.click("editConfigButton")
+        field = self.window.findChild(QQuickItem, "playback_rateField")
+        self.assertEqual(float(field.property("text")), original["playback_rate"])
+        self.click("cancelConfigButton")
+        self.assertEqual(self.p.config, original)
+
+    def test_config_save_updates_pending_but_preserves_completed(self):
+        self.drop([self.source])
+        other = self.home / "pending.mp4"
+        other.write_bytes(b"video")
+        self.drop([other])
+        self.p._rows[0]["status"] = "Hoàn tất"
+        original = self.p._rows[0]["config"]["playback_rate"]
+        self.edit_speed("1.25")
+        self.click("saveConfigButton")
+        self.assertEqual(self.p.config["playback_rate"], 1.25)
+        self.assertEqual(self.p._rows[0]["config"]["playback_rate"], original)
+        self.assertEqual(self.p._rows[1]["config"]["playback_rate"], 1.25)
+        self.assertFalse(self.window.findChild(QObject, "configDialog").property("visible"))
+
+    def test_config_escape_discards_draft(self):
+        original = self.p.config
+        self.edit_speed("1.30")
+        QTest.keyClick(self.window, Qt.Key_Escape)
+        self.wait()
+        self.assertFalse(self.window.findChild(QObject, "configDialog").property("visible"))
+        self.assertEqual(self.p.config, original)
+
+    def test_apply_config_rejects_invalid_data_and_running_tasks(self):
+        original = self.p.config
+        self.assertFalse(self.p.applyConfig({"playback_rate": 99}))
+        self.assertEqual(self.p.config, original)
+        self.controller._busy = True
+        try:
+            self.assertFalse(self.p.applyConfig({"playback_rate": 1.25}))
+        finally:
+            self.controller._busy = False
+        self.assertEqual(self.p.config, original)
 
     def test_native_drop_imports_unicode_file(self):
         self.assertTrue(self.drop([self.source]))

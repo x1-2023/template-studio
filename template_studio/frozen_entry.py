@@ -1,4 +1,4 @@
-"""Điểm vào bản Template Studio portable đã đóng gói."""
+"""Điểm vào bản Beta Render portable đã đóng gói."""
 import sys
 import os
 from pathlib import Path
@@ -28,5 +28,5 @@ if __name__ == '__main__':
         if '--check' not in sys.argv:
             from PySide6.QtWidgets import QApplication, QMessageBox
             application = QApplication.instance() or QApplication([])
-            QMessageBox.critical(None, 'Không mở được Template Studio', str(error) + '\nChi tiết: ' + str(home / 'startup-error.log'))
+            QMessageBox.critical(None, 'Không mở được Beta Render', str(error) + '\nChi tiết: ' + str(home / 'startup-error.log'))
         raise SystemExit(1)

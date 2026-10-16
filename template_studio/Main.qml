@@ -7,7 +7,7 @@ ApplicationWindow {
     id: window
     visible: true
     width: 1480; height: 900; minimumWidth: 1120; minimumHeight: 700
-    title: "Template Studio · Trong như pha lê"
+    title: "Beta Render · Thư viện hiệu ứng"
     color: "#0b141b"
     property color panel: "#14242f"
     property color border: "#294451"

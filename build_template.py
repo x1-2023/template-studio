@@ -1,4 +1,4 @@
-"""Build Template Studio standalone: không cần Python/venv trên máy đích."""
+"""Build Beta Render standalone: không cần Python/venv trên máy đích."""
 import os
 import hashlib
 import importlib.metadata
@@ -58,7 +58,25 @@ def main():
     for path in (dist, work):
         clean_build_directory(path)
     spec = ROOT / '.runtime' / 'template_studio.spec'
+    from PyInstaller.utils.win32.versioninfo import (
+        FixedFileInfo, StringFileInfo, StringStruct, StringTable,
+        VarFileInfo, VarStruct, VSVersionInfo,
+    )
+    version_tuple = tuple(int(part) for part in VERSION.split('.')) + (0,)
+    version_info = VSVersionInfo(
+        ffi=FixedFileInfo(filevers=version_tuple, prodvers=version_tuple),
+        kids=[StringFileInfo([StringTable('040904B0', [
+            StringStruct('FileDescription', 'Beta Render'),
+            StringStruct('ProductName', 'Beta Render'),
+            StringStruct('FileVersion', VERSION),
+            StringStruct('ProductVersion', VERSION),
+            StringStruct('OriginalFilename', 'TemplateStudio.exe'),
+        ])]), VarFileInfo([VarStruct('Translation', [1033, 1200])])],
+    )
+    version_file = ROOT / '.runtime' / 'beta-render-version.txt'
+    version_file.write_text(str(version_info), encoding='utf-8')
     args = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean', '--onedir', '--windowed', '--noupx',
+            '--version-file', str(version_file),
             '--name', 'TemplateStudio', '--distpath', str(dist), '--workpath', str(work), '--specpath', str(spec.parent),
             '--paths', str(ROOT), '--collect-submodules', 'template_studio', '--collect-submodules', 'offline_studio',
             '--collect-all', 'video_fx',
