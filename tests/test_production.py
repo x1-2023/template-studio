@@ -247,3 +247,48 @@ class QueueTests(unittest.TestCase):
             self.assertEqual(requests[0]["seconds"],2)
             self.assertEqual(requests[1]["config"]["subtitle_part_label"],"PART 1")
             self.assertAlmostEqual(requests[1]["seconds"],.1)
+
+    def test_real_121_queue_is_migrated_backed_up_and_can_export_without_reselecting_preset(self):
+        from unittest.mock import Mock
+        legacy = json.loads((Path(__file__).parent/"fixtures/preset-1.2.1.json").read_text(encoding="utf-8"))
+        self.assertNotIn("part_count", legacy)
+        with tempfile.TemporaryDirectory() as folder:
+            home = Path(folder).resolve()
+            source = home/"nguồn.mp4"
+            source.write_bytes(b"source")
+            previous = home/"old.mp4"
+            previous.write_bytes(b"previous-video")
+            saved = dict(schema=1, production_defaults="tiktok", config=legacy, preset="pentagon-9x16",
+                         output=str(home/"exports"), custom=[dict(id="custom-old",name="Mẫu riêng",config=legacy)], rows=[
+                dict(id=str(i),path=str(source),name=source.name,status=status,percent=100 if i else 0,
+                     detail="",result=str(previous) if i else "",duration=3,meta="",config=legacy,presetName="Mẫu cũ")
+                for i,status in enumerate(("Chờ xử lý","Hoàn tất"))
+            ])
+            original = json.dumps(saved,ensure_ascii=False)
+            (home/"production.json").write_text(original,encoding="utf-8")
+            host = Host(home)
+            host.mediaReady, host._nvenc, host._closing = True, True, False
+            p = Production(host)
+            self.assertEqual((home/"production-before-karaoke.json").read_text(encoding="utf-8"),original)
+            for config in [p.config,p._custom[0]["config"],*(row["config"] for row in p._rows)]:
+                self.assertEqual(config["part_count"],1)
+                self.assertEqual(config["subtitle_mode"],"off")
+                self.assertEqual({key:config[key] for key in legacy},legacy)
+            p._ready,p._cache = True,"cache"
+            p.pool = Mock()
+            def submit(work,result,error,event,finished):
+                result(work(event))
+                finished()
+            p.pool.submit.side_effect = submit
+            def worker(root,home,request,progress):
+                self.assertEqual(request["config"]["part_count"],1)
+                self.assertEqual(request["config"]["subtitle_mode"],"off")
+                Path(request["output"]).write_bytes(b"new-video")
+                return dict(wall_seconds=1)
+            with patch("template_studio.production.run_worker",side_effect=worker) as run:
+                p.runBatch()
+            self.assertEqual(run.call_count,1)
+            self.assertTrue(all(row["status"]=="Hoàn tất" for row in p._rows))
+            self.assertEqual(previous.read_bytes(),b"previous-video")
+            Production(Host(home))
+            self.assertEqual((home/"production-before-karaoke.json").read_text(encoding="utf-8"),original)

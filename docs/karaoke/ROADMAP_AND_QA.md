@@ -24,7 +24,11 @@ Windows, RTX 2070 SUPER, OpenGL/NVENC và FFmpeg có libass:
 
 Các công cụ tái hiện: `python tools/qa_karaoke.py` và `python tools/qa_portable.py --input <MP4-có-lời-thoại> --karaoke`.
 
-## Cổng phát hành
+## Bản chính thức 1.3.1
+
+Kiểm tra nâng cấp bằng cấu hình 1.2.1 thật phát hiện từng hàng chờ chưa được bổ sung các trường mới. Đã chuẩn hóa cấu hình của tất cả hàng khi đọc phiên làm việc, giữ thông số cũ và tạo `production-before-karaoke.json` trước khi chuyển. Kiểm thử mới xuất tiếp hàng cũ mà không chọn lại preset, giữ video hoàn tất, preset tùy chỉnh và bản sao nguyên trạng. 1.3.0 được chuyển sang prerelease để updater tiếp tục dùng 1.2.1 trong lúc nghiệm thu 1.3.1.
+
+## Nghiệm thu nền 1.3.0
 
 Ứng viên 1.3.0 đã vượt qua các kiểm tra source và EXE:
 

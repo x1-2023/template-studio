@@ -76,6 +76,11 @@ class Production(QObject):
             saved = json.loads(self._state.read_text(encoding="utf-8-sig"))
             if saved.get("schema") != 1:
                 raise ValueError("Phiên bản dữ liệu không được hỗ trợ.")
+            configs = [saved["config"], *(row.get("config", {}) for row in saved.get("rows", []))]
+            if any("part_count" not in config for config in configs):
+                backup = self.home / "production-before-karaoke.json"
+                if not backup.exists():
+                    shutil.copy2(self._state, backup)
             self._config = normalize(saved["config"])
             self._preset = saved.get("preset", DEFAULT_PRESET_ID)
             self._output = str(saved["output"])
@@ -99,7 +104,7 @@ class Production(QObject):
                     )
                 if row["status"] != "Hoàn tất" and not Path(row["path"]).is_file():
                     row.update(status="Thiếu nguồn", detail="Nguồn đã bị dời hoặc xóa.")
-                row.setdefault("config", copy.deepcopy(self._config))
+                row["config"] = normalize(row.get("config", self._config))
                 row.setdefault("presetName", self.presetName)
             self._index = 0 if self._rows else -1
             if saved.get("production_defaults") != "tiktok":

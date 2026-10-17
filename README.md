@@ -54,6 +54,8 @@ Lần đầu dùng bản mặc định TikTok, cấu hình hiện tại và vide
 
 GUI thư viện Video-FX cũ vẫn mở được từ source bằng `python template_gui.py --library`; không ghép 150 filter CPU vào chuỗi GPU mới trong phiên bản này.
 
+Khi nâng từ 1.2.1, app sao lưu `production.json` thành `production-before-karaoke.json`, rồi bổ sung các trường mới cho hàng chờ. Thông số cũ được giữ; các video cũ vẫn xuất một file và tắt karaoke cho tới khi bạn chọn preset mới. Bản sao trước chuyển đổi được giữ trong thư mục dữ liệu để phục hồi khi cần.
+
 ## Updater
 
 App tự kiểm tra GitHub Releases khi mở và mỗi 4 giờ. Nếu đang tải FFmpeg hoặc xuất video, việc kiểm tra được chờ tới lúc rảnh. Có bản mới sẽ hiện **Cập nhật app** ở màn hình chính; bấm để app tải, xác minh SHA256 và tự cài/mở lại. Cũng có thể kiểm tra thủ công trong **Cài đặt**. Giữ preset, queue, cache riêng, runtime và video xuất. Helper giữ backup và phục hồi nếu bản mới không khởi động được; nhật ký nằm trong `.updates/` cạnh EXE. Tài nguyên mặc định được cập nhật cùng app.
