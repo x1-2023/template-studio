@@ -158,7 +158,8 @@ def render(source, output, config, args, progress=lambda event: None):
             raise ValueError("Cần nhận lời thoại trước khi render. Chạy preset từ màn hình Xuất video.")
         else:
             raise ValueError("Chế độ phụ đề không được hỗ trợ")
-        subtitle_ass = Path(diagnostics).resolve() / "karaoke.ass" if diagnostics else output.with_suffix(".karaoke.ass")
+        subtitle_ass = (Path(diagnostics).resolve() / "karaoke.ass" if diagnostics else
+                        output.parent / (".beta-karaoke-" + uuid.uuid4().hex + ".ass"))
         write_ass(words, subtitle_ass, w, h, source_offset=rate*timeline_offset+float(config.get("source_offset", 0)),
                   playback_rate=rate, angle=float(config.get("subtitle_angle", -11)),
                   red=config.get("subtitle_red", "FF374A"),
@@ -236,7 +237,7 @@ def render(source, output, config, args, progress=lambda event: None):
             encode += encoder_options
             if subtitle_ass is not None:
                 # File ASS có tên ASCII cố định trong cwd riêng của worker.
-                overlay = "setsar=1,ass=filename=karaoke.ass"
+                overlay = "setsar=1,ass=filename=" + subtitle_ass.name
             else:
                 overlay = "setsar=1"
             encode += [
