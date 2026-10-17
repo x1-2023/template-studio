@@ -1,5 +1,6 @@
 """Build Beta Render standalone: không cần Python/venv trên máy đích."""
 import os
+import argparse
 import hashlib
 import importlib.metadata
 import json
@@ -47,6 +48,12 @@ def collect_licenses(target):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=Path, default=ROOT / 'release/template-studio')
+    options = parser.parse_args()
+    output_root = options.output.resolve()
+    if not output_root.is_relative_to((ROOT / 'release').resolve()) or output_root == (ROOT / 'release').resolve():
+        raise ValueError('Thư mục build phải nằm trong release của workspace.')
     from template_studio.version import VERSION, ASSET_NAME
     from template_studio.assets_local import validate
     from template_studio.gpu.resources import bundled_cache
@@ -78,6 +85,7 @@ def main():
     )
     version_file = ROOT / '.runtime' / 'beta-render-version.txt'
     version_file.write_text(str(version_info), encoding='utf-8')
+    import PySide6
     args = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean', '--onedir', '--windowed', '--noupx',
             '--version-file', str(version_file),
             '--icon', str(ROOT / 'template_studio/assets/beta-render.ico'),
@@ -90,12 +98,12 @@ def main():
             '--add-data', f'{ROOT / "template_studio/Main.qml"};template_studio',
             '--add-data', f'{ROOT / "template_studio/Production.qml"};template_studio',
             '--add-data', f'{ROOT / "template_studio/assets"};template_studio/assets',
+            '--add-binary', f'{Path(PySide6.__file__).parent / "msvcp140.dll"};.',
             '--add-data', f'{ROOT / "template_studio/apply_update.ps1"};template_studio',
             str(ROOT / 'template_studio/frozen_entry.py')]
     env = os.environ.copy()
     env.update(TEMP=str(cache), TMP=str(cache), PYINSTALLER_CONFIG_DIR=str(cache / 'pyinstaller'))
     # Không lấy DLL từ PATH của ứng dụng khác (ví dụ ICU của Poppler không tương thích Qt).
-    import PySide6
     runtime_paths = [Path(sys.executable).parent, Path(sys.base_prefix), Path(PySide6.__file__).parent,
                      Path(os.environ.get('SystemRoot', r'C:\Windows')) / 'System32',
                      Path(os.environ.get('SystemRoot', r'C:\Windows'))]
@@ -104,7 +112,7 @@ def main():
     env['QML2_IMPORT_PATH'] = str(Path(PySide6.__file__).parent / 'qml')
     env['QML_IMPORT_PATH'] = env['QML2_IMPORT_PATH']
     subprocess.run(args, cwd=ROOT, env=env, check=True)
-    target = ROOT / 'release' / 'template-studio' / 'TemplateStudio'
+    target = output_root / 'TemplateStudio'
     target.parent.mkdir(parents=True, exist_ok=True)
     if target.exists():
         if not (target / 'release.json').is_file() or any((target / name).exists() for name in ('data', 'exports', 'runtime')):

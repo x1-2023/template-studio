@@ -1,0 +1,29 @@
+{
+  "project": "Beta Render Karaoke 1012",
+  "base_tag": "v1.2.1",
+  "base_commit": "a36081087a5940bf002837acf37609f2db1170b8",
+  "date": "2026-10-17",
+  "version": "1.3.0",
+  "state": "Đã tích hợp và kiểm thử source trên Windows; đang kiểm thử đóng gói",
+  "validated": [
+    "Whisper native nhận 163 từ từ MP4 55 giây, khoảng 10 giây trên CPU local",
+    "Cache phụ đề dùng lại giữa preview và xuất",
+    "Karaoke preview 90 khung, xuất một video 270 khung",
+    "Ba phần 90 khung/phần, 1080x1440/30, có âm thanh",
+    "Hủy phần hai, đọc lại sổ và tiếp tục không render lại phần một",
+    "Đường dẫn có dấu, khoảng trắng, dấu nháy và ngoặc vuông",
+    "CPU x264 720x960, tốc độ 1.02, cắt đầu 0.2 giây, tắt âm thanh",
+    "Preset cũ giống từng pixel với v1.2.1 tại 0/0.5/3 giây"
+  ],
+  "pending": [
+    "EXE giải nén sạch: tải ASR/model và xuất ba phần offline",
+    "CI, bản phát hành và updater",
+    "Đối chiếu với video CapCut gốc 1012 chưa có trong ZIP"
+  ],
+  "limitations": [
+    "Arial và ASS mô phỏng phong cách chữ, không khẳng định giống template CapCut 1:1",
+    "Chia ba phần đều nhau, không dùng điểm cắt thủ công của Draft",
+    "Draft lồng thay đổi tốc độ được báo không hỗ trợ",
+    "Độ chính xác nhận lời thoại phụ thuộc âm thanh"
+  ]
+}

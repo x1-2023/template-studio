@@ -28,6 +28,10 @@ class ProgressWriter:
 
 
 def execute(request, emit, diagnostics=None):
+    if request["action"] == "transcribe":
+        import os
+        from .speech import transcribe
+        return transcribe(request["source"], os.environ["TEMPLATE_STUDIO_HOME"], diagnostics, emit)
     if request["action"] == "health":
         import glcontext  # noqa: F401
         import moderngl

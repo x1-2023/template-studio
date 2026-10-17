@@ -35,8 +35,12 @@ class PresetTests(unittest.TestCase):
     def test_production_defaults_are_not_reference_speed(self):
         items = main_catalog()
         self.assertEqual(items[0]["id"], DEFAULT_PRESET_ID)
-        for item in items:
+        for item in items[:3]:
             self.assertEqual((item["config"]["width"], item["config"]["height"]), (1080, 1920))
+        karaoke = next(item for item in items if item["id"] == "karaoke-1012")
+        self.assertEqual(karaoke["config"]["height"], 1440)
+        self.assertEqual(karaoke["config"]["subtitle_mode"], "auto")
+        self.assertEqual(karaoke["config"]["part_count"], 3)
         self.assertTrue(items[0]["config"]["intro_enabled"])
         self.assertTrue(items[0]["config"]["filter_enabled"])
         self.assertFalse(items[0]["config"]["flip"])

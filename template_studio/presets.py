@@ -11,13 +11,14 @@ FILTER_NAME = "Camera độ nét cao 2"  # 7514206177195068689
 PRESET_NAMES = {
     "pentagon-3x4": f"Ngũ giác + {FILTER_NAME} · 3:4",
     "pentagon-9x16": "TikTok · Ngũ giác + Camera",
+    "karaoke-1012": "1012 · Karaoke đỏ + video nghiêng",
     "color": f"Chỉ {FILTER_NAME} · 3:4",
     "color-9x16": "TikTok · Chỉ bộ lọc Camera",
     "layout": "TikTok · Chỉ nền mờ",
     "reference": "Theo video mẫu CapCut · 3:4",
 }
 DEFAULT_PRESET_ID = "pentagon-9x16"
-MAIN_PRESET_IDS = (DEFAULT_PRESET_ID, "color-9x16", "layout")
+MAIN_PRESET_IDS = (DEFAULT_PRESET_ID, "color-9x16", "layout", "karaoke-1012")
 
 BASE = dict(
     width=1080,
@@ -25,6 +26,15 @@ BASE = dict(
     fps=30,
     flip=False,
     scale=1.0513,
+    rotation_deg=0.0,
+    subtitle_mode="off",
+    subtitle_file="",
+    subtitle_angle=-11.0,
+    subtitle_red="FF374A",
+    subtitle_title="",
+    subtitle_part_label="",
+    part_count=1,
+    effect_loop_seconds=0.0,
     offset=[0, 0],
     playback_rate=1.0,
     source_offset=0.0,
@@ -49,6 +59,14 @@ BASE = dict(
 )
 
 SYSTEM = [
+    dict(
+        id="karaoke-1012",
+        name=PRESET_NAMES["karaoke-1012"],
+        description="1080 × 1440, video nghiêng, karaoke trắng/đỏ. Tự nhận lời thoại và xuất 3 phần.",
+        config=dict(width=1080, height=1440, scale=1.1248, rotation_deg=-9.0059,
+                    intro_enabled=True, filter_enabled=True, effect_end=3600, effect_loop_seconds=2.166667, part_count=3,
+                    subtitle_mode="auto", video_bitrate=12.0),
+    ),
     dict(
         id="pentagon-3x4",
         name=PRESET_NAMES["pentagon-3x4"],
@@ -127,10 +145,13 @@ def normalize(value):
     s.update(copy.deepcopy(value))
     for key, lo, hi in [
         ("scale", 0.3, 1.5),
+        ("rotation_deg", -30, 30),
+        ("subtitle_angle", -30, 30),
+        ("effect_loop_seconds", 0, 60),
         ("playback_rate", 0.5, 2),
         ("background_sigma_ratio", 0, 0.1),
         ("effect_start", 0, 60),
-        ("effect_end", 0, 120),
+        ("effect_end", 0, 3600),
         ("effect_slider", 0, 1),
         ("ae_time_scale", 0.25, 4),
         ("bokeh_size", 0, 1.5),
@@ -173,6 +194,18 @@ def normalize(value):
     ]:
         if s[key] not in choices:
             raise ValueError(f"Giá trị {key} không hợp lệ.")
+    if type(s["part_count"]) is not int or s["part_count"] not in (1, 3):
+        raise ValueError("Số part phải là 1 hoặc 3")
+    if s["subtitle_mode"] not in ("off", "sidecar", "file", "auto"):
+        raise ValueError("Chế độ phụ đề không hợp lệ")
+    if not isinstance(s["subtitle_title"], str) or len(s["subtitle_title"]) > 140:
+        raise ValueError("Tiêu đề karaoke quá dài")
+    if not isinstance(s["subtitle_part_label"], str) or len(s["subtitle_part_label"]) > 16:
+        raise ValueError("Nhãn part quá dài")
+    if not isinstance(s["subtitle_file"], str) or len(s["subtitle_file"]) > 1024:
+        raise ValueError("Đường dẫn phụ đề không hợp lệ")
+    if not isinstance(s["subtitle_red"], str) or not re.fullmatch("[0-9a-fA-F]{6}", s["subtitle_red"]):
+        raise ValueError("Màu karaoke phải là RRGGBB")
     s["resolution"] = s["width"]
     return s
 

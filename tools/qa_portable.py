@@ -61,6 +61,7 @@ def main():
         "--archive", type=Path, default=ROOT / "release/template-studio" / ASSET_NAME
     )
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--karaoke", action="store_true", help="Kiểm tra nhận giọng nói và ba phần karaoke bằng worker EXE")
     args = parser.parse_args()
     source = args.input.resolve()
     if not source.is_file():
@@ -196,6 +197,43 @@ def main():
             f"EXE offline: {preset['name']} · {video['width']}×{video['height']} · 90 khung · OK",
             flush=True,
         )
+    karaoke = None
+    if args.karaoke:
+        job = folder / "speech"
+        job.mkdir()
+        request_path = job / "request.json"
+        request_path.write_text(json.dumps(dict(action="transcribe",source=str(source))),encoding="utf-8")
+        run([str(executable),"--render-worker","--request",str(request_path)], env, job/"launcher.log", timeout=600)
+        speech = read_json(job/"result.json")
+        assert speech["ok"] and len(speech["result"]["words"]) > 5, speech
+        captions = job/"words.json"
+        captions.write_text(json.dumps(speech["result"]["words"],ensure_ascii=False),encoding="utf-8")
+        preset = next(p for p in catalog() if p["id"]=="karaoke-1012")
+        from template_studio.parts import plan_parts
+        intervals = plan_parts(float(original["format"]["duration"]),preset["config"])
+        outputs = folder/"karaoke-exports"
+        outputs.mkdir()
+        karaoke = dict(words=len(speech["result"]["words"]),parts=[])
+        for i, interval in enumerate(intervals):
+            part = folder/f"karaoke-{i+1}"
+            part.mkdir()
+            request = dict(action="render",source=str(source),output=str(outputs/f"part{i+1}.mp4"),
+                           config={**preset["config"],"subtitle_mode":"file","subtitle_file":str(captions),"subtitle_part_label":f"PART {i+1}"},
+                           cache=first["effects"],encoder="h264_nvenc",bitrate=12,preview=False,
+                           seconds=interval["seconds"],offset=interval["start"])
+            request_path = part/"request.json"
+            request_path.write_text(json.dumps(request,ensure_ascii=False),encoding="utf-8")
+            run([str(executable),"--render-worker","--request",str(request_path)], offline, part/"launcher.log", timeout=240)
+            result = read_json(part/"result.json")
+            assert result["ok"], result
+            info = probe(media/"ffprobe.exe",Path(request["output"]),offline)
+            video = next(s for s in info["streams"] if s["codec_type"]=="video")
+            assert (video["width"],video["height"],video["r_frame_rate"])==(1080,1440,"30/1")
+            assert abs(float(video["duration"])-interval["seconds"]) < .15
+            assert any(s["codec_type"]=="audio" for s in info["streams"])==has_audio
+            karaoke["parts"].append(dict(output=request["output"],frames=video["nb_frames"],seconds=video["duration"]))
+            print(f"Karaoke EXE offline: phần {i+1}/3 · OK",flush=True)
+        assert len(list(outputs.iterdir()))==3
     (folder / "xac-minh.json").write_text(
         json.dumps(
             dict(
@@ -203,6 +241,7 @@ def main():
                 first_start=first,
                 offline=True,
                 renders=results,
+                karaoke=karaoke,
             ),
             ensure_ascii=False,
             indent=2,

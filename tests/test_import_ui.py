@@ -175,6 +175,39 @@ class ImportUiTests(unittest.TestCase):
         self.assertFalse(self.window.findChild(QObject, "configDialog").property("visible"))
         self.assertEqual(self.p.config, original)
 
+    def test_karaoke_preset_saves_new_fields_and_preserves_default_presets(self):
+        self.p.choosePreset("karaoke-1012")
+        self.assertEqual(len(self.p.mainPresets), 4)
+        self.assertEqual(self.p.config["subtitle_mode"], "auto")
+        self.click("editConfigButton")
+        dialog = self.window.findChild(QObject, "configDialog")
+        draft = {**self.p.config, "part_count":1, "subtitle_title":"TIÊU ĐỀ MẪU", "rotation_deg":-8}
+        dialog.setProperty("draft", draft)
+        self.click("saveConfigButton")
+        self.assertEqual(self.p.config, draft)
+        self.p.choosePreset("pentagon-9x16")
+        self.assertEqual(self.p.config["subtitle_mode"], "off")
+        self.assertEqual(self.p.config["part_count"], 1)
+        self.assertEqual(self.p.config["rotation_deg"], 0)
+
+    def test_subtitle_picker_updates_draft_and_cancel_keeps_saved_config(self):
+        self.p.choosePreset("karaoke-1012")
+        self.click("editConfigButton")
+        dialog = self.window.findChild(QObject, "configDialog")
+        dialog.setProperty("draft", {**self.p.config,"subtitle_mode":"file"})
+        scroll = self.window.findChild(QQuickItem, "configurationScroll")
+        section = self.window.findChild(QQuickItem, "captionsSection")
+        QTest.qWait(60)
+        scroll.property("contentItem").setProperty("contentY", section.y()-20)
+        QTest.qWait(60)
+        path = self.home/"phụ đề.words.json"
+        with patch("template_studio.production.QFileDialog.getOpenFileName",return_value=(str(path),"")) as picker:
+            self.click("subtitlePicker")
+        picker.assert_called_once()
+        self.assertEqual(dialog.property("draft").toVariant()["subtitle_file"], str(path))
+        self.click("cancelConfigButton")
+        self.assertEqual(self.p.config["subtitle_file"], "")
+
     def test_apply_config_rejects_invalid_data_and_running_tasks(self):
         original = self.p.config
         self.assertFalse(self.p.applyConfig({"playback_rate": 99}))

@@ -28,12 +28,17 @@ LAYOUT = """#version 330
 in vec2 v_uv; out vec4 frag;
 uniform sampler2D image; uniform sampler2D background;
 uniform vec2 source_size; uniform vec2 output_size;
-uniform int cover_only; uniform int flip;
+uniform int cover_only; uniform int flip; uniform float rotation_deg;
 uniform float scale; uniform vec2 offset;
 void main(){
     float s=cover_only==1 ? max(output_size.x/source_size.x,output_size.y/source_size.y)
                          : min(output_size.x/source_size.x,output_size.y/source_size.y)*scale;
-    vec2 uv=(v_uv*output_size-output_size*(.5+offset))/(source_size*s)+.5;
+    vec2 d=v_uv*output_size-output_size*(.5+offset);
+    if (cover_only==0) {
+        float a=radians(-rotation_deg);
+        d=vec2(cos(a)*d.x-sin(a)*d.y, sin(a)*d.x+cos(a)*d.y);
+    }
+    vec2 uv=d/(source_size*s)+.5;
     bool inside=all(greaterThanEqual(uv,vec2(0)))&&all(lessThanEqual(uv,vec2(1)));
     if(flip==1) uv.x=1.-uv.x;
     frag=cover_only==1||inside ? texture(image,uv) : texture(background,v_uv);
@@ -263,6 +268,7 @@ class Renderer:
             "output_size": self.size,
             "flip": int(self.preset["flip"]),
             "scale": self.preset["scale"],
+            "rotation_deg": float(self.preset.get("rotation_deg", 0)),
             "offset": tuple(self.preset.get("offset", [0, 0])),
         }
         bg = self.run(
@@ -342,7 +348,10 @@ class Renderer:
                 "effect_start", 0
             ) <= t < self.preset.get("effect_end", 2.166667)
             if active:
-                p = animation(t, self.preset)
+                loop = float(self.preset.get("effect_loop_seconds", 0))
+                start = float(self.preset.get("effect_start", 0))
+                effect_t = start + ((t - start) % loop) if loop > 0 else t
+                p = animation(effect_t, self.preset)
                 a = max(0.0, p["sample"] / 79)
                 blur = a**0.35
                 w, h = self.size

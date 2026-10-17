@@ -139,9 +139,33 @@ def render(source, output, config, args, progress=lambda event: None):
     ):
         raise ValueError("Đường dẫn file dở không hợp lệ.")
     decode_log, encode_log, render_report = sidecars
-    started = time.perf_counter()
+    subtitle_ass = None
+    if config.get("subtitle_mode", "off") != "off":
+        from template_studio.karaoke import (
+            find_caption_file, load_words, write_ass,
+        )
+        mode = config["subtitle_mode"]
+        if mode == "sidecar":
+            caption_file = find_caption_file(source)
+            if caption_file is None:
+                raise FileNotFoundError("Thiếu phụ đề cạnh video: video.words.json hoặc video.srt")
+            words = load_words(caption_file)
+        elif mode == "file":
+            if not config.get("subtitle_file"):
+                raise ValueError("Chọn đường dẫn phụ đề .srt/.json")
+            words = load_words(config["subtitle_file"])
+        elif mode == "auto":
+            raise ValueError("Cần nhận lời thoại trước khi render. Chạy preset từ màn hình Xuất video.")
+        else:
+            raise ValueError("Chế độ phụ đề không được hỗ trợ")
+        subtitle_ass = Path(diagnostics).resolve() / "karaoke.ass" if diagnostics else output.with_suffix(".karaoke.ass")
+        write_ass(words, subtitle_ass, w, h, source_offset=rate*timeline_offset+float(config.get("source_offset", 0)),
+                  playback_rate=rate, angle=float(config.get("subtitle_angle", -11)),
+                  red=config.get("subtitle_red", "FF374A"),
+                  title=config.get("subtitle_title", ""), part_label=config.get("subtitle_part_label", ""), duration=seconds)
     renderer = Renderer((dw, dh), (w, h), config, args.skin, args.cache)
     gpu_name = renderer.ctx.info["GL_RENDERER"]
+    started = time.perf_counter()
     decoder = encoder = mask_decoder = None
     mask_still = None
     frame_count = 0
@@ -210,9 +234,14 @@ def render(source, output, config, args, progress=lambda event: None):
                     "192k",
                 ]
             encode += encoder_options
+            if subtitle_ass is not None:
+                # File ASS có tên ASCII cố định trong cwd riêng của worker.
+                overlay = "setsar=1,ass=filename=karaoke.ass"
+            else:
+                overlay = "setsar=1"
             encode += [
                 "-vf",
-                "setsar=1",
+                overlay,
                 "-pix_fmt",
                 "yuv420p",
                 "-colorspace",
@@ -237,6 +266,7 @@ def render(source, output, config, args, progress=lambda event: None):
             encoder = stack.enter_context(
                 managed_process(
                     encode,
+                    cwd=subtitle_ass.parent if subtitle_ass is not None else None,
                     stdin=subprocess.PIPE,
                     stderr=en,
                     bufsize=10**7,
@@ -421,6 +451,8 @@ def render(source, output, config, args, progress=lambda event: None):
         renderer.close()
         if temporary.exists():
             temporary.unlink()
+        if subtitle_ass is not None:
+            subtitle_ass.unlink(missing_ok=True)
 
 
 def parser():

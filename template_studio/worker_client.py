@@ -78,6 +78,17 @@ def run_worker(root, home, request, progress=lambda event: None):
                 if process.returncode or not result.get("ok"):
                     raise WorkerError(result.get("error", "Worker thất bại"), folder)
     finally:
+        if request.get("action") == "transcribe":
+            # Worker bị hủy có thể chưa chạy finally; chỉ dọn file của folder vừa tạo.
+            for pending in [folder / "audio.wav", folder / "whisper-runtime.zip", *folder.glob("*.partial")]:
+                for attempt in range(30):
+                    try:
+                        pending.unlink(missing_ok=True)
+                        break
+                    except PermissionError:
+                        if attempt == 29:
+                            break
+                        time.sleep(.1)
         if request.get("temporary"):
             partial = Path(request["temporary"])
             if (

@@ -20,12 +20,25 @@ Mã nguồn [công khai GPL-3.0-only](https://github.com/x1-2023/template-studio
 - Màn hình chính dành cho **TikTok: video dọc 9:16, 1080 × 1920, 30 FPS**, MP4/H.264 và âm thanh AAC. [TikTok khuyến nghị video dọc 9:16 và xuất 1080 × 1920](https://ads.tiktok.com/business/en/guides/video-advertising-guide).
 - Mặc định **TikTok · Ngũ giác + Camera** bật đồng thời **Lớp phủ ngũ giác lấp lánh** (`7491138615477685505`) và **Camera độ nét cao 2** (`7514206177195068689`), tốc độ 1×, không lật ngang. Một preset lưu chung hiệu ứng, bộ lọc, bố cục và thiết lập xuất.
 - **TikTok · Chỉ bộ lọc Camera** tắt hiệu ứng mở đầu; **TikTok · Chỉ nền mờ** tắt cả hiệu ứng và bộ lọc. Cả ba đều dùng 9:16. Preset tự lưu vẫn được giữ.
+- **1012 · Karaoke đỏ + video nghiêng** xuất 3:4, 1080 × 1440, video nghiêng −9°, chữ nghiêng −11°, từ đang đọc màu đỏ và các từ còn lại màu trắng. Mặc định tự nhận lời thoại từ MP4 và chia nguồn thành **ba phần đều nhau**. Trong **Chỉnh cấu hình** có thể chọn xuất một video, đổi góc, tiêu đề hoặc nguồn phụ đề. Có các nút mở riêng từng phần đã xuất.
 - Profile Tiêu chuẩn TikTok dùng H.264 VBR 12 Mb/s; Tiết kiệm dùng 60% bitrate đã chọn; Chất lượng cao dùng CQ18, dung lượng tùy nội dung.
 - **Cài đặt → Dùng cấu hình video mẫu 3:4** mở cấu hình đối chiếu riêng: 1080 × 1440, lật ngang, 1.02× và 9.65 Mb/s theo cặp nguồn–CapCut. Mẫu này được giữ để kiểm tra kết quả, không nằm trong danh sách TikTok chính. Bố cục 9:16 dựa trên draft, chưa có cặp video draft gốc để chấm độ giống.
 - Giao diện gồm **Nguồn video → Cấu hình chung → Xem trước**. Bấm **Chỉnh cấu hình…** để mở cửa sổ lớn với các nhóm thu gọn; chỉnh bằng thanh kéo hoặc nhập số. **Lưu thay đổi** áp dụng cho video chưa xuất; **Hủy** bỏ lần chỉnh đó. Preview nằm bên phải; lưu preset và nhập/xuất JSON ngay trong cột cấu hình.
 - Shader chạy GPU; NVENC tăng tốc mã hóa. Chọn mã hóa CPU vẫn cần OpenGL cho shader.
 
 Preview và xuất dùng cùng engine. Preview 540px giúp xem nhanh; chất lượng ở kích thước full có thể khác do nội suy và sharpen phụ thuộc kích thước. Xem [báo cáo port GPU](CapCut_FFmpeg_Codex_Handoff/work/REPORT.md) và [đối chiếu dung lượng](CapCut_FFmpeg_Codex_Handoff/work/ENCODING_REPORT.md). Không tuyên bố tái tạo CapCut 1:1; chưa có model segmentation/stabilization/HDR gốc.
+
+## Karaoke tự động
+
+Chọn preset **1012**, thêm MP4 và bấm **Xem thử** hoặc **Xuất video**. Lần đầu dùng, app tải bộ Whisper native và model đa ngôn ngữ Base khoảng 150 MB, kiểm tra SHA256 rồi lưu trong `data/template-studio/runtime/speech/`. Sau đó nhận lời thoại offline trên CPU, trong worker riêng; shader video và mã hóa NVENC vẫn dùng GPU khi có. Không cần Python, CUDA hay cài CapCut. Video không được tải lên dịch vụ nhận giọng nói.
+
+Phụ đề được nhận một lần cho mỗi nguồn và lưu trong `cache/captions/`; preview, ba phần và các lượt xuất lại dùng chung. Nguồn thay đổi sẽ được nhận lại. Whisper tự nhận ngôn ngữ, giữ lời gốc; độ chính xác phụ thuộc âm thanh. Kiểm tra bằng bản xem thử. Video không có âm thanh cần tắt phụ đề hoặc chọn file có sẵn.
+
+Có thể chọn `video.words.json`/`video.srt` cạnh video hoặc dùng **Chọn file…**. JSON nhận danh sách `{text,start,end}` tính bằng giây, hoặc Draft CapCut dạng JSON thuần. SRT chỉ có mốc cả dòng nên thời gian từng từ được ước lượng. Các đoạn Draft lồng thay đổi tốc độ chưa được hỗ trợ; app báo lỗi để dùng SRT/JSON theo video đã xuất.
+
+Ba phần được chia theo ranh giới khung hình trên thời gian video xuất. Sổ tiến độ trong `cache/parts/` giữ đường dẫn và trạng thái từng phần. Khi dừng/lỗi, phần đã hoàn tất được giữ; chạy lại cùng nguồn, cấu hình và nơi xuất sẽ kiểm tra codec, kích thước, FPS, thời lượng và âm thanh rồi tiếp tục phần thiếu. Đổi cấu hình tạo một lượt xuất mới. File đang có không bị ghi đè. Các điểm cắt đều nhau có thể khác điểm cắt thủ công của video CapCut mẫu.
+
+Karaoke dùng ASS/libass và Arial có sẵn trên Windows, mô phỏng kiểu chữ trắng/đỏ hai dòng; không kèm font hay template chữ độc quyền CapCut. Hiệu ứng ngũ giác lặp theo cấu hình và có thể tắt lặp. Xem [trạng thái tích hợp 1012](docs/karaoke/ROADMAP_AND_QA.md).
 
 ## Hàng đợi và dữ liệu
 

@@ -21,6 +21,8 @@ from offline_studio.process import probe
 from .assets_local import discover, import_cache, validate
 from .gpu.resources import bundled_cache
 from .output_files import archive_output_artifacts, reports_directory
+from .parts import render_parts
+from .speech import prepare_captions
 from .presets import (
     DEFAULT_PRESET_ID, EFFECT_NAME, FILTER_NAME, LEGACY_NAMES,
     catalog, main_catalog, normalize, safe_name, tiktok_config, tiktok_name,
@@ -712,6 +714,18 @@ class Production(QObject):
             if path and Path(path).is_file():
                 QDesktopServices.openUrl(QUrl.fromLocalFile(path))
 
+    @Slot(int)
+    def openPart(self, index):
+        if self._index >= 0:
+            paths = self._rows[self._index].get("parts", [])
+            if 0 <= index < len(paths) and Path(paths[index]).is_file():
+                QDesktopServices.openUrl(QUrl.fromLocalFile(paths[index]))
+
+    @Slot(result=str)
+    def chooseSubtitleFile(self):
+        path, _ = QFileDialog.getOpenFileName(None, "Chọn phụ đề", "", "Phụ đề (*.srt *.json)")
+        return path
+
     @Slot(bool)
     def showSource(self, enabled):
         self._mode = "source" if enabled else "result"
@@ -771,15 +785,18 @@ class Production(QObject):
             self._mode = "result"
             self.host.message("Đã tạo bản xem thử.")
 
+        def work(emit):
+            prepared = prepare_captions(self.root, self.home, source, config,
+                                        lambda text: emit(dict(notice=text)))
+            if prepared["part_count"] > 1:
+                prepared = {**prepared, "subtitle_part_label": "PART 1"}
+            return run_worker(
+                self.root, self.home, self.request(source, destination, prepared, True, offset),
+                lambda event: emit(dict(notice=f"Đang dựng bản xem thử: {event['percent']:.0f}%")),
+            )
+
         self.pool.submit(
-            lambda emit: run_worker(
-                self.root,
-                self.home,
-                self.request(source, destination, config, True, offset),
-                lambda p: emit(
-                    dict(notice=f"Đang dựng bản xem thử: {p['percent']:.0f}%")
-                ),
-            ),
+            work,
             result=done,
             error=self.host.message,
             event=self.task_event,
@@ -802,7 +819,7 @@ class Production(QObject):
             if (
                 row["status"] == "Hoàn tất"
                 and row.get("result")
-                and not Path(row["result"]).is_file()
+                and any(not Path(path).is_file() for path in row.get("parts", [row["result"]]))
             ):
                 row.update(
                     status="Chờ xử lý",
@@ -868,6 +885,8 @@ class Production(QObject):
                     if not Path(row["path"]).is_file():
                         raise FileNotFoundError("Không tìm thấy video nguồn.")
                     signature = fingerprint(row["path"], config)
+                    config = prepare_captions(self.root, self.home, row["path"], config,
+                        lambda text: emit(dict(row=token, values=dict(detail=text), notice=text)))
                     destination = output / (
                         safe_name(Path(row["name"]).stem)
                         + "_"
@@ -891,21 +910,27 @@ class Production(QObject):
                             )
                         )
 
-                    result = run_worker(
-                        self.root,
-                        self.home,
-                        self.request(row["path"], destination, config),
-                        progress,
-                    )
+                    if config["part_count"] > 1:
+                        result = render_parts(
+                            self.root, self.home, token, row["path"], config, output,
+                            self.request, progress,
+                            lambda parts: emit(dict(row=token, values=dict(parts=parts, result=parts[0]), save=True)),
+                        )
+                        outputs = result["parts"]
+                    else:
+                        result = run_worker(self.root, self.home,
+                                            self.request(row["path"], destination, config), progress)
+                        outputs = [str(destination)]
                     stamp = Path(row["path"]).stat()
                     done += 1
                     values = dict(
                         status="Hoàn tất",
                         percent=100,
-                        result=str(destination),
+                        result=outputs[0], parts=outputs,
                         signature=signature,
                         sourceStamp=[stamp.st_size, stamp.st_mtime_ns],
-                        detail=f"{result['wall_seconds']:.1f}s · {destination.stat().st_size / 1024**2:.1f} MiB",
+                        detail=f"{len(outputs)} phần · {result['wall_seconds']:.1f}s" if len(outputs) > 1 else
+                               f"{result['wall_seconds']:.1f}s · {destination.stat().st_size / 1024**2:.1f} MiB",
                     )
                 except TaskCancelled:
                     raise

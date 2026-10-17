@@ -14,6 +14,8 @@ Mã nguồn Beta Render do dự án cung cấp được cấp phép GPL-3.0-only
 | Pydantic | Xem requirements-lock.txt, [mã nguồn](https://github.com/pydantic/pydantic) | MIT |
 | Python | 3.14 khi build bản Windows, [mã nguồn](https://www.python.org/downloads/source/) | PSF và giấy phép kèm theo |
 | PyInstaller | Chỉ dùng để build, [mã nguồn](https://github.com/pyinstaller/pyinstaller) | GPL với ngoại lệ phân phối bootloader |
+| Whisper.cpp / ggml | Runtime native [b5454](https://github.com/ggml-org/whisper.cpp/tree/b5454), tải trực tiếp từ release chính thức khi dùng karaoke | MIT, xem giấy phép upstream |
+| Whisper Base đa ngôn ngữ | Model từ [ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp/tree/5359861c739e955e79d9a303bcbc70fb988958b1), nguồn [OpenAI Whisper](https://github.com/openai/whisper) | MIT |
 
 Bản EXE giữ nguyên thư viện liên kết động. Thông báo giấy phép lấy từ các wheel và danh sách phiên bản/đường dẫn mã nguồn được đóng trong `_internal/licenses/`, gồm `package-sources.json`. Mã nguồn của app có tại [repository công khai](https://github.com/x1-2023/template-studio); source dependency không sửa đổi có tại các dự án gốc và các bản phân phối source trên PyPI ghi trong danh sách này.
 
