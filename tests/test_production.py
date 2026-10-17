@@ -222,3 +222,28 @@ class QueueTests(unittest.TestCase):
             with patch("template_studio.production.QDesktopServices.openUrl") as opened:
                 p.openErrorLog()
             self.assertEqual(opened.call_args.args[0].toLocalFile(), str(log).replace("\\", "/"))
+
+    def test_preview_uses_correct_part_badge_and_stops_at_part_boundary(self):
+        from unittest.mock import Mock
+        with tempfile.TemporaryDirectory() as folder:
+            home = Path(folder)
+            host = Host(home)
+            host.mediaReady, host._nvenc = True, True
+            p = Production(host)
+            p._ready, p._cache = True, "cache"
+            p._config = next(item["config"] for item in catalog() if item["id"]=="karaoke-1012")
+            p._rows = [dict(path="video.mp4",duration=9)]
+            p._index = 0
+            p.pool = Mock()
+            p.pool.submit.side_effect = lambda work,**kwargs:work(lambda event:None)
+            requests = []
+            def worker(root,home,request,progress):
+                requests.append(request)
+                return dict(output=request["output"])
+            with patch("template_studio.production.prepare_captions",side_effect=lambda root,home,src,config,notice:config), patch("template_studio.production.run_worker",side_effect=worker):
+                p.preview(4)
+                p.preview(2.9)
+            self.assertEqual(requests[0]["config"]["subtitle_part_label"],"PART 2")
+            self.assertEqual(requests[0]["seconds"],2)
+            self.assertEqual(requests[1]["config"]["subtitle_part_label"],"PART 1")
+            self.assertAlmostEqual(requests[1]["seconds"],.1)

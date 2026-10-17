@@ -21,7 +21,7 @@ from offline_studio.process import probe
 from .assets_local import discover, import_cache, validate
 from .gpu.resources import bundled_cache
 from .output_files import archive_output_artifacts, reports_directory
-from .parts import render_parts
+from .parts import plan_parts, render_parts
 from .speech import prepare_captions
 from .presets import (
     DEFAULT_PRESET_ID, EFFECT_NAME, FILTER_NAME, LEGACY_NAMES,
@@ -761,6 +761,7 @@ class Production(QObject):
             self.host.message(self._runtime)
             return
         source = self._rows[self._index]["path"]
+        duration = float(self._rows[self._index]["duration"])
         config = copy.deepcopy(self._config)
         folder = self.home / "cache/previews"
         folder.mkdir(parents=True, exist_ok=True)
@@ -788,10 +789,17 @@ class Production(QObject):
         def work(emit):
             prepared = prepare_captions(self.root, self.home, source, config,
                                         lambda text: emit(dict(notice=text)))
+            seconds = 3
             if prepared["part_count"] > 1:
-                prepared = {**prepared, "subtitle_part_label": "PART 1"}
+                intervals = plan_parts(duration, prepared)
+                index = max(i for i, part in enumerate(intervals) if part["start"] <= offset)
+                part = intervals[index]
+                seconds = min(3, part["start"] + part["seconds"] - offset)
+                prepared = {**prepared, "subtitle_part_label": f"PART {index+1}"}
+            request = self.request(source, destination, prepared, True, offset)
+            request["seconds"] = seconds
             return run_worker(
-                self.root, self.home, self.request(source, destination, prepared, True, offset),
+                self.root, self.home, request,
                 lambda event: emit(dict(notice=f"Đang dựng bản xem thử: {event['percent']:.0f}%")),
             )
 

@@ -1,11 +1,13 @@
-Beta Render 1.2.1 sửa lỗi dừng render khi Windows khóa file tiến độ.
+Beta Render 1.3.0 thêm preset **1012 · Karaoke đỏ + video nghiêng**.
 
-- Ghi JSON bằng file tạm riêng, thử lại khi Windows báo Access is denied. Nếu chưa ghi được tiến độ, video vẫn tiếp tục render; cấu hình và kết quả vẫn báo lỗi khi không lưu được.
-- Sửa lỗi đóng pipe che mất lỗi gốc thành `[Errno 22] Invalid argument`.
-- Thư mục xuất chỉ nhận MP4. Log, thống kê render và báo cáo lượt chạy được lưu trong thư mục nhật ký của app.
-- Cất log/báo cáo của bản cũ đã nhận diện vào `cache/workers/archived-exports/`, giữ nguyên MP4 và file khác của người dùng.
-- Chọn video lỗi rồi bấm **Nhật ký lỗi** để mở đúng log. Tên file tạm ngắn hơn để tránh kéo dài đường dẫn theo tên video.
+- Thêm MP4, chọn 1012 rồi xuất: tự nhận lời thoại, karaoke trắng/đỏ hai dòng, video nghiêng trên nền mờ. Mặc định 1080 × 1440, 30 FPS, ba phần đều nhau.
+- Nhận lời thoại local bằng Whisper native. Lần đầu tải runtime/model khoảng 150 MB, xác minh SHA256; các lần sau dùng offline. Không cần Python hoặc CUDA.
+- Preview và các phần xuất dùng chung phụ đề đã nhận. Có thể chọn SRT/JSON riêng, chỉnh tiêu đề, góc video/chữ, lặp hiệu ứng và xuất một video hoặc ba phần.
+- Có nút mở từng phần. Dừng/lỗi rồi chạy lại cùng nguồn, cấu hình và nơi xuất sẽ kiểm tra các phần hoàn tất và tiếp tục phần thiếu.
+- Giữ nguyên các preset TikTok, cấu hình, hàng đợi và các sửa lỗi tiến độ Windows của 1.2.1. Thư mục xuất chỉ nhận MP4; nhật ký và sổ chia phần nằm trong dữ liệu app.
 
-Cập nhật từ app bằng **Cập nhật app**, hoặc tải ZIP và giải nén toàn bộ. Giữ cấu hình, preset, hàng đợi và video đã xuất. Hàng đợi vẫn xử lý lần lượt; bấm **Xuất lại** để chạy lại video lỗi.
+Cập nhật qua **Cài đặt → Kiểm tra cập nhật → Cập nhật và mở lại**, hoặc tải ZIP và giải nén toàn bộ. Giữ tên `TemplateStudio.exe` để tương thích updater.
 
-Windows 10/11 x64, driver OpenGL 3.3 trở lên. Hiệu ứng có sẵn, FFmpeg tự tải và xác minh ở lần mở đầu nếu thiếu; cần mạng lần đầu, sau đó dùng offline.
+Karaoke dùng ASS/Arial để mô phỏng phong cách mẫu, không khẳng định giống template CapCut 1:1. Điểm chia đều có thể khác cắt thủ công. Lời nhận tự động có thể sai; nên xem thử. Video không có âm thanh cần tắt phụ đề hoặc chọn file có sẵn.
+
+Windows 10/11 x64, driver OpenGL 3.3 trở lên. FFmpeg và bộ nhận giọng nói cần mạng khi chuẩn bị lần đầu; sau đó dùng offline. Shader chạy GPU; Whisper hiện chạy CPU để tương thích máy khác.

@@ -30,8 +30,12 @@ class ProgressWriter:
 def execute(request, emit, diagnostics=None):
     if request["action"] == "transcribe":
         import os
+        from .paths import data_home
         from .speech import transcribe
-        return transcribe(request["source"], os.environ["TEMPLATE_STUDIO_HOME"], diagnostics, emit)
+        app_root = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parents[1]
+        home = data_home(app_root)
+        os.environ["TEMPLATE_STUDIO_HOME"] = str(home)
+        return transcribe(request["source"], home, diagnostics, emit)
     if request["action"] == "health":
         import glcontext  # noqa: F401
         import moderngl

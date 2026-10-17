@@ -3,6 +3,7 @@
 import hashlib
 import io
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -49,6 +50,15 @@ class SpeechTests(unittest.TestCase):
             dict(text="[_BEG_]", offsets={"from":0,"to":100}),
         ]))
         self.assertEqual(words, [dict(text="CHÀO",start=.2,end=.65)])
+
+    def test_standalone_asr_worker_uses_data_home_without_environment_override(self):
+        from template_studio.worker import execute
+        with tempfile.TemporaryDirectory() as folder, patch.dict(os.environ):
+            os.environ.pop("TEMPLATE_STUDIO_HOME", None)
+            with patch("template_studio.paths.data_home",return_value=Path(folder)), patch("template_studio.speech.transcribe",return_value=dict(words=[])) as transcribe:
+                emit = lambda event: None
+                self.assertEqual(execute(dict(action="transcribe",source="video.mp4"),emit,Path(folder)),dict(words=[]))
+            self.assertEqual(transcribe.call_args.args[1],Path(folder))
 
 
 class PartTests(unittest.TestCase):

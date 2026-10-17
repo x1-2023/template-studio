@@ -364,7 +364,7 @@ ApplicationWindow {
                     Caption { text: win.timeText(previewPlayer.position)+" / "+win.timeText(previewPlayer.duration); Layout.alignment: Qt.AlignRight; visible: p.previewUrl!==""; font.pixelSize: 11 }
                     RowLayout { Layout.fillWidth: true
                         Caption { text: "Từ giây"; font.pixelSize: 12 }
-                        NumberField { id: offset; objectName: "previewOffset"; from: 0; to: current ? Math.max(0,Math.floor(current.duration/p.config.playback_rate)-3) : 0; Layout.fillWidth: true }
+                        NumberField { id: offset; objectName: "previewOffset"; from: 0; to: current ? Math.max(0,Math.floor((current.duration-p.config.source_offset)/p.config.playback_rate)-3) : 0; Layout.fillWidth: true }
                     }
                     Action { objectName: "previewButton"; text: "Xem thử 3 giây"; Layout.fillWidth: true; enabled: !studio.busy && p.ready && p.currentIndex>=0; onClicked: p.preview(offset.value) }
                     Action { text: "Mở video đã xuất"; Layout.fillWidth: true; enabled: current!==null && !!current.result; onClicked: p.openResult() }
