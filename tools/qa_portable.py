@@ -210,7 +210,8 @@ def main():
         captions.write_text(json.dumps(speech["result"]["words"],ensure_ascii=False),encoding="utf-8")
         preset = next(p for p in catalog() if p["id"]=="karaoke-1012")
         from template_studio.parts import plan_parts
-        intervals = plan_parts(float(original["format"]["duration"]),preset["config"])
+        source_video = next(s for s in original["streams"] if s["codec_type"]=="video")
+        intervals = plan_parts(float(source_video.get("duration",original["format"]["duration"])),preset["config"])
         outputs = folder/"karaoke-exports"
         outputs.mkdir()
         karaoke = dict(words=len(speech["result"]["words"]),parts=[])

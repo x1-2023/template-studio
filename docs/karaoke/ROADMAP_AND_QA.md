@@ -26,4 +26,13 @@ Các công cụ tái hiện: `python tools/qa_karaoke.py` và `python tools/qa_p
 
 ## Cổng phát hành
 
-Đang kiểm tra ZIP sạch, native ASR, ba phần bằng EXE, CI và updater. Chưa có video CapCut hoàn chỉnh của project 1012 trong gói gửi nên chưa chấm độ giống; các điểm cắt đều nhau và hiệu ứng lặp là thiết kế hiện tại. Model ASR có thể nhận sai từ/thời gian, cần xem thử với nguồn thực tế.
+Ứng viên 1.3.0 đã vượt qua các kiểm tra source và EXE:
+
+- 69/69 kiểm thử local và [Windows CI](https://github.com/x1-2023/template-studio/actions/runs/39037301798) đạt. Mã chức năng: `031ae2473512118638dd683b3f82ddebc712491b`; fixture TEMP của runner được chuẩn hóa ở `d7a8f43`.
+- ZIP giải nén vào dữ liệu sạch, PATH chỉ có Windows, không Python/FFmpeg/cache effect: app tự tải và xác minh FFmpeg; các preset cũ render offline bằng NVENC.
+- Worker EXE trực tiếp tự xác định data_home, tải runtime Whisper và model khoảng 150 MB có checksum. Nhận 163 từ từ nguồn; ba phần sau đó xuất với mạng bị chặn.
+- Kế hoạch chia dùng thời lượng luồng video, tách phần đệm AAC của container: mỗi phần 553 khung, 18.433333 giây, 1080×1440/30 FPS, có âm thanh. Thư mục xuất chỉ có ba MP4.
+- GUI 1366×768 với preview MP4 thật đã được xem bằng mắt. Preview có nhãn đúng phần; khi xem sát điểm cắt sẽ dừng ở ranh giới phần đó.
+- Phát hiện và sửa lỗi riêng của worker chạy trực tiếp không có biến môi trường; thêm kiểm thử hồi quy. Renderer gọi trực tiếp cũng dùng tên ASS an toàn và dọn file tạm.
+
+Trạng thái phát hành và checksum được công bố ở GitHub Releases với tag `v1.3.0`, qua workflow kiểm tra/build/worker riêng. Chưa có video CapCut hoàn chỉnh của project 1012 trong gói gửi nên chưa chấm độ giống; các điểm cắt đều nhau và hiệu ứng lặp là thiết kế hiện tại. Model ASR có thể nhận sai từ/thời gian, cần xem thử với nguồn thực tế.

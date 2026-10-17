@@ -4,7 +4,10 @@
   "base_commit": "a36081087a5940bf002837acf37609f2db1170b8",
   "date": "2026-10-17",
   "version": "1.3.0",
-  "state": "Đã tích hợp và kiểm thử source trên Windows; đang kiểm thử đóng gói",
+  "state": "Đã nghiệm thu source và EXE portable trên Windows",
+  "source_commit": "031ae2473512118638dd683b3f82ddebc712491b",
+  "unit_tests": "69/69 đạt trên local và Windows CI",
+  "ci_url": "https://github.com/x1-2023/template-studio/actions/runs/39037301798",
   "validated": [
     "Whisper native nhận 163 từ từ MP4 55 giây, khoảng 10 giây trên CPU local",
     "Cache phụ đề dùng lại giữa preview và xuất",
@@ -13,11 +16,14 @@
     "Hủy phần hai, đọc lại sổ và tiếp tục không render lại phần một",
     "Đường dẫn có dấu, khoảng trắng, dấu nháy và ngoặc vuông",
     "CPU x264 720x960, tốc độ 1.02, cắt đầu 0.2 giây, tắt âm thanh",
-    "Preset cũ giống từng pixel với v1.2.1 tại 0/0.5/3 giây"
+    "Preset cũ giống từng pixel với v1.2.1 tại 0/0.5/3 giây",
+    "GUI 1366x768 với preview nhận lời thoại thật và các cấu hình mới",
+    "EXE sạch tự tải FFmpeg, Whisper và model đã xác minh SHA256",
+    "EXE nhận 163 từ và xuất ba phần offline, mỗi phần 553 khung/18.433333 giây, có âm thanh",
+    "Worker trực tiếp dùng data_home khi không có biến môi trường",
+    "Preview hiển thị đúng nhãn phần và cắt ở ranh giới phần"
   ],
   "pending": [
-    "EXE giải nén sạch: tải ASR/model và xuất ba phần offline",
-    "CI, bản phát hành và updater",
     "Đối chiếu với video CapCut gốc 1012 chưa có trong ZIP"
   ],
   "limitations": [
