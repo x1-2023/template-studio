@@ -17,7 +17,7 @@ Mã nguồn [công khai GPL-3.0-only](https://github.com/x1-2023/template-studio
 
 ## Preset và cấu hình
 
-- Màn hình chính dành cho **TikTok: video dọc 9:16, 1080 × 1920, 30 FPS**, MP4/H.264 và âm thanh AAC. [TikTok khuyến nghị video dọc 9:16 và xuất 1080 × 1920](https://ads.tiktok.com/business/en/guides/video-advertising-guide).
+- Ba preset TikTok xuất **video dọc 9:16, 1080 × 1920, 30 FPS**, MP4/H.264 và âm thanh AAC. [TikTok khuyến nghị video dọc 9:16 và xuất 1080 × 1920](https://ads.tiktok.com/business/en/guides/video-advertising-guide).
 - Mặc định **TikTok · Ngũ giác + Camera** bật đồng thời **Lớp phủ ngũ giác lấp lánh** (`7491138615477685505`) và **Camera độ nét cao 2** (`7514206177195068689`), tốc độ 1×, không lật ngang. Một preset lưu chung hiệu ứng, bộ lọc, bố cục và thiết lập xuất.
 - **TikTok · Chỉ bộ lọc Camera** tắt hiệu ứng mở đầu; **TikTok · Chỉ nền mờ** tắt cả hiệu ứng và bộ lọc. Cả ba đều dùng 9:16. Preset tự lưu vẫn được giữ.
 - **1012 · Karaoke đỏ + video nghiêng** xuất 3:4, 1080 × 1440, video nghiêng −9°, chữ nghiêng −11°, từ đang đọc màu đỏ và các từ còn lại màu trắng. Mặc định tự nhận lời thoại từ MP4 và chia nguồn thành **ba phần đều nhau**. Trong **Chỉnh cấu hình** có thể chọn xuất một video, đổi góc, tiêu đề hoặc nguồn phụ đề. Có các nút mở riêng từng phần đã xuất.

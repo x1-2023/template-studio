@@ -72,7 +72,8 @@ class PartTests(unittest.TestCase):
 
     def test_retry_keeps_verified_parts_and_renders_only_remaining_outputs(self):
         with tempfile.TemporaryDirectory() as folder:
-            home = Path(folder)
+            # TEMP của Windows runner có thể dùng bí danh RUNNER~1.
+            home = Path(folder).resolve()
             source = home/"nguồn.mp4"
             source.write_bytes(b"source")
             output = home/"exports"
