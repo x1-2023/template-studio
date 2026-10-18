@@ -69,6 +69,7 @@ def execute(request, emit, diagnostics=None):
         no_filter=not config["filter_enabled"],
         mute=config["mute"],
         timeline_offset=request.get("offset", 0),
+        effect_offset=request.get("effect_offset", 0),
         diagnostics=diagnostics,
     )
     args.temporary = request.get("temporary")

@@ -105,6 +105,9 @@ def render(source, output, config, args, progress=lambda event: None):
     stamp = (source.stat().st_size, source.stat().st_mtime_ns)
     rate, offset = float(config["playback_rate"]), float(config.get("source_offset", 0))
     timeline_offset = max(0, float(getattr(args, "timeline_offset", 0)))
+    effect_offset = float(getattr(args, "effect_offset", 0))
+    if not math.isfinite(effect_offset) or not 0 <= effect_offset <= timeline_offset:
+        raise ValueError("Mốc bắt đầu intro không hợp lệ.")
     offset += timeline_offset * rate
     bitrate_mbps = args.video_bitrate
     encoder_options = video_encoder_args(args.encoder, bitrate_mbps)
@@ -163,7 +166,8 @@ def render(source, output, config, args, progress=lambda event: None):
         write_ass(words, subtitle_ass, w, h, source_offset=rate*timeline_offset+float(config.get("source_offset", 0)),
                   playback_rate=rate, angle=float(config.get("subtitle_angle", -11)),
                   red=config.get("subtitle_red", "FF374A"),
-                  title=config.get("subtitle_title", ""), part_label=config.get("subtitle_part_label", ""), duration=seconds)
+                  title=config.get("subtitle_title", "").replace("{video}", source.stem.replace("_", " "))[:140],
+                  part_label=config.get("subtitle_part_label", ""), duration=seconds)
     renderer = Renderer((dw, dh), (w, h), config, args.skin, args.cache)
     gpu_name = renderer.ctx.info["GL_RENDERER"]
     started = time.perf_counter()
@@ -343,6 +347,7 @@ def render(source, output, config, args, progress=lambda event: None):
                     not args.no_effect,
                     not args.no_filter,
                     mask,
+                    effect_offset=effect_offset,
                 )
                 process_times.append((time.perf_counter() - begin) * 1000)
                 gpu_times.append(renderer.last_gpu_ms)

@@ -2,12 +2,12 @@
   "project": "Beta Render Karaoke 1012",
   "base_tag": "v1.2.1",
   "base_commit": "a36081087a5940bf002837acf37609f2db1170b8",
-  "date": "2026-10-17",
+  "date": "2026-10-18",
   "version": "1.3.1",
-  "state": "Đã nghiệm thu source và EXE portable trên Windows",
-  "source_commit": "031ae2473512118638dd683b3f82ddebc712491b",
-  "unit_tests": "69/69 nền 1.3.0 đạt; đã thêm hồi quy nâng cấp từ cấu hình 1.2.1 thật",
-  "ci_url": "https://github.com/x1-2023/template-studio/actions/runs/39037301798",
+  "state": "Ứng viên theo Draft và hai thành phẩm; chờ nguồn gốc để so trực tiếp",
+  "source_commit": "781cf5b8b9826ea69529381265393ba524f292b3 (nền trước khi nhận video mẫu)",
+  "unit_tests": "78/78 source đạt",
+  "ci_url": "https://github.com/x1-2023/template-studio/actions/runs/39038246855",
   "validated": [
     "Whisper native nhận 163 từ từ MP4 55 giây, khoảng 10 giây trên CPU local",
     "Cache phụ đề dùng lại giữa preview và xuất",
@@ -22,14 +22,19 @@
     "EXE nhận 163 từ và xuất ba phần offline, mỗi phần 553 khung/18.433333 giây, có âm thanh",
     "Worker trực tiếp dùng data_home khi không có biến môi trường",
     "Preview hiển thị đúng nhãn phần và cắt ở ranh giới phần",
-    "Tự chuyển toàn bộ cấu hình hàng chờ 1.2.1, sao lưu nguyên file và xuất tiếp không chọn lại preset"
+    "Tự chuyển toàn bộ cấu hình hàng chờ 1.2.1, sao lưu nguyên file và xuất tiếp không chọn lại preset",
+    "Đọc hai thành phẩm 1080x1440/30 FPS, khoảng 9.6 Mb/s và Draft với hai compound",
+    "Sửa chiều xoay, vị trí chữ, tốc độ 1.0293 và dịch X theo Draft",
+    "Tự chia theo thời lượng và khoảng nghỉ, tự tiêu đề/nhãn PART, intro riêng mỗi part",
+    "Render GPU hai part tự chia trên nguồn có lời thoại, có âm thanh và không có sidecar trong exports"
   ],
   "pending": [
-    "Đối chiếu với video CapCut gốc 1012 chưa có trong ZIP"
+    "So trực tiếp GPU với hai thành phẩm khi có MP4 nguồn gốc",
+    "Đóng gói và kiểm tra EXE theo cấu hình tham chiếu mới trước khi phát hành stable"
   ],
   "limitations": [
-    "Arial và ASS mô phỏng phong cách chữ, không khẳng định giống template CapCut 1:1",
-    "Chia ba phần đều nhau, không dùng điểm cắt thủ công của Draft",
+    "Arial Black và ASS mô phỏng phong cách chữ, chưa có emoji động/tô màu từ khóa",
+    "Điểm chia tự động có thể khác cắt thủ công trong Draft",
     "Draft lồng thay đổi tốc độ được báo không hỗ trợ",
     "Độ chính xác nhận lời thoại phụ thuộc âm thanh"
   ]

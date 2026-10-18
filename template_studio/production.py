@@ -21,7 +21,7 @@ from offline_studio.process import probe
 from .assets_local import discover, import_cache, validate
 from .gpu.resources import bundled_cache
 from .output_files import archive_output_artifacts, reports_directory
-from .parts import plan_parts, render_parts
+from .parts import plan_source_parts, render_parts
 from .speech import prepare_captions
 from .presets import (
     DEFAULT_PRESET_ID, EFFECT_NAME, FILTER_NAME, LEGACY_NAMES,
@@ -598,7 +598,7 @@ class Production(QObject):
                     video = next(
                         s for s in data["streams"] if s["codec_type"] == "video"
                     )
-                    row["duration"] = float(data["format"]["duration"])
+                    row["duration"] = float(video.get("duration", data["format"]["duration"]))
                     row["meta"] = (
                         f"{video['width']}×{video['height']} · {row['duration']:.1f}s"
                     )
@@ -766,7 +766,6 @@ class Production(QObject):
             self.host.message(self._runtime)
             return
         source = self._rows[self._index]["path"]
-        duration = float(self._rows[self._index]["duration"])
         config = copy.deepcopy(self._config)
         folder = self.home / "cache/previews"
         folder.mkdir(parents=True, exist_ok=True)
@@ -795,13 +794,16 @@ class Production(QObject):
             prepared = prepare_captions(self.root, self.home, source, config,
                                         lambda text: emit(dict(notice=text)))
             seconds = 3
-            if prepared["part_count"] > 1:
-                intervals = plan_parts(duration, prepared)
+            effect_offset = 0
+            if prepared["part_count"] != 1:
+                intervals = plan_source_parts(source, prepared)
                 index = max(i for i, part in enumerate(intervals) if part["start"] <= offset)
                 part = intervals[index]
                 seconds = min(3, part["start"] + part["seconds"] - offset)
                 prepared = {**prepared, "subtitle_part_label": f"PART {index+1}"}
+                effect_offset = part["start"]
             request = self.request(source, destination, prepared, True, offset)
+            request["effect_offset"] = effect_offset
             request["seconds"] = seconds
             return run_worker(
                 self.root, self.home, request,
@@ -923,7 +925,7 @@ class Production(QObject):
                             )
                         )
 
-                    if config["part_count"] > 1:
+                    if config["part_count"] != 1:
                         result = render_parts(
                             self.root, self.home, token, row["path"], config, output,
                             self.request, progress,

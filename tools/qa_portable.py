@@ -209,6 +209,7 @@ def main():
         captions = job/"words.json"
         captions.write_text(json.dumps(speech["result"]["words"],ensure_ascii=False),encoding="utf-8")
         preset = next(p for p in catalog() if p["id"]=="karaoke-1012")
+        preset["config"].update(part_count=3, playback_rate=1)
         from template_studio.parts import plan_parts
         source_video = next(s for s in original["streams"] if s["codec_type"]=="video")
         intervals = plan_parts(float(source_video.get("duration",original["format"]["duration"])),preset["config"])
@@ -222,6 +223,7 @@ def main():
                            config={**preset["config"],"subtitle_mode":"file","subtitle_file":str(captions),"subtitle_part_label":f"PART {i+1}"},
                            cache=first["effects"],encoder="h264_nvenc",bitrate=12,preview=False,
                            seconds=interval["seconds"],offset=interval["start"])
+            request["effect_offset"] = interval["start"]
             request_path = part/"request.json"
             request_path.write_text(json.dumps(request,ensure_ascii=False),encoding="utf-8")
             run([str(executable),"--render-worker","--request",str(request_path)], offline, part/"launcher.log", timeout=240)

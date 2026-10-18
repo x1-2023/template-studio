@@ -35,7 +35,7 @@ void main(){
                          : min(output_size.x/source_size.x,output_size.y/source_size.y)*scale;
     vec2 d=v_uv*output_size-output_size*(.5+offset);
     if (cover_only==0) {
-        float a=radians(-rotation_deg);
+        float a=radians(rotation_deg);
         d=vec2(cos(a)*d.x-sin(a)*d.y, sin(a)*d.x+cos(a)*d.y);
     }
     vec2 uv=d/(source_size*s)+.5;
@@ -335,7 +335,7 @@ class Renderer:
             {"intensity": self.preset.get("filter_intensity", 1)},
         )
 
-    def process(self, rgb, t, effect=True, tone=True, mask=None):
+    def process(self, rgb, t, effect=True, tone=True, mask=None, effect_offset=0):
         # Video dùng hàng trên trước; OpenGL dùng gốc UV ở dưới. LUT atlas giữ
         # thứ tự pixel trong PNG vì tọa độ LUT được mã hóa theo đúng atlas đó.
         self.input.write(np.ascontiguousarray(rgb[::-1]).tobytes(), alignment=1)
@@ -344,13 +344,14 @@ class Renderer:
             apply_tone = tone and t >= self.preset.get("filter_start", 0)
             if apply_tone and self.preset.get("filter_stage", "before") == "before":
                 image = self.filter(image, mask)
+            effect_time = t - effect_offset
             active = effect and self.preset.get(
                 "effect_start", 0
-            ) <= t < self.preset.get("effect_end", 2.166667)
+            ) <= effect_time < self.preset.get("effect_end", 2.166667)
             if active:
                 loop = float(self.preset.get("effect_loop_seconds", 0))
                 start = float(self.preset.get("effect_start", 0))
-                effect_t = start + ((t - start) % loop) if loop > 0 else t
+                effect_t = start + ((effect_time - start) % loop) if loop > 0 else effect_time
                 p = animation(effect_t, self.preset)
                 a = max(0.0, p["sample"] / 79)
                 blur = a**0.35

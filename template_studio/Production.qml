@@ -318,9 +318,9 @@ ApplicationWindow {
                     Label { text: (p.config.height/p.config.width>1.5 ? "9:16" : "3:4")+" · "+p.config.width+" × "+p.config.height+" · "+p.config.fps+" FPS · "+(p.config.mute ? "Tắt âm thanh" : "Giữ âm thanh gốc"); color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Label { text: "H.264 · "+(p.config.quality==="high" ? "CQ18" : (p.config.video_bitrate*(p.config.quality==="small" ? .6 : 1)).toFixed(2)+" Mb/s")+" · "+(p.config.encoder==="auto" ? "Encoder tự động" : p.config.encoder==="h264_nvenc" ? "NVENC" : "CPU"); color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Label { text: "Bộ lọc: "+(p.config.filter_enabled ? p.filterName+" · "+Math.round(p.config.filter_intensity*100)+"% · Độ nét "+Math.round(p.config.sharpness*100)+"%" : "Tắt"); color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-                    Label { text: "Phụ đề: "+({"auto":"Tự nhận lời thoại","file":"File đã chọn","sidecar":"File cạnh video","off":"Tắt"})[p.config.subtitle_mode]+" · "+(p.config.part_count===3 ? "Xuất 3 phần" : "Xuất 1 video"); visible: p.config.subtitle_mode!=="off" || p.config.part_count>1; color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    Label { text: "Phụ đề: "+({"auto":"Tự nhận lời thoại","file":"File đã chọn","sidecar":"File cạnh video","off":"Tắt"})[p.config.subtitle_mode]+" · "+(p.config.part_count===0 ? "Tự chia part" : p.config.part_count===1 ? "Xuất 1 video" : "Xuất "+p.config.part_count+" phần"); visible: p.config.subtitle_mode!=="off" || p.config.part_count!==1; color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Action { objectName: "editConfigButton"; text: "Chỉnh cấu hình…"; primary: true; Layout.fillWidth: true; topPadding: 12; bottomPadding: 12; enabled: !studio.busy; onClicked: configDialog.open() }
-                    Caption { text: p.config.part_count===3 ? "Mỗi video nguồn xuất thành ba phần đều nhau." : p.config.height/p.config.width>1.5 ? "Xuất video dọc 9:16 để đăng TikTok." : "Xuất video khung 3:4."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    Caption { text: p.config.part_count===0 ? "Khoảng "+p.config.part_seconds+" giây/part, ưu tiên khoảng nghỉ lời thoại gần mốc cắt." : p.config.part_count>1 ? "Chia thành "+p.config.part_count+" phần đều nhau." : p.config.height/p.config.width>1.5 ? "Xuất video dọc 9:16 để đăng TikTok." : "Xuất video khung 3:4."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Caption { text: "Áp dụng cho các video chưa xuất."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Item { Layout.preferredHeight: 8 }
                     Label { text: "Lưu cấu hình thành preset"; color: ink; font.pixelSize: 13; font.bold: true }
@@ -368,9 +368,9 @@ ApplicationWindow {
                     }
                     Action { objectName: "previewButton"; text: "Xem thử 3 giây"; Layout.fillWidth: true; enabled: !studio.busy && p.ready && p.currentIndex>=0; onClicked: p.preview(offset.value) }
                     Action { text: "Mở video đã xuất"; Layout.fillWidth: true; enabled: current!==null && !!current.result; onClicked: p.openResult() }
-                    RowLayout { Layout.fillWidth: true; visible: current!==null && current.parts!==undefined && current.parts.length>1
+                    Flow { Layout.fillWidth: true; spacing: 6; visible: current!==null && current.parts!==undefined && current.parts.length>1
                         Repeater { model: current && current.parts ? current.parts : []
-                            Action { required property int index; text: "Phần "+(index+1); Layout.fillWidth: true; onClicked: p.openPart(index) }
+                            Action { required property int index; text: "Phần "+(index+1); width: Math.max(72,(parent.width-6)/2); onClicked: p.openPart(index) }
                         }
                     }
                 }
@@ -476,7 +476,8 @@ ApplicationWindow {
                                 onEditingFinished: configDialog.edit("subtitle_file", text) }
                             Action { objectName: "subtitlePicker"; text: "Chọn file…"; enabled: !studio.busy; onClicked: { var path=p.chooseSubtitleFile(); if(path)configDialog.edit("subtitle_file",path) } }
                         }
-                        Field { objectName: "subtitleTitle"; placeholderText: "Tiêu đề trên cùng (để trống nếu không dùng)"
+                        Check { objectName: "titleFromFile"; text: "Dùng tên video làm tiêu đề"; checked: configDialog.draft.subtitle_title==="{video}"; enabled: !studio.busy; onClicked: configDialog.edit("subtitle_title",checked ? "{video}" : "") }
+                        Field { objectName: "subtitleTitle"; placeholderText: "Tiêu đề trên cùng (để trống để tắt)"; visible: configDialog.draft.subtitle_title!=="{video}"
                             Layout.fillWidth: true; text: configDialog.draft.subtitle_title; enabled: !studio.busy
                             onEditingFinished: configDialog.edit("subtitle_title", text) }
                         SettingRow { label: "Độ nghiêng phụ đề"; setting: "subtitle_angle"; low: -30; high: 30; decimals: 1; unit: "°" }
@@ -491,7 +492,11 @@ ApplicationWindow {
                     FoldSection { objectName: "outputSection"; title: "Thiết lập đầu ra"; expanded: true
                         RowLayout { Layout.fillWidth: true
                             Caption { text: "Chia video"; Layout.preferredWidth: 132 }
-                            Select { objectName: "partCountSelect"; model: ["1 video", "3 phần đều nhau"]; currentIndex: configDialog.draft.part_count===3 ? 1 : 0; enabled: !studio.busy; onActivated: configDialog.edit("part_count",currentIndex===1 ? 3 : 1); Layout.fillWidth: true }
+                            Select { objectName: "partCountSelect"; model: ["Tự chia theo thời lượng", "1 video", "2 phần đều nhau", "3 phần đều nhau"]; currentIndex: configDialog.draft.part_count; enabled: !studio.busy; onActivated: configDialog.edit("part_count",currentIndex); Layout.fillWidth: true }
+                        }
+                        RowLayout { Layout.fillWidth: true; visible: configDialog.draft.part_count===0
+                            Caption { text: "Giây mỗi part"; Layout.preferredWidth: 132 }
+                            Field { objectName: "partSecondsField"; text: String(configDialog.draft.part_seconds); validator: IntValidator {bottom:30;top:1800} enabled: !studio.busy; onEditingFinished: if(acceptableInput)configDialog.edit("part_seconds",Number(text)); Layout.fillWidth: true }
                         }
                         RowLayout { Layout.fillWidth: true
                             Caption { text: "Chất lượng"; Layout.preferredWidth: 132 }

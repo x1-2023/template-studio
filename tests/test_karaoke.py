@@ -42,7 +42,7 @@ class KaraokeTests(unittest.TestCase):
             p=write_ass(words,Path(d)/'karaoke.ass',1080,1440,
                         source_offset=2,playback_rate=1,angle=-11,red='FF374A')
             content=p.read_text(encoding='utf-8-sig')
-            self.assertIn(r'\frz-11.00',content)
+            self.assertIn(r'\frz11.00',content)
             self.assertIn('Dialogue: 0,0:00:01.00,0:00:01.40,',content)
             self.assertIn(r'\c&H4A37FF&',content)
             self.assertIn('LADIES',content)
@@ -100,6 +100,16 @@ class KaraokeTests(unittest.TestCase):
         for value in ([dict(text="a")], [dict(text=None,start=0,end=1)], [dict(text="a",start=0,end=float("inf"))]):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 _parse_timed_json(value)
+
+    def test_title_wraps_and_matches_reference_positions(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = write_ass([], Path(folder)/"x.ass", 1080, 1440, duration=3,
+                             title="MELO CALLS OUT PABLO TORRE OVER LEBRON HELICOPTER INVESTIGATION", part_label="PART 2")
+            text = path.read_text(encoding="utf-8-sig")
+            self.assertIn(r"\pos(540,203)", text)
+            self.assertIn(r"\pos(540,1231)", text)
+            self.assertIn(r"OVER\NLEBRON", text)
+            self.assertIn(r"\frz10.88", text)
 
 
 if __name__=='__main__':

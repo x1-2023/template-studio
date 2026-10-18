@@ -34,6 +34,7 @@ BASE = dict(
     subtitle_title="",
     subtitle_part_label="",
     part_count=1,
+    part_seconds=180.0,
     effect_loop_seconds=0.0,
     offset=[0, 0],
     playback_rate=1.0,
@@ -62,10 +63,11 @@ SYSTEM = [
     dict(
         id="karaoke-1012",
         name=PRESET_NAMES["karaoke-1012"],
-        description="1080 × 1440, video nghiêng, karaoke trắng/đỏ. Tự nhận lời thoại và xuất 3 phần.",
+        description="Theo mẫu 1012: 1080 × 1440, video nghiêng, karaoke trắng/đỏ. Tự nhận lời và chia khoảng 3 phút/part.",
         config=dict(width=1080, height=1440, scale=1.1248, rotation_deg=-9.0059,
-                    intro_enabled=True, filter_enabled=True, effect_end=3600, effect_loop_seconds=2.166667, part_count=3,
-                    subtitle_mode="auto", video_bitrate=12.0),
+                    offset=[-0.047318612, 0], playback_rate=1.02931464386368,
+                    intro_enabled=True, filter_enabled=True, effect_end=2.166667, effect_loop_seconds=0, part_count=0,
+                    subtitle_mode="auto", subtitle_title="{video}", subtitle_red="FF0000", video_bitrate=9.65),
     ),
     dict(
         id="pentagon-3x4",
@@ -148,6 +150,7 @@ def normalize(value):
         ("rotation_deg", -30, 30),
         ("subtitle_angle", -30, 30),
         ("effect_loop_seconds", 0, 60),
+        ("part_seconds", 30, 1800),
         ("playback_rate", 0.5, 2),
         ("background_sigma_ratio", 0, 0.1),
         ("effect_start", 0, 60),
@@ -194,8 +197,8 @@ def normalize(value):
     ]:
         if s[key] not in choices:
             raise ValueError(f"Giá trị {key} không hợp lệ.")
-    if type(s["part_count"]) is not int or s["part_count"] not in (1, 3):
-        raise ValueError("Số part phải là 1 hoặc 3")
+    if type(s["part_count"]) is not int or s["part_count"] not in (0, 1, 2, 3):
+        raise ValueError("Chọn tự chia, một video, hai hoặc ba phần.")
     if s["subtitle_mode"] not in ("off", "sidecar", "file", "auto"):
         raise ValueError("Chế độ phụ đề không hợp lệ")
     if not isinstance(s["subtitle_title"], str) or len(s["subtitle_title"]) > 140:

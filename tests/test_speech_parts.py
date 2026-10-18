@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from template_studio.parts import plan_parts, render_parts
+from template_studio.parts import plan_parts, plan_source_parts, render_parts
 from template_studio.presets import catalog, normalize
 from template_studio.speech import _download, parse_whisper, prepare_captions
 
@@ -62,6 +62,51 @@ class SpeechTests(unittest.TestCase):
 
 
 class PartTests(unittest.TestCase):
+    def test_auto_parts_use_caption_pause_and_preserve_entire_video(self):
+        config = normalize(dict(part_count=0, part_seconds=180, playback_rate=1.02931464386368))
+        words = [dict(text="FINISH.", start=184*config["playback_rate"], end=185.9*config["playback_rate"]),
+                 dict(text="NEXT", start=186.1*config["playback_rate"], end=187*config["playback_rate"])]
+        parts = plan_parts(366.9*config["playback_rate"], config, words)
+        self.assertEqual(len(parts), 2)
+        self.assertAlmostEqual(parts[1]["start"], 185.9)
+        self.assertAlmostEqual(sum(x["seconds"] for x in parts), 366.9)
+        self.assertAlmostEqual(parts[0]["start"]+parts[0]["seconds"], parts[1]["start"])
+
+    def test_auto_parts_map_source_offset_and_rate_once(self):
+        config = normalize(dict(part_count=0,part_seconds=30,source_offset=2,playback_rate=1.5))
+        parts = plan_parts(122,config,[dict(text="END.",start=44,end=48.5),dict(text="NEXT",start=50,end=51)])
+        self.assertAlmostEqual(parts[1]["start"],31)
+        self.assertAlmostEqual(sum(p["seconds"] for p in parts),80)
+
+    def test_auto_without_words_and_short_video(self):
+        config = normalize(dict(part_count=0,part_seconds=180))
+        self.assertEqual(len(plan_parts(90,config)),1)
+        self.assertEqual([p["start"] for p in plan_parts(509,config)],[0,180,360])
+        for duration in (0,float("nan"),float("inf")):
+            with self.assertRaises(ValueError):
+                plan_parts(duration,config)
+
+    def test_auto_does_not_cut_mid_word_and_avoids_tiny_final_part(self):
+        config = normalize(dict(part_count=0,part_seconds=180))
+        parts = plan_parts(367,config,[dict(text="LONG",start=179,end=181)])
+        self.assertEqual(parts[1]["start"],181)
+        self.assertEqual(len(plan_parts(185,config)),1)
+
+    def test_two_equal_parts_remain_available(self):
+        self.assertEqual(plan_parts(10,normalize(dict(part_count=2))),
+                         [dict(start=0,seconds=5),dict(start=5,seconds=5)])
+
+    def test_sidecar_guides_auto_cuts_using_video_not_audio_duration(self):
+        with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder)/"video.mp4"
+            caption = source.with_suffix(".words.json")
+            caption.write_text(json.dumps([dict(text="END.",start=178,end=183),dict(text="NEXT",start=184,end=185)]))
+            config = normalize(dict(part_count=0,subtitle_mode="sidecar"))
+            metadata = dict(format=dict(duration="401"),streams=[dict(codec_type="video",duration="400")])
+            parts = plan_source_parts(source,config,metadata)
+            self.assertEqual(parts[1]["start"],183)
+            self.assertAlmostEqual(sum(p["seconds"] for p in parts),400)
+
     def test_part_boundaries_share_one_output_timeline_at_nonunit_speed(self):
         config = normalize(dict(part_count=3,playback_rate=1.02,source_offset=1.3))
         parts = plan_parts(10, config)
@@ -79,7 +124,7 @@ class PartTests(unittest.TestCase):
             output = home/"exports"
             output.mkdir()
             config = next(p["config"] for p in catalog() if p["id"]=="karaoke-1012")
-            config.update(subtitle_mode="off")
+            config.update(subtitle_mode="off", part_count=3, playback_rate=1)
             calls = []
 
             def metadata(path):
@@ -105,6 +150,7 @@ class PartTests(unittest.TestCase):
                 stamp = first.stat().st_mtime_ns
                 result = render_parts(home,home,"row",source,config,output,request,lambda event:None,lambda paths:None)
             self.assertEqual(len(calls), 4)
+            self.assertEqual([c["effect_offset"] for c in calls], [0,3,3,6])
             self.assertEqual(len(result["parts"]), 3)
             self.assertEqual(first.stat().st_mtime_ns, stamp)
             self.assertEqual(len(list(output.glob("*.mp4"))), 3)

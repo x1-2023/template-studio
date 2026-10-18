@@ -1,4 +1,4 @@
-"""Chia ba phần theo ranh giới khung hình, ghi sổ để tiếp tục sau khi lỗi/dừng."""
+"""Chia part theo khung hình và khoảng nghỉ lời thoại, ghi sổ để xuất tiếp."""
 
 import hashlib
 import json
@@ -16,10 +16,48 @@ from .worker_client import run_worker
 from .version import VERSION
 
 
-def plan_parts(duration, config):
+def plan_parts(duration, config, words=None):
     duration = (duration - config["source_offset"]) / config["playback_rate"]
     fps, count = config["fps"], config["part_count"]
+    if not math.isfinite(duration) or duration <= 0:
+        raise ValueError("Video không còn nội dung sau mốc cắt đầu.")
     frames = math.ceil(duration * fps - 1e-6)
+    if count == 0:
+        if words is None and config.get("subtitle_mode") == "file":
+            from .karaoke import load_words
+            words = load_words(config["subtitle_file"])
+        words = words or []
+        rate, offset = config["playback_rate"], config["source_offset"]
+        candidates = []
+        for i, word in enumerate(words):
+            end = (word["end"] - offset) / rate
+            following = (words[i+1]["start"] - offset) / rate if i+1 < len(words) else duration
+            if following >= end:
+                candidates.append((end, following, word["text"].endswith((".", "!", "?"))))
+        boundaries = [0]
+        step = config["part_seconds"]
+        while duration - boundaries[-1] / fps > step + 15:
+            target = boundaries[-1] / fps + step
+            nearby = []
+            for end, following, sentence in candidates:
+                cut = max(end, min(target, following))
+                frame = math.ceil(cut * fps - 1e-6)
+                cut = frame / fps
+                if (abs(cut - target) <= 8 and duration - cut >= 15
+                        and cut <= following + 1e-6 and (sentence or following - end >= .15)):
+                    nearby.append((abs(cut-target) + (0 if sentence else 2), frame))
+            frame = min(nearby)[1] if nearby else round(target * fps)
+            # Không cắt giữa một từ nếu không tìm được khoảng nghỉ gần mốc.
+            for word in words:
+                start, end = ((word[k]-offset)/rate for k in ("start", "end"))
+                if start < frame/fps < end:
+                    frame = math.ceil(end*fps - 1e-6)
+            if not boundaries[-1] < frame < frames or duration-frame/fps < 15:
+                break
+            boundaries.append(frame)
+        boundaries.append(frames)
+        return [dict(start=a/fps, seconds=min(duration, b/fps)-a/fps)
+                for a,b in zip(boundaries, boundaries[1:])]
     if frames < count:
         raise ValueError("Video quá ngắn để chia thành các phần đã chọn.")
     return [dict(
@@ -46,17 +84,40 @@ def _valid_part(item, config, audio):
         return False
 
 
+def _caption_file(source, config):
+    if config.get("subtitle_mode") == "file":
+        return Path(config["subtitle_file"])
+    if config.get("subtitle_mode") == "sidecar":
+        from .karaoke import find_caption_file
+        path = find_caption_file(source)
+        if path is None:
+            raise FileNotFoundError("Thiếu phụ đề cạnh video: video.words.json hoặc video.srt")
+        return path
+    return None
+
+
+def plan_source_parts(source, config, metadata=None):
+    """Preview và xuất cùng dùng luồng video, không cộng phần đệm âm thanh."""
+    metadata = metadata or probe(source)
+    video = next(s for s in metadata["streams"] if s["codec_type"] == "video")
+    caption = _caption_file(source, config) if config["part_count"] == 0 else None
+    words = None
+    if caption is not None:
+        from .karaoke import load_words
+        words = load_words(caption)
+    return plan_parts(float(video.get("duration", metadata["format"]["duration"])), config, words)
+
+
 def render_parts(root, home, row_id, source, config, output, request, progress, completed):
     source, output = Path(source).resolve(), Path(output).resolve()
     stamp = [source.stat().st_size, source.stat().st_mtime_ns]
-    caption = Path(config["subtitle_file"]) if config.get("subtitle_mode") == "file" else None
+    caption = _caption_file(source, config)
     caption_stamp = [caption.stat().st_size, caption.stat().st_mtime_ns] if caption else None
     identity = dict(version=VERSION, row=row_id, source=str(source), stamp=stamp, config=config, caption_stamp=caption_stamp, output=str(output))
     key = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
     journal = Path(home) / "cache/parts" / (key + ".json")
     metadata = probe(source)
-    video = next(s for s in metadata["streams"] if s["codec_type"] == "video")
-    intervals = plan_parts(float(video.get("duration", metadata["format"]["duration"])), config)
+    intervals = plan_source_parts(source, config, metadata)
     audio = not config["mute"] and any(s["codec_type"] == "audio" for s in metadata["streams"])
     try:
         manifest = json.loads(journal.read_text(encoding="utf-8"))
@@ -86,6 +147,7 @@ def render_parts(root, home, row_id, source, config, output, request, progress, 
             atomic_json(journal, manifest)
             part_config = {**config, "subtitle_part_label": f"PART {i+1}"}
             job = request(str(source), target, part_config, offset=item["start"])
+            job["effect_offset"] = item["start"]
             job["seconds"] = item["seconds"]
             run_worker(root, home, job, lambda event, index=i: progress({
                 **event, "percent": (index + event["percent"] / 100) / len(intervals) * 100,

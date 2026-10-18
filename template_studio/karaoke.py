@@ -5,6 +5,7 @@ import html
 import json
 import math
 import re
+import textwrap
 from pathlib import Path
 
 MAX_BYTES = 32 * 1024 * 1024
@@ -205,8 +206,8 @@ def _groups(words, max_words=4):
 
 
 def write_ass(words, destination, width, height, *, source_offset=0.0,
-              playback_rate=1.0, timeline_offset=0.0, font_name="Arial",
-              red="FF374A", angle=-11.0, y_ratio=0.73, max_words=4, title="", part_label="", duration=None):
+              playback_rate=1.0, timeline_offset=0.0, font_name="Arial Black",
+              red="FF374A", angle=-11.0, y_ratio=0.66534, max_words=6, title="", part_label="", duration=None):
     """Tạo ASS; source_offset tính theo nguồn, timeline_offset theo video xuất."""
     if not 0 < playback_rate <= 4 or not 0.1 <= y_ratio <= 0.9:
         raise ValueError("Thời gian hoặc vị trí phụ đề không hợp lệ.")
@@ -220,23 +221,26 @@ def write_ass(words, destination, width, height, *, source_offset=0.0,
     highlight = f"{b}{g}{r}"
     base = float(source_offset) + float(timeline_offset) * float(playback_rate)
     # Cỡ chữ ASS tính bằng pixel theo PlayResY.
-    size = max(18, round(height * 0.035))
+    size = max(18, round(height * 0.05))
     x, y = round(width / 2), round(height * y_ratio)
     heading = ("[Script Info]\nScriptType: v4.00+\nScaledBorderAndShadow: yes\n"
                f"PlayResX: {width}\nPlayResY: {height}\nWrapStyle: 2\n\n"
                "[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n"
-               f"Style: Karaoke,{font_name},{size},&H00FFFFFF,&H00FFFFFF,&H00101010,&H90000000,-1,0,0,0,100,100,0,0,1,2.5,1.0,5,40,40,30,1\n"
-               f"Style: Header,{font_name},{max(22,round(height*.026))},&H00FFFFFF,&H00FFFFFF,&H003300A2,&H003300A2,-1,0,0,0,100,100,0,0,3,6,0,5,40,40,30,1\n"
-               f"Style: Part,{font_name},{max(18,round(height*.022))},&H00FFFFFF,&H00FFFFFF,&H003300A2,&H003300A2,-1,0,0,0,100,100,0,0,3,5,0,5,40,40,30,1\n\n"
+               f"Style: Karaoke,{font_name},{size},&H00FFFFFF,&H00FFFFFF,&H00000000,&H90000000,-1,0,0,0,80,100,0,0,1,4.5,2.0,5,40,40,30,1\n"
+               f"Style: Header,{font_name},{max(22,round(height*.043))},&H00FFFFFF,&H00FFFFFF,&H003300A2,&H003300A2,-1,0,0,0,80,100,0,0,3,10,0,5,40,40,30,1\n"
+               f"Style: Part,{font_name},{max(18,round(height*.043))},&H00FFFFFF,&H00FFFFFF,&H003300A2,&H003300A2,-1,0,0,0,80,100,0,0,3,10,0,5,40,40,30,1\n\n"
                "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n")
     lines = [heading]
     # Tiêu đề và nhãn phần giữ suốt thời lượng video đang render.
     last_end = max((float(w["end"]) for w in words), default=0)
     visible_end = float(duration) if duration is not None else max(0.0, (last_end - base) / playback_rate)
-    for style, value, yy in (("Header", title, .155), ("Part", part_label, .833)):
+    for style, value, yy in (("Header", title, .14066), ("Part", part_label, .85461)):
         if value and visible_end > 0:
-            content = _ass_text(value.upper()).replace(r"\n", r"\N")
-            anchor = rf"{{\an5\pos({x},{round(height*yy)})\frz{angle:.2f}}}"
+            paragraphs = value.upper().replace(r"\n", "\n").splitlines()
+            chunks = [line for paragraph in paragraphs for line in textwrap.wrap(paragraph, 32)]
+            content = r"\N".join(_ass_text(line) for line in chunks)
+            # ASS xoay dương ngược kim đồng hồ; Draft dùng dấu âm cho cùng hướng.
+            anchor = rf"{{\an5\pos({x},{round(height*yy)})\frz{-angle*.9893:.2f}}}"
             lines.append(f"Dialogue: 0,0:00:00.00,{_ass_time(visible_end)},{style},,0,0,0,,{anchor}{content}\n")
     for group in _groups(words, max_words=max_words):
         mapped = [dict(x, start=(x["start"] - base) / playback_rate,
@@ -260,7 +264,7 @@ def write_ass(words, destination, width, height, *, source_offset=0.0,
                     parts.append(r"{\c&H" + highlight + "&}" + token + r"{\c&HFFFFFF&}")
                 else:
                     parts.append(token)
-            layout = rf"{{\an5\pos({x},{y})\frz{angle:.2f}}}"
+            layout = rf"{{\an5\pos({x},{y})\frz{-angle:.2f}}}"
             lines.append(f"Dialogue: 0,{_ass_time(start)},{_ass_time(end)},Karaoke,,0,0,0,,{layout}{''.join(parts)}\n")
     path = Path(destination)
     path.parent.mkdir(parents=True, exist_ok=True)

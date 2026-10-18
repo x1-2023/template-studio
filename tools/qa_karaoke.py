@@ -40,7 +40,8 @@ def main():
     caption = source.with_suffix(".words.json")
     atomic_json(caption, words)
     config = next(p["config"] for p in catalog() if p["id"] == "karaoke-1012")
-    config.update(subtitle_mode="file", subtitle_file=str(caption), subtitle_title="BETA RENDER 1012")
+    config.update(subtitle_mode="file", subtitle_file=str(caption), subtitle_title="BETA RENDER 1012",
+                  part_count=3, playback_rate=1)
 
     def request(src, output, settings, preview=False, offset=0):
         return dict(action="render", source=src, output=str(output), config=settings,
