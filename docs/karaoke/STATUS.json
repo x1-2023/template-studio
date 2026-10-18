@@ -4,7 +4,10 @@
   "base_commit": "a36081087a5940bf002837acf37609f2db1170b8",
   "date": "2026-10-18",
   "version": "1.3.1",
-  "state": "Đã nghiệm thu nguồn thật và EXE; phát hành qua workflow tag v1.3.1",
+  "state": "Đã phát hành 1.3.1; gói public và updater đã được kiểm tra thực tế",
+  "release_url": "https://github.com/x1-2023/template-studio/releases/tag/v1.3.1",
+  "release_sha256": "a486c52441f456c83cc0e6766cc59d4fb6eaea5f2781535c6cbc64df365fc3ea",
+  "release_workflow": "https://github.com/x1-2023/template-studio/actions/runs/39145102306",
   "source_commit": "f16e645eb54165abf19d096fccc48392fc301db8",
   "unit_tests": "80/80 local và Windows CI đạt",
   "ci_url": "https://github.com/x1-2023/template-studio/actions/runs/39144830992",
@@ -31,7 +34,10 @@
     "Tổng 14839 khung, 1080x1440/30 FPS, khoảng 9.6 Mb/s; render GPU khoảng 429 giây trên RTX 2070 SUPER",
     "So bốn khung với CapCut: SSIM toàn khung 0.8324–0.8616; vùng ngoài dải chữ 0.9344–0.9539",
     "EXE cuối offline: nâng cấu hình 1.2.1 có backup, nhận 163 từ và xuất hai part 1079/533 khung",
-    "Phạm vi phụ đề riêng từng part, không lấy lẫn lời của part trước; tiêu đề lấy tên file hoặc nhập riêng"
+    "Phạm vi phụ đề riêng từng part, không lấy lẫn lời của part trước; tiêu đề lấy tên file hoặc nhập riêng",
+    "Updater tải đúng gói GitHub public có SHA256, cài từ 1.2.1 lên 1.3.1 và app báo khởi động thành công",
+    "Cập nhật giữ cấu hình cũ, dữ liệu, video xuất, runtime và backup EXE 1.2.1 đúng SHA256",
+    "EXE public sau cập nhật render GPU offline 90 khung có tiêu đề/phụ đề, PATH chỉ có Windows"
   ],
   "pending": [],
   "limitations": [

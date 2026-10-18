@@ -27,4 +27,6 @@ Whisper nhận 1457 từ từ toàn bộ nguồn. Với mốc 180 giây, kế ho
 
 80/80 kiểm thử local và [Windows CI](https://github.com/x1-2023/template-studio/actions/runs/39144830992) đạt ở mã chức năng `f16e645eb54165abf19d096fccc48392fc301db8`. ZIP EXE cuối giải nén sang dữ liệu sạch, PATH chỉ có Windows và mạng bị chặn: chuyển cấu hình 1.2.1, sao lưu nguyên trạng, xuất preset cũ, nhận 163 từ và xuất hai part karaoke 1079/533 khung có âm thanh. Phần ASR dùng runtime/model đã tải và xác minh từ lượt kiểm tra sạch trước.
 
+Đã kiểm tra cập nhật thực bằng gói [1.3.1 public](https://github.com/x1-2023/template-studio/releases/tag/v1.3.1), SHA256 `a486c52441f456c83cc0e6766cc59d4fb6eaea5f2781535c6cbc64df365fc3ea`: tải qua updater, kiểm tra hash, giải nén, cài lên bản sao 1.2.1 và mở lại app thành công. Cấu hình cũ, dữ liệu, video xuất và runtime được giữ; backup EXE cũ đúng SHA256. EXE public sau cập nhật render GPU offline 90 khung 1080×1440 với phụ đề ASR và tiêu đề tự động, PATH chỉ có Windows. Thử nghiệm dùng thư mục QA riêng, không thay app người dùng đang mở.
+
 Video nguồn, Draft, phụ đề của mẫu và ảnh đối chiếu giữ local; không đóng gói vào EXE hay đưa lên Git.
