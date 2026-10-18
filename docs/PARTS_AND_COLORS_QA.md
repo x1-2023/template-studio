@@ -7,5 +7,7 @@
 - Render GPU từ source và từ EXE giải nén: video thử 15 giây có tiếng, cắt đầu 0.15 giây, tốc độ 1.02931464386368×, chia 5 part. Đầu ra 1080×1440/30 FPS, số khung 86/87/86/87/87, có âm thanh ở cả 5 phần; thư mục xuất chỉ có 5 MP4. Preview 540×720/30 FPS, 60 khung trong 2 giây.
 - Kiểm tra điểm ảnh trong video full và preview xác nhận cả năm màu thử `00FFCC`, `3366FF`, `FF00FF`, `FFDD00`, `123D56` xuất hiện đúng. Đây là màu QA, không đổi màu mặc định của preset 1012.
 - EXE chạy với PATH chỉ Windows, chặn proxy mạng, dùng runtime đã lưu. Cấu hình 1.3.1 của preset/hàng chờ được bổ sung màu mặc định trắng/đen/hồng; giữ số part, màu highlight đã chỉnh và mọi thông số cũ.
+- GitHub CI `39147317729` và workflow phát hành `39147319872` đạt tại commit `e855de0e655e76bc5844ea3da9803bf3ec54e4da`. [v1.3.2](https://github.com/x1-2023/template-studio/releases/tag/v1.3.2) là stable/latest; ZIP public 257599904 byte, SHA256 `cc6a0cb8837f79dcaa2fddc1f65796944b09338764042126940f4f12d8264945`.
+- Đã thử updater trên bản sao gói public 1.3.1: tải và xác minh gói 1.3.2, thay EXE, mở lại thành công, lưu backup EXE đúng hash. Giữ preset riêng, hàng chờ, thông số cũ, file kiểm tra trong data/exports/runtime; bổ sung màu mặc định. EXE public sau nâng cấp render offline 60 khung ở kích thước full và xác nhận đủ năm màu tùy chọn.
 
-File kiểm chứng local: `.runtime/tests-132-final.log`, `.runtime/qa-colors-parts-132/verified.json`, `.runtime/qa-native-132/verified.json`. Video và dữ liệu QA không đưa lên Git.
+File kiểm chứng local: `.runtime/tests-132-final.log`, `.runtime/qa-colors-parts-132/verified.json`, `.runtime/qa-native-132/verified.json`, `.runtime/qa-updater-132/verified.json`. Video và dữ liệu QA không đưa lên Git.
