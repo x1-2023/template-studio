@@ -35,7 +35,7 @@ Windows, RTX 2070 SUPER, OpenGL/NVENC và FFmpeg có libass:
 
 Các công cụ tái hiện: `python tools/qa_karaoke.py` và `python tools/qa_portable.py --input <MP4-có-lời-thoại> --karaoke`. Để kiểm tra chế độ tự chia trong EXE: `python tools/qa_portable.py --input <MP4-có-lời-thoại> --archive <ZIP-ứng-viên> --karaoke --part-seconds 30` (nguồn trên 45 giây để có ít nhất hai phần).
 
-## Ứng viên 1.3.1
+## Nghiệm thu 1.3.1
 
 Kiểm tra nâng cấp bằng cấu hình 1.2.1 thật phát hiện từng hàng chờ chưa được bổ sung các trường mới. Đã chuẩn hóa cấu hình của tất cả hàng khi đọc phiên làm việc, giữ thông số cũ và tạo `production-before-karaoke.json` trước khi chuyển. Kiểm thử mới xuất tiếp hàng cũ mà không chọn lại preset, giữ video hoàn tất, preset tùy chỉnh và bản sao nguyên trạng. 1.3.0 được chuyển sang prerelease để updater tiếp tục dùng 1.2.1 trong lúc nghiệm thu 1.3.1.
 
@@ -50,4 +50,4 @@ Kiểm tra nâng cấp bằng cấu hình 1.2.1 thật phát hiện từng hàng
 - GUI 1366×768 với preview MP4 thật đã được xem bằng mắt. Preview có nhãn đúng phần; khi xem sát điểm cắt sẽ dừng ở ranh giới phần đó.
 - Phát hiện và sửa lỗi riêng của worker chạy trực tiếp không có biến môi trường; thêm kiểm thử hồi quy. Renderer gọi trực tiếp cũng dùng tên ASS an toàn và dọn file tạm.
 
-Nền 1.3.0 ở GitHub Releases đã chuyển sang prerelease; updater tiếp tục dùng 1.2.1 trong khi nghiệm thu ứng viên 1.3.1. Các kiểm tra ba phần bên trên ghi nhận thiết kế ban đầu của handoff; preset hiện đã đổi sang tự chia và intro đầu part theo hai thành phẩm nhận ngày 18/10. Model ASR có thể nhận sai từ/thời gian, cần xem thử với nguồn thực tế.
+Nền 1.3.0 ở GitHub Releases đã chuyển sang prerelease trong lúc nghiệm thu 1.3.1. Các kiểm tra ba phần bên trên ghi nhận thiết kế ban đầu của handoff; preset hiện đã đổi sang tự chia và intro đầu part theo nguồn thật cùng hai thành phẩm nhận ngày 18/10. Kết quả full nguồn và EXE cuối ở [báo cáo đối chiếu](REFERENCE_CHECK.md). Model ASR có thể nhận sai từ/thời gian, cần xem thử với nguồn thực tế.

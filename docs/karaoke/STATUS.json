@@ -4,10 +4,10 @@
   "base_commit": "a36081087a5940bf002837acf37609f2db1170b8",
   "date": "2026-10-18",
   "version": "1.3.1",
-  "state": "Ứng viên theo Draft và hai thành phẩm; chờ nguồn gốc để so trực tiếp",
-  "source_commit": "781cf5b8b9826ea69529381265393ba524f292b3 (nền trước khi nhận video mẫu)",
-  "unit_tests": "78/78 source đạt",
-  "ci_url": "https://github.com/x1-2023/template-studio/actions/runs/39038246855",
+  "state": "Đã nghiệm thu nguồn thật và EXE; phát hành qua workflow tag v1.3.1",
+  "source_commit": "f16e645eb54165abf19d096fccc48392fc301db8",
+  "unit_tests": "80/80 local và Windows CI đạt",
+  "ci_url": "https://github.com/x1-2023/template-studio/actions/runs/39144830992",
   "validated": [
     "Whisper native nhận 163 từ từ MP4 55 giây, khoảng 10 giây trên CPU local",
     "Cache phụ đề dùng lại giữa preview và xuất",
@@ -26,12 +26,14 @@
     "Đọc hai thành phẩm 1080x1440/30 FPS, khoảng 9.6 Mb/s và Draft với hai compound",
     "Sửa chiều xoay, vị trí chữ, tốc độ 1.0293 và dịch X theo Draft",
     "Tự chia theo thời lượng và khoảng nghỉ, tự tiêu đề/nhãn PART, intro riêng mỗi part",
-    "Render GPU hai part tự chia trên nguồn có lời thoại, có âm thanh và không có sidecar trong exports"
+    "Render GPU hai part tự chia trên nguồn có lời thoại, có âm thanh và không có sidecar trong exports",
+    "Nguồn YouTube thật: nhận 1457 từ; xuất ba part 5400/5664/3775 khung, giữ hết nguồn, có âm thanh",
+    "Tổng 14839 khung, 1080x1440/30 FPS, khoảng 9.6 Mb/s; render GPU khoảng 429 giây trên RTX 2070 SUPER",
+    "So bốn khung với CapCut: SSIM toàn khung 0.8324–0.8616; vùng ngoài dải chữ 0.9344–0.9539",
+    "EXE cuối offline: nâng cấu hình 1.2.1 có backup, nhận 163 từ và xuất hai part 1079/533 khung",
+    "Phạm vi phụ đề riêng từng part, không lấy lẫn lời của part trước; tiêu đề lấy tên file hoặc nhập riêng"
   ],
-  "pending": [
-    "So trực tiếp GPU với hai thành phẩm khi có MP4 nguồn gốc",
-    "Đóng gói và kiểm tra EXE theo cấu hình tham chiếu mới trước khi phát hành stable"
-  ],
+  "pending": [],
   "limitations": [
     "Arial Black và ASS mô phỏng phong cách chữ, chưa có emoji động/tô màu từ khóa",
     "Điểm chia tự động có thể khác cắt thủ công trong Draft",

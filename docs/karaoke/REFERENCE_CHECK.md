@@ -23,4 +23,8 @@ SSIM và PSNR trên ảnh xám 1080×1440 cùng thời điểm, không tìm offs
 
 Whisper nhận 1457 từ từ toàn bộ nguồn. Với mốc 180 giây, kế hoạch xuất là 180 + 188.8 + khoảng 125.825237 giây ở tốc độ đã đổi; phần cuối được giữ. Điểm cắt ưu tiên nghỉ lời thoại và tránh giữa từ, nên có thể lệch mốc 180 giây và khác điểm cắt thủ công. Tiêu đề mặc định lấy từ tên file; có thể bỏ chọn để nhập tiêu đề riêng hoặc để trống để tắt. Preview thật 3 giây đã được dựng từ phụ đề ASR và tiêu đề tự động.
 
+Đã xuất full nguồn trên RTX 2070 SUPER: ba part 180.000000/188.800000/125.833333 giây, 5400/5664/3775 khung, tổng 14839 khung. Cả ba H.264 1080×1440/30 FPS, khoảng 9.6 Mb/s, có âm thanh. Tổng thời lượng sai khác kế hoạch dưới một khung; thư mục xuất chỉ có ba MP4. Thời gian render khoảng 429 giây trên máy QA, không tính nhận lời thoại. Đây không phải cam kết tốc độ cho máy khác.
+
+80/80 kiểm thử local và [Windows CI](https://github.com/x1-2023/template-studio/actions/runs/39144830992) đạt ở mã chức năng `f16e645eb54165abf19d096fccc48392fc301db8`. ZIP EXE cuối giải nén sang dữ liệu sạch, PATH chỉ có Windows và mạng bị chặn: chuyển cấu hình 1.2.1, sao lưu nguyên trạng, xuất preset cũ, nhận 163 từ và xuất hai part karaoke 1079/533 khung có âm thanh. Phần ASR dùng runtime/model đã tải và xác minh từ lượt kiểm tra sạch trước.
+
 Video nguồn, Draft, phụ đề của mẫu và ảnh đối chiếu giữ local; không đóng gói vào EXE hay đưa lên Git.
