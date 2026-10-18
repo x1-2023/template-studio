@@ -151,6 +151,7 @@ class PartTests(unittest.TestCase):
                 result = render_parts(home,home,"row",source,config,output,request,lambda event:None,lambda paths:None)
             self.assertEqual(len(calls), 4)
             self.assertEqual([c["effect_offset"] for c in calls], [0,3,3,6])
+            self.assertEqual(calls[-1]["part_range"],[6,9])
             self.assertEqual(len(result["parts"]), 3)
             self.assertEqual(first.stat().st_mtime_ns, stamp)
             self.assertEqual(len(list(output.glob("*.mp4"))), 3)

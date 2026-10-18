@@ -271,6 +271,7 @@ class QueueTests(unittest.TestCase):
             job = worker.call_args.args[2]
             self.assertEqual(job["config"]["subtitle_part_label"],"PART 2")
             self.assertEqual(job["effect_offset"],180)
+            self.assertEqual(job["part_range"],[180,360])
             self.assertEqual(job["seconds"],2)
 
     def test_real_121_queue_is_migrated_backed_up_and_can_export_without_reselecting_preset(self):

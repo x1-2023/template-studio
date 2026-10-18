@@ -795,6 +795,7 @@ class Production(QObject):
                                         lambda text: emit(dict(notice=text)))
             seconds = 3
             effect_offset = 0
+            part_range = None
             if prepared["part_count"] != 1:
                 intervals = plan_source_parts(source, prepared)
                 index = max(i for i, part in enumerate(intervals) if part["start"] <= offset)
@@ -802,8 +803,10 @@ class Production(QObject):
                 seconds = min(3, part["start"] + part["seconds"] - offset)
                 prepared = {**prepared, "subtitle_part_label": f"PART {index+1}"}
                 effect_offset = part["start"]
+                part_range = [part["start"], part["start"] + part["seconds"]]
             request = self.request(source, destination, prepared, True, offset)
             request["effect_offset"] = effect_offset
+            request["part_range"] = part_range
             request["seconds"] = seconds
             return run_worker(
                 self.root, self.home, request,

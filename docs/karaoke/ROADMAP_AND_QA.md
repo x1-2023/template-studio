@@ -10,8 +10,8 @@ Ngày 18/10/2026, nền `v1.2.1` / `a36081087a5940bf002837acf37609f2db1170b8`. H
 - Thành phẩm cho thấy ngũ giác rõ ở đầu từng part, hết sau intro. Đã bỏ mặc định lặp suốt clip, đặt lại intro ở mỗi part; sửa chiều xoay để cạnh phải đi lên như mẫu, vị trí chữ .66534 chiều cao, tiêu đề .14066 và nhãn part .85461.
 - Preset sản xuất dùng quy tắc tổng quát: khoảng 180 giây/part, tìm khoảng nghỉ/cuối câu trong ±8 giây, tránh cắt giữa từ và gộp đuôi ngắn. Không gán hai điểm cắt riêng của mẫu cho mọi nguồn; giữ toàn bộ video sau mốc cắt đầu.
 - Tự lấy tên file làm tiêu đề, tự đánh số PART. Dùng Arial Black của Windows thay font ZY Trend riêng của CapCut; chưa có emoji động/tô màu từ khóa.
-- 78 kiểm thử source đạt; render GPU một nguồn có lời thoại 55.3 giây ở tốc độ theo Draft thành hai part 35.966667 và khoảng 17.763503 giây (đặt mốc thử 30 giây, sai số mã hóa trong một khung), có âm thanh. Thư mục xuất chỉ có MP4. Đã kiểm tra ảnh đầu part hai và ảnh sau intro. Preview và xuất cùng đọc thời lượng luồng video; phụ đề cạnh video cũng tham gia chọn điểm cắt.
-- Cần MP4 nguồn gốc để chấm độ giống trực tiếp với hai thành phẩm. Không dùng thành phẩm làm nguồn render lần nữa.
+- 80 kiểm thử source đạt; render GPU một nguồn có lời thoại 55.3 giây ở tốc độ theo Draft thành hai part 35.966667 và khoảng 17.763503 giây (đặt mốc thử 30 giây, sai số mã hóa trong một khung), có âm thanh. Thư mục xuất chỉ có MP4. Đã kiểm tra ảnh đầu part hai và ảnh sau intro. Preview và xuất cùng đọc thời lượng luồng video; phụ đề cạnh video cũng tham gia chọn điểm cắt.
+- Đã nhận nguồn YouTube thật, dựng hai đoạn GPU và đo bốn khung đối chiếu; đã nhận 1457 từ từ toàn bộ nguồn và tạo preview ASR. Người dùng xác nhận mẫu thiếu part cuối, app phải giữ hết nguồn. Xem [đối chiếu và giới hạn](REFERENCE_CHECK.md).
 
 ## Đã sửa và kiểm thử source
 
@@ -33,7 +33,7 @@ Windows, RTX 2070 SUPER, OpenGL/NVENC và FFmpeg có libass:
 - Mã hóa CPU x264, 720×960, tốc độ 1.02×, cắt đầu 0.2 giây, tắt tiếng: ba phần có tổng thời lượng trong sai số một khung.
 - Kiểm thử GUI lưu/hủy cấu hình karaoke, chọn file phụ đề và giữ các preset cũ.
 
-Các công cụ tái hiện: `python tools/qa_karaoke.py` và `python tools/qa_portable.py --input <MP4-có-lời-thoại> --karaoke`.
+Các công cụ tái hiện: `python tools/qa_karaoke.py` và `python tools/qa_portable.py --input <MP4-có-lời-thoại> --karaoke`. Để kiểm tra chế độ tự chia trong EXE: `python tools/qa_portable.py --input <MP4-có-lời-thoại> --archive <ZIP-ứng-viên> --karaoke --part-seconds 30` (nguồn trên 45 giây để có ít nhất hai phần).
 
 ## Ứng viên 1.3.1
 

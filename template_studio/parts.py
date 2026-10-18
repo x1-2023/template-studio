@@ -148,6 +148,7 @@ def render_parts(root, home, row_id, source, config, output, request, progress, 
             part_config = {**config, "subtitle_part_label": f"PART {i+1}"}
             job = request(str(source), target, part_config, offset=item["start"])
             job["effect_offset"] = item["start"]
+            job["part_range"] = [item["start"], item["start"] + item["seconds"]]
             job["seconds"] = item["seconds"]
             run_worker(root, home, job, lambda event, index=i: progress({
                 **event, "percent": (index + event["percent"] / 100) / len(intervals) * 100,

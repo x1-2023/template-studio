@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from template_studio.media_setup import FILES  # noqa: E402
-from template_studio.presets import DEFAULT_PRESET_ID, catalog  # noqa: E402
+from template_studio.presets import DEFAULT_PRESET_ID, catalog, normalize  # noqa: E402
 from template_studio.updater import extract_package  # noqa: E402
 from template_studio.version import ASSET_NAME, VERSION  # noqa: E402
 
@@ -62,7 +62,12 @@ def main():
     )
     parser.add_argument("--output", type=Path)
     parser.add_argument("--karaoke", action="store_true", help="Kiểm tra nhận giọng nói và ba phần karaoke bằng worker EXE")
+    parser.add_argument("--part-seconds", type=float, help="Kèm --karaoke để thử tự chia theo thời lượng thay vì ba phần đều nhau")
     args = parser.parse_args()
+    if args.part_seconds is not None:
+        if not args.karaoke:
+            parser.error("--part-seconds cần dùng cùng --karaoke")
+        normalize(dict(part_seconds=args.part_seconds))
     source = args.input.resolve()
     if not source.is_file():
         raise FileNotFoundError("Không tìm thấy video để kiểm tra.")
@@ -210,6 +215,9 @@ def main():
         captions.write_text(json.dumps(speech["result"]["words"],ensure_ascii=False),encoding="utf-8")
         preset = next(p for p in catalog() if p["id"]=="karaoke-1012")
         preset["config"].update(part_count=3, playback_rate=1)
+        if args.part_seconds is not None:
+            preset["config"].update(part_count=0,part_seconds=args.part_seconds,
+                                    playback_rate=1.02931464386368,subtitle_mode="file",subtitle_file=str(captions))
         from template_studio.parts import plan_parts
         source_video = next(s for s in original["streams"] if s["codec_type"]=="video")
         intervals = plan_parts(float(source_video.get("duration",original["format"]["duration"])),preset["config"])
@@ -224,6 +232,7 @@ def main():
                            cache=first["effects"],encoder="h264_nvenc",bitrate=12,preview=False,
                            seconds=interval["seconds"],offset=interval["start"])
             request["effect_offset"] = interval["start"]
+            request["part_range"] = [interval["start"],interval["start"]+interval["seconds"]]
             request_path = part/"request.json"
             request_path.write_text(json.dumps(request,ensure_ascii=False),encoding="utf-8")
             run([str(executable),"--render-worker","--request",str(request_path)], offline, part/"launcher.log", timeout=240)
@@ -235,8 +244,8 @@ def main():
             assert abs(float(video["duration"])-interval["seconds"]) < .15
             assert any(s["codec_type"]=="audio" for s in info["streams"])==has_audio
             karaoke["parts"].append(dict(output=request["output"],frames=video["nb_frames"],seconds=video["duration"]))
-            print(f"Karaoke EXE offline: phần {i+1}/3 · OK",flush=True)
-        assert len(list(outputs.iterdir()))==3
+            print(f"Karaoke EXE offline: phần {i+1}/{len(intervals)} · OK",flush=True)
+        assert len(list(outputs.iterdir()))==len(intervals)
     (folder / "xac-minh.json").write_text(
         json.dumps(
             dict(

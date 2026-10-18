@@ -193,12 +193,14 @@ def _ass_text(value):
 def _groups(words, max_words=4):
     """Chia nhóm từ ngắn để hiển thị karaoke hai dòng."""
     group = []
-    for word in words:
+    endings = (".", "?", "!", ",", ";", ":")
+    for index, word in enumerate(words):
         if group and (len(group) >= max_words or word["start"] - group[-1]["end"] > 0.65 or word["start"] - group[0]["start"] > 2.8):
             yield group
             group = []
         group.append(word)
-        if word["text"].endswith((".", "?", "!")):
+        if word["text"].endswith(endings) or (len(group) >= min(4, max_words) and
+                not any(w["text"].endswith(endings) for w in words[index+1:index+1+max_words-len(group)])):
             yield group
             group = []
     if group:
@@ -207,7 +209,8 @@ def _groups(words, max_words=4):
 
 def write_ass(words, destination, width, height, *, source_offset=0.0,
               playback_rate=1.0, timeline_offset=0.0, font_name="Arial Black",
-              red="FF374A", angle=-11.0, y_ratio=0.66534, max_words=6, title="", part_label="", duration=None):
+              red="FF374A", angle=-11.0, y_ratio=0.66534, max_words=6, title="", part_label="", duration=None,
+              context_start=0.0, context_end=None):
     """Tạo ASS; source_offset tính theo nguồn, timeline_offset theo video xuất."""
     if not 0 < playback_rate <= 4 or not 0.1 <= y_ratio <= 0.9:
         raise ValueError("Thời gian hoặc vị trí phụ đề không hợp lệ.")
@@ -220,15 +223,23 @@ def write_ass(words, destination, width, height, *, source_offset=0.0,
     r, g, b = red[:2], red[2:4], red[4:]
     highlight = f"{b}{g}{r}"
     base = float(source_offset) + float(timeline_offset) * float(playback_rate)
+    if not math.isfinite(context_start) or context_start < 0 or (context_end is not None and
+            (not math.isfinite(context_end) or context_end <= context_start)):
+        raise ValueError("Phạm vi phụ đề của part không hợp lệ.")
+    limit = context_end if context_end is not None else float("inf")
+    words = [dict(w,start=max(w["start"],context_start),end=min(w["end"],limit))
+             for w in words if w["end"] > context_start and w["start"] < limit]
     # Cỡ chữ ASS tính bằng pixel theo PlayResY.
-    size = max(18, round(height * 0.05))
+    size = max(18, round(height * .046))
+    top_size = max(20, round(height * .064))
+    outline, shadow, padding = max(1, height*.0042), max(.5, height*.0014), max(3, height*.007)
     x, y = round(width / 2), round(height * y_ratio)
     heading = ("[Script Info]\nScriptType: v4.00+\nScaledBorderAndShadow: yes\n"
                f"PlayResX: {width}\nPlayResY: {height}\nWrapStyle: 2\n\n"
                "[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n"
-               f"Style: Karaoke,{font_name},{size},&H00FFFFFF,&H00FFFFFF,&H00000000,&H90000000,-1,0,0,0,80,100,0,0,1,4.5,2.0,5,40,40,30,1\n"
-               f"Style: Header,{font_name},{max(22,round(height*.043))},&H00FFFFFF,&H00FFFFFF,&H003300A2,&H003300A2,-1,0,0,0,80,100,0,0,3,10,0,5,40,40,30,1\n"
-               f"Style: Part,{font_name},{max(18,round(height*.043))},&H00FFFFFF,&H00FFFFFF,&H003300A2,&H003300A2,-1,0,0,0,80,100,0,0,3,10,0,5,40,40,30,1\n\n"
+               f"Style: Karaoke,{font_name},{size},&H00FFFFFF,&H00FFFFFF,&H00000000,&H90000000,-1,0,0,0,80,100,0,0,1,{outline:.2f},{shadow:.2f},5,40,40,30,1\n"
+               f"Style: Header,{font_name},{max(22,round(height*.052))},&H00FFFFFF,&H00FFFFFF,&H003300A2,&H003300A2,-1,0,0,0,80,100,0,0,3,{padding:.2f},0,5,40,40,30,1\n"
+               f"Style: Part,{font_name},{max(18,round(height*.057))},&H00FFFFFF,&H00FFFFFF,&H003300A2,&H003300A2,-1,0,0,0,80,100,0,0,3,{padding:.2f},0,5,40,40,30,1\n\n"
                "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n")
     lines = [heading]
     # Tiêu đề và nhãn phần giữ suốt thời lượng video đang render.
@@ -251,12 +262,12 @@ def write_ass(words, destination, width, height, *, source_offset=0.0,
         for start, end in zip(boundaries, boundaries[1:]):
             if end <= start or end <= 0:
                 continue
-            active_index = next((i for i, w in enumerate(mapped) if w["start"] <= start < w["end"]), None)
+            active_index = next((i for i in reversed(range(len(mapped))) if mapped[i]["start"] <= start), None)
             parts = []
-            split_at = (len(mapped) + 1) // 2 if len(mapped) > 2 else 0
+            split_at = 2 if len(mapped) > 2 else 0
             for j, word in enumerate(mapped):
                 if j == split_at:
-                    parts.append(r"\N")
+                    parts.append(r"\N{\fs" + str(size) + "}")
                 elif j:
                     parts.append(" ")
                 token = _ass_text(word["text"].upper())
@@ -264,7 +275,7 @@ def write_ass(words, destination, width, height, *, source_offset=0.0,
                     parts.append(r"{\c&H" + highlight + "&}" + token + r"{\c&HFFFFFF&}")
                 else:
                     parts.append(token)
-            layout = rf"{{\an5\pos({x},{y})\frz{-angle:.2f}}}"
+            layout = rf"{{\an5\pos({x},{y})\frz{-angle:.2f}\fs{top_size}}}"
             lines.append(f"Dialogue: 0,{_ass_time(start)},{_ass_time(end)},Karaoke,,0,0,0,,{layout}{''.join(parts)}\n")
     path = Path(destination)
     path.parent.mkdir(parents=True, exist_ok=True)

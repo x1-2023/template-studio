@@ -108,6 +108,11 @@ def render(source, output, config, args, progress=lambda event: None):
     effect_offset = float(getattr(args, "effect_offset", 0))
     if not math.isfinite(effect_offset) or not 0 <= effect_offset <= timeline_offset:
         raise ValueError("Mốc bắt đầu intro không hợp lệ.")
+    part_range = getattr(args, "part_range", None)
+    if part_range is not None and (not isinstance(part_range, (list, tuple)) or len(part_range) != 2 or
+            any(not isinstance(x, (int, float)) or not math.isfinite(x) for x in part_range) or
+            not 0 <= part_range[0] <= timeline_offset < part_range[1]):
+        raise ValueError("Phạm vi part không hợp lệ.")
     offset += timeline_offset * rate
     bitrate_mbps = args.video_bitrate
     encoder_options = video_encoder_args(args.encoder, bitrate_mbps)
@@ -167,7 +172,9 @@ def render(source, output, config, args, progress=lambda event: None):
                   playback_rate=rate, angle=float(config.get("subtitle_angle", -11)),
                   red=config.get("subtitle_red", "FF374A"),
                   title=config.get("subtitle_title", "").replace("{video}", source.stem.replace("_", " "))[:140],
-                  part_label=config.get("subtitle_part_label", ""), duration=seconds)
+                  part_label=config.get("subtitle_part_label", ""), duration=seconds,
+                  context_start=float(config.get("source_offset", 0)) + rate*(part_range[0] if part_range else 0),
+                  context_end=float(config.get("source_offset", 0)) + rate*part_range[1] if part_range else None)
     renderer = Renderer((dw, dh), (w, h), config, args.skin, args.cache)
     gpu_name = renderer.ctx.info["GL_RENDERER"]
     started = time.perf_counter()

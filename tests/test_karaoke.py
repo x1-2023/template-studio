@@ -111,6 +111,26 @@ class KaraokeTests(unittest.TestCase):
             self.assertIn(r"OVER\NLEBRON", text)
             self.assertIn(r"\frz10.88", text)
 
+    def test_phrases_do_not_show_the_next_sentence_early(self):
+        words = [dict(text=t,start=i*.3,end=(i+1)*.3) for i,t in enumerate(
+            ["AND","LADIES","AND","GENTLEMEN,","DO","NOT","FORGET","OCTOBER","30TH,"])]
+        with tempfile.TemporaryDirectory() as folder:
+            path = write_ass(words,Path(folder)/"x.ass",1080,1440)
+            first = next(line for line in path.read_text(encoding="utf-8-sig").splitlines() if line.startswith("Dialogue:"))
+            self.assertNotIn("FORGET",first)
+            self.assertIn(r"\fs92",first)
+            self.assertIn(r"\N{\fs66}",first)
+
+    def test_part_context_excludes_words_from_previous_and_next_parts(self):
+        words=[dict(text=t,start=i,end=i+1) for i,t in enumerate(["PREVIOUS","CURRENT","NEXT"])]
+        with tempfile.TemporaryDirectory() as folder:
+            path=write_ass(words,Path(folder)/"x.ass",1080,1440,source_offset=1,
+                           context_start=1,context_end=2,duration=1)
+            text=path.read_text(encoding="utf-8-sig")
+            self.assertIn("CURRENT",text)
+            self.assertNotIn("PREVIOUS",text)
+            self.assertNotIn("NEXT",text)
+
 
 if __name__=='__main__':
     unittest.main()
