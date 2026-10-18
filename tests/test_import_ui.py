@@ -17,7 +17,7 @@ DLL_DIRECTORY = (
 os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Basic")
 
 from PySide6.QtCore import QEvent, QMimeData, QObject, QPointF, Qt, QUrl  # noqa: E402
-from PySide6.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent  # noqa: E402
+from PySide6.QtGui import QColor, QDragEnterEvent, QDragMoveEvent, QDropEvent  # noqa: E402
 from PySide6.QtQml import QQmlApplicationEngine  # noqa: E402
 from PySide6.QtQuick import QQuickItem, QQuickWindow  # noqa: E402
 from PySide6.QtTest import QTest  # noqa: E402
@@ -207,6 +207,53 @@ class ImportUiTests(unittest.TestCase):
         self.assertEqual(dialog.property("draft").toVariant()["subtitle_file"], str(path))
         self.click("cancelConfigButton")
         self.assertEqual(self.p.config["subtitle_file"], "")
+
+    def test_color_picker_and_custom_part_count_save_with_preset(self):
+        self.p.choosePreset("karaoke-1012")
+        self.click("editConfigButton")
+        dialog=self.window.findChild(QObject,"configDialog")
+        flick=self.window.findChild(QQuickItem,"configurationScroll").property("contentItem")
+
+        def scroll_to(name):
+            item=self.window.findChild(QQuickItem,name)
+            y=item.mapToScene(QPointF(0,0)).y()
+            flick.setProperty("contentY",flick.property("contentY")+y-260)
+            QTest.qWait(70)
+            return item
+
+        scroll_to("subtitle_redPicker")
+        with patch("template_studio.production.QColorDialog.getColor",return_value=QColor()):
+            self.click("subtitle_redPicker")
+        self.assertEqual(dialog.property("draft").toVariant()["subtitle_red"],"FF0000")
+        with patch("template_studio.production.QColorDialog.getColor",return_value=QColor("#33CCAA")):
+            self.click("subtitle_redPicker")
+        scroll_to("subtitle_colorField")
+        self.click("subtitle_colorField")
+        QTest.keyClick(self.window,Qt.Key_A,Qt.ControlModifier)
+        for char in "#66AAFF":
+            QTest.keyClick(self.window,Qt.Key(ord(char)))
+        QTest.keyClick(self.window,Qt.Key_Tab)
+        select=scroll_to("partCountSelect")
+        self.click("partCountSelect")
+        QTest.keyClick(self.window,Qt.Key_End)
+        QTest.keyClick(self.window,Qt.Key_Return)
+        self.wait()
+        self.assertEqual(select.property("currentIndex"),2)
+        self.assertEqual(dialog.property("draft").toVariant()["part_count"],2)
+        scroll_to("partCountField")
+        self.click("partCountField")
+        QTest.keyClick(self.window,Qt.Key_A,Qt.ControlModifier)
+        QTest.keyClick(self.window,Qt.Key_5)
+        QTest.keyClick(self.window,Qt.Key_Tab)
+        self.click("saveConfigButton")
+        self.assertFalse(dialog.property("visible"),self.controller.notice)
+        self.assertEqual(self.p.config["part_count"],5)
+        self.assertEqual(self.p.config["subtitle_red"],"33CCAA")
+        self.assertEqual(self.p.config["subtitle_color"],"66AAFF")
+        self.p.savePreset("Màu và số part")
+        saved=self.p.mainPresets[-1]["config"]
+        self.assertEqual(saved["part_count"],5)
+        self.assertEqual(saved["subtitle_red"],"33CCAA")
 
     def test_apply_config_rejects_invalid_data_and_running_tasks(self):
         original = self.p.config

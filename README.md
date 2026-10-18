@@ -2,7 +2,7 @@
 
 <img src="template_studio/assets/beta-render.png" alt="Logo Beta Render" width="96" height="96">
 
-Ứng dụng Windows xuất video hàng loạt bằng GPU. Luồng chính: **thêm video → chọn preset → Xuất video**. App nhớ preset và nơi lưu; mỗi video xuất thành một file, nguồn được giữ nguyên.
+Ứng dụng Windows xuất video hàng loạt bằng GPU. Luồng chính: **thêm video → chọn preset → Xuất video**. App nhớ preset và nơi lưu; có thể xuất một file hoặc chia thành nhiều part, nguồn được giữ nguyên.
 
 Mã nguồn [công khai GPL-3.0-only](https://github.com/x1-2023/template-studio). Dự án độc lập; xem [giấy phép thành phần](THIRD_PARTY_NOTICES.md).
 
@@ -20,7 +20,7 @@ Mã nguồn [công khai GPL-3.0-only](https://github.com/x1-2023/template-studio
 - Ba preset TikTok xuất **video dọc 9:16, 1080 × 1920, 30 FPS**, MP4/H.264 và âm thanh AAC. [TikTok khuyến nghị video dọc 9:16 và xuất 1080 × 1920](https://ads.tiktok.com/business/en/guides/video-advertising-guide).
 - Mặc định **TikTok · Ngũ giác + Camera** bật đồng thời **Lớp phủ ngũ giác lấp lánh** (`7491138615477685505`) và **Camera độ nét cao 2** (`7514206177195068689`), tốc độ 1×, không lật ngang. Một preset lưu chung hiệu ứng, bộ lọc, bố cục và thiết lập xuất.
 - **TikTok · Chỉ bộ lọc Camera** tắt hiệu ứng mở đầu; **TikTok · Chỉ nền mờ** tắt cả hiệu ứng và bộ lọc. Cả ba đều dùng 9:16. Preset tự lưu vẫn được giữ.
-- **1012 · Karaoke đỏ + video nghiêng** xuất 3:4, 1080 × 1440/30 FPS, khoảng 9.65 Mb/s, video nghiêng −9°, chữ nghiêng −11°, từ đang đọc màu đỏ. Mặc định tự nhận lời thoại từ MP4, lấy tên file làm tiêu đề và **tự chia khoảng 180 giây/part**, ưu tiên khoảng nghỉ lời thoại gần mốc cắt. Mỗi phần có intro và nhãn PART riêng. Tốc độ 1.0293× theo Draft mẫu. Trong **Chỉnh cấu hình** có thể đổi thời lượng mỗi part, chọn xuất một video/hai/ba phần đều nhau, đổi góc, tiêu đề hoặc nguồn phụ đề.
+- **1012 · Karaoke đỏ + video nghiêng** xuất 3:4, 1080 × 1440/30 FPS, khoảng 9.65 Mb/s, video nghiêng −9°, chữ nghiêng −11°, từ đang đọc màu đỏ. Mặc định tự nhận lời thoại từ MP4, lấy tên file làm tiêu đề và **tự chia khoảng 180 giây/part**, ưu tiên khoảng nghỉ lời thoại gần mốc cắt. Mỗi phần có intro và nhãn PART riêng. Tốc độ 1.0293× theo Draft mẫu. Trong **Chỉnh cấu hình** có thể đổi thời lượng, số part, màu chữ, góc, tiêu đề hoặc nguồn phụ đề.
 - Profile Tiêu chuẩn TikTok dùng H.264 VBR 12 Mb/s; Tiết kiệm dùng 60% bitrate đã chọn; Chất lượng cao dùng CQ18, dung lượng tùy nội dung.
 - **Cài đặt → Dùng cấu hình video mẫu 3:4** mở cấu hình đối chiếu riêng: 1080 × 1440, lật ngang, 1.02× và 9.65 Mb/s theo cặp nguồn–CapCut. Mẫu này được giữ để kiểm tra kết quả, không nằm trong danh sách TikTok chính. Bố cục 9:16 dựa trên draft, chưa có cặp video draft gốc để chấm độ giống.
 - Giao diện gồm **Nguồn video → Cấu hình chung → Xem trước**. Bấm **Chỉnh cấu hình…** để mở cửa sổ lớn với các nhóm thu gọn; chỉnh bằng thanh kéo hoặc nhập số. **Lưu thay đổi** áp dụng cho video chưa xuất; **Hủy** bỏ lần chỉnh đó. Preview nằm bên phải; lưu preset và nhập/xuất JSON ngay trong cột cấu hình.
@@ -39,6 +39,8 @@ Có thể chọn `video.words.json`/`video.srt` cạnh video hoặc dùng **Ch�
 Chế độ tự chia dùng thời lượng sau khi đổi tốc độ/cắt đầu. App tìm khoảng nghỉ hoặc cuối câu trong ±8 giây quanh mốc, dịch điểm cắt ra cuối từ nếu cần, gộp đuôi ngắn và giữ toàn bộ nội dung còn lại. Khi tắt phụ đề, app chia theo thời lượng. Điểm cắt được làm tròn theo khung hình; đây là quy tắc tự động, có thể khác cắt thủ công trong Draft. Sổ tiến độ trong `cache/parts/` giữ đường dẫn và trạng thái từng phần. Khi dừng/lỗi, phần đã hoàn tất được giữ; chạy lại cùng nguồn, cấu hình và nơi xuất sẽ kiểm tra codec, kích thước, FPS, thời lượng và âm thanh rồi tiếp tục phần thiếu. Đổi cấu hình tạo một lượt xuất mới; file đang có không bị ghi đè.
 
 Tiêu đề dùng `{video}` để lấy tên file, có thể sửa thành nội dung riêng hoặc để trống để tắt. Karaoke dùng ASS/libass và Arial Black trên Windows; không kèm font/template chữ độc quyền CapCut. Chưa có emoji động và tô màu từ khóa như template gốc. Intro ngũ giác mặc định chỉ chạy ở đầu mỗi part; có thể chỉnh lặp trong cấu hình. Xem [trạng thái tích hợp 1012](docs/karaoke/ROADMAP_AND_QA.md).
+
+Trong **Chỉnh cấu hình → Thiết lập đầu ra → Chia video**, chọn **Chọn số part** rồi nhập 2–100 để chia đều toàn bộ nguồn thành đúng số phần đó. Vẫn có chế độ xuất một video hoặc tự chia theo số giây. Mục **Phụ đề karaoke** có bảng chọn màu và ô HEX cho chữ thường, từ đang đọc, viền, chữ tiêu đề/PART và nền tiêu đề/PART. Các màu được lưu cùng preset, dùng chung cho preview và bản xuất. Danh sách video đã xuất có combobox chọn part để mở, kể cả khi xuất nhiều phần.
 
 ## Hàng đợi và dữ liệu
 

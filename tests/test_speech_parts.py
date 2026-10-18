@@ -96,6 +96,17 @@ class PartTests(unittest.TestCase):
         self.assertEqual(plan_parts(10,normalize(dict(part_count=2))),
                          [dict(start=0,seconds=5),dict(start=5,seconds=5)])
 
+    def test_custom_part_count_keeps_every_frame_at_nonunit_speed(self):
+        config=normalize(dict(part_count=7,source_offset=.2,playback_rate=1.0293))
+        parts=plan_parts(20,config)
+        self.assertEqual(len(parts),7)
+        self.assertAlmostEqual(sum(p["seconds"] for p in parts),(20-.2)/1.0293)
+        for a,b in zip(parts,parts[1:]):
+            self.assertAlmostEqual(a["start"]+a["seconds"],b["start"])
+            self.assertAlmostEqual(b["start"]*30,round(b["start"]*30))
+        with self.assertRaisesRegex(ValueError,"quá ngắn"):
+            plan_parts(1,normalize(dict(part_count=100)))
+
     def test_sidecar_guides_auto_cuts_using_video_not_audio_duration(self):
         with tempfile.TemporaryDirectory() as folder:
             source = Path(folder)/"video.mp4"

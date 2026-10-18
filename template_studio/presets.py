@@ -31,6 +31,10 @@ BASE = dict(
     subtitle_file="",
     subtitle_angle=-11.0,
     subtitle_red="FF374A",
+    subtitle_color="FFFFFF",
+    subtitle_outline="000000",
+    title_color="FFFFFF",
+    title_background="A20033",
     subtitle_title="",
     subtitle_part_label="",
     part_count=1,
@@ -197,8 +201,10 @@ def normalize(value):
     ]:
         if s[key] not in choices:
             raise ValueError(f"Giá trị {key} không hợp lệ.")
-    if type(s["part_count"]) is not int or s["part_count"] not in (0, 1, 2, 3):
-        raise ValueError("Chọn tự chia, một video, hai hoặc ba phần.")
+    count = s["part_count"]
+    if type(count) not in (int, float) or not 0 <= count <= 100 or int(count) != count:
+        raise ValueError("Chọn tự chia hoặc số part từ 1 đến 100.")
+    s["part_count"] = int(count)
     if s["subtitle_mode"] not in ("off", "sidecar", "file", "auto"):
         raise ValueError("Chế độ phụ đề không hợp lệ")
     if not isinstance(s["subtitle_title"], str) or len(s["subtitle_title"]) > 140:
@@ -207,8 +213,10 @@ def normalize(value):
         raise ValueError("Nhãn part quá dài")
     if not isinstance(s["subtitle_file"], str) or len(s["subtitle_file"]) > 1024:
         raise ValueError("Đường dẫn phụ đề không hợp lệ")
-    if not isinstance(s["subtitle_red"], str) or not re.fullmatch("[0-9a-fA-F]{6}", s["subtitle_red"]):
-        raise ValueError("Màu karaoke phải là RRGGBB")
+    for key in ("subtitle_red", "subtitle_color", "subtitle_outline", "title_color", "title_background"):
+        if not isinstance(s[key], str) or not re.fullmatch("#?[0-9a-fA-F]{6}", s[key]):
+            raise ValueError("Màu chữ cần có dạng #RRGGBB.")
+        s[key] = s[key].removeprefix("#").upper()
     s["resolution"] = s["width"]
     return s
 

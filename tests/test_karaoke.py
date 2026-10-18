@@ -131,6 +131,20 @@ class KaraokeTests(unittest.TestCase):
             self.assertNotIn("PREVIOUS",text)
             self.assertNotIn("NEXT",text)
 
+    def test_custom_colors_reach_styles_and_restore_base_after_highlight(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path=write_ass([dict(text="XIN",start=0,end=.5),dict(text="CHÀO",start=.5,end=1)],
+                Path(folder)/"x.ass",1080,1440,color="00FFCC",red="3366FF",outline_color="112233",
+                title_color="AABBCC",title_background="102040",title="TIÊU ĐỀ",part_label="PART 5")
+            text=path.read_text(encoding="utf-8-sig")
+            self.assertIn("&H00CCFF00,&H00CCFF00,&H00332211",text)
+            self.assertIn("&H00CCBBAA,&H00CCBBAA,&H00402010,&H00402010",text)
+            self.assertIn(r"{\c&HFF6633&}XIN{\c&HCCFF00&}",text)
+            self.assertNotIn(r"{\c&HFFFFFF&}",text)
+            for invalid in (None,"#FFFFFF","FFFFFF00",r"\N0000"):
+                with self.subTest(color=invalid),self.assertRaises(ValueError):
+                    write_ass([],Path(folder)/"bad.ass",1080,1440,color=invalid)
+
 
 if __name__=='__main__':
     unittest.main()

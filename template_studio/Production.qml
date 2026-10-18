@@ -27,6 +27,11 @@ ApplicationWindow {
         var seconds = Math.floor(milliseconds/1000)
         return Math.floor(seconds/60) + ":" + (seconds%60 < 10 ? "0" : "") + seconds%60
     }
+    function partLabels(count) {
+        var labels=[]
+        for(var i=0;i<count;i++)labels.push("Part "+(i+1))
+        return labels
+    }
 
     component Action: Button {
         id: b
@@ -78,6 +83,25 @@ ApplicationWindow {
         color: enabled ? win.ink : "#8290a5"; placeholderTextColor: "#8c9bb0"
         selectByMouse: true; selectionColor: win.accent; selectedTextColor: "#09221d"
         background: Rectangle { color: "#10232d"; radius: 6; border.color: field.activeFocus ? win.accent : "#3c5966"; opacity: field.enabled ? 1 : .5 }
+    }
+    component ColorRow: RowLayout {
+        id: colorRow
+        required property string label
+        required property string setting
+        Layout.fillWidth: true
+        Caption { text: colorRow.label; Layout.preferredWidth: 132 }
+        Action {
+            objectName: colorRow.setting+"Picker"; text: ""; implicitWidth: 46
+            Accessible.name: "Chọn "+colorRow.label.toLowerCase(); enabled: !studio.busy
+            Rectangle { anchors.centerIn: parent; width: 24; height: 20; radius: 3; border.color: "#a0adc1"; color: "#"+configDialog.draft[colorRow.setting]; opacity: studio.busy ? .5 : 1 }
+            onClicked: {var value=p.chooseColor(configDialog.draft[colorRow.setting]);if(value)configDialog.edit(colorRow.setting,value)}
+        }
+        Field {
+            objectName: colorRow.setting+"Field"; text: "#"+configDialog.draft[colorRow.setting]; Layout.fillWidth: true
+            enabled: !studio.busy; maximumLength: 7
+            validator: RegularExpressionValidator { regularExpression: /#?[0-9a-fA-F]{6}/ }
+            onEditingFinished: {if(acceptableInput)configDialog.edit(colorRow.setting,text.replace(/^#/,"").toUpperCase());else text="#"+configDialog.draft[colorRow.setting]}
+        }
     }
     component Range: Slider {
         id: range
@@ -368,10 +392,9 @@ ApplicationWindow {
                     }
                     Action { objectName: "previewButton"; text: "Xem thử 3 giây"; Layout.fillWidth: true; enabled: !studio.busy && p.ready && p.currentIndex>=0; onClicked: p.preview(offset.value) }
                     Action { text: "Mở video đã xuất"; Layout.fillWidth: true; enabled: current!==null && !!current.result; onClicked: p.openResult() }
-                    Flow { Layout.fillWidth: true; spacing: 6; visible: current!==null && current.parts!==undefined && current.parts.length>1
-                        Repeater { model: current && current.parts ? current.parts : []
-                            Action { required property int index; text: "Phần "+(index+1); width: Math.max(72,(parent.width-6)/2); onClicked: p.openPart(index) }
-                        }
+                    RowLayout { Layout.fillWidth: true; visible: current!==null && current.parts!==undefined && current.parts.length>1
+                        Select { id: partResultSelect; objectName: "partResultSelect"; model: win.partLabels(current && current.parts ? current.parts.length : 0); Layout.fillWidth: true }
+                        Action { text: "Mở part"; onClicked: p.openPart(partResultSelect.currentIndex) }
                     }
                 }
             }
@@ -481,7 +504,12 @@ ApplicationWindow {
                             Layout.fillWidth: true; text: configDialog.draft.subtitle_title; enabled: !studio.busy
                             onEditingFinished: configDialog.edit("subtitle_title", text) }
                         SettingRow { label: "Độ nghiêng phụ đề"; setting: "subtitle_angle"; low: -30; high: 30; decimals: 1; unit: "°" }
-                        Caption { text: configDialog.draft.subtitle_mode==="auto" ? "Tự nhận lời thoại trên máy. Lần đầu tải bộ nhận giọng nói khoảng 150 MB; những lần sau dùng lại. Kiểm tra lời và thời điểm bằng bản xem thử." : "Từ đang đọc màu đỏ, các từ còn lại màu trắng. SRT dùng thời gian từng từ ước lượng; JSON dùng mốc thời gian trong file."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                        ColorRow { label: "Chữ phụ đề"; setting: "subtitle_color" }
+                        ColorRow { label: "Từ đang đọc"; setting: "subtitle_red" }
+                        ColorRow { label: "Viền phụ đề"; setting: "subtitle_outline" }
+                        ColorRow { label: "Chữ tiêu đề/PART"; setting: "title_color" }
+                        ColorRow { label: "Nền tiêu đề/PART"; setting: "title_background" }
+                        Caption { text: configDialog.draft.subtitle_mode==="auto" ? "Tự nhận lời thoại trên máy. Lần đầu tải bộ nhận giọng nói khoảng 150 MB; những lần sau dùng lại. Kiểm tra lời và thời điểm bằng bản xem thử." : "SRT dùng thời gian từng từ ước lượng; JSON dùng mốc thời gian trong file."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     }
                     FoldSection { objectName: "colorSection"; title: p.filterName
                         Check { text: "Bật bộ lọc"; checked: configDialog.draft.filter_enabled; enabled: !studio.busy; onClicked: configDialog.edit("filter_enabled",checked) }
@@ -492,7 +520,12 @@ ApplicationWindow {
                     FoldSection { objectName: "outputSection"; title: "Thiết lập đầu ra"; expanded: true
                         RowLayout { Layout.fillWidth: true
                             Caption { text: "Chia video"; Layout.preferredWidth: 132 }
-                            Select { objectName: "partCountSelect"; model: ["Tự chia theo thời lượng", "1 video", "2 phần đều nhau", "3 phần đều nhau"]; currentIndex: configDialog.draft.part_count; enabled: !studio.busy; onActivated: configDialog.edit("part_count",currentIndex); Layout.fillWidth: true }
+                            Select { objectName: "partCountSelect"; model: ["Tự chia theo thời lượng", "1 video", "Chọn số part"]; currentIndex: configDialog.draft.part_count===0 ? 0 : configDialog.draft.part_count===1 ? 1 : 2; enabled: !studio.busy; onActivated: configDialog.edit("part_count",currentIndex<2 ? currentIndex : Math.max(2,configDialog.draft.part_count)); Layout.fillWidth: true }
+                        }
+                        RowLayout { Layout.fillWidth: true; visible: configDialog.draft.part_count>1
+                            Caption { text: "Số part"; Layout.preferredWidth: 132 }
+                            Field { objectName: "partCountField"; text: String(configDialog.draft.part_count); validator: IntValidator {bottom:2;top:100} enabled: !studio.busy; Layout.fillWidth: true
+                                onEditingFinished: {if(acceptableInput)configDialog.edit("part_count",Number(text));else text=String(configDialog.draft.part_count)} }
                         }
                         RowLayout { Layout.fillWidth: true; visible: configDialog.draft.part_count===0
                             Caption { text: "Giây mỗi part"; Layout.preferredWidth: 132 }

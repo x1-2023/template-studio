@@ -210,7 +210,8 @@ def _groups(words, max_words=4):
 def write_ass(words, destination, width, height, *, source_offset=0.0,
               playback_rate=1.0, timeline_offset=0.0, font_name="Arial Black",
               red="FF374A", angle=-11.0, y_ratio=0.66534, max_words=6, title="", part_label="", duration=None,
-              context_start=0.0, context_end=None):
+              context_start=0.0, context_end=None, color="FFFFFF", outline_color="000000",
+              title_color="FFFFFF", title_background="A20033"):
     """Tạo ASS; source_offset tính theo nguồn, timeline_offset theo video xuất."""
     if not 0 < playback_rate <= 4 or not 0.1 <= y_ratio <= 0.9:
         raise ValueError("Thời gian hoặc vị trí phụ đề không hợp lệ.")
@@ -218,10 +219,12 @@ def write_ass(words, destination, width, height, *, source_offset=0.0,
         raise ValueError("Phông chữ hoặc số từ mỗi nhóm không hợp lệ.")
     if duration is not None and (not math.isfinite(duration) or duration <= 0):
         raise ValueError("Thời lượng phụ đề phải là số dương hữu hạn.")
-    if not re.fullmatch(r"[0-9a-fA-F]{6}", red):
-        raise ValueError("Màu từ đang đọc cần theo dạng RRGGBB.")
-    r, g, b = red[:2], red[2:4], red[4:]
-    highlight = f"{b}{g}{r}"
+    def ass_color(value):
+        if not isinstance(value, str) or not re.fullmatch(r"[0-9a-fA-F]{6}", value):
+            raise ValueError("Màu chữ cần theo dạng RRGGBB.")
+        return (value[4:6]+value[2:4]+value[0:2]).upper()
+    highlight, base_color, border, heading_color, heading_background = map(
+        ass_color, (red, color, outline_color, title_color, title_background))
     base = float(source_offset) + float(timeline_offset) * float(playback_rate)
     if not math.isfinite(context_start) or context_start < 0 or (context_end is not None and
             (not math.isfinite(context_end) or context_end <= context_start)):
@@ -237,9 +240,9 @@ def write_ass(words, destination, width, height, *, source_offset=0.0,
     heading = ("[Script Info]\nScriptType: v4.00+\nScaledBorderAndShadow: yes\n"
                f"PlayResX: {width}\nPlayResY: {height}\nWrapStyle: 2\n\n"
                "[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n"
-               f"Style: Karaoke,{font_name},{size},&H00FFFFFF,&H00FFFFFF,&H00000000,&H90000000,-1,0,0,0,80,100,0,0,1,{outline:.2f},{shadow:.2f},5,40,40,30,1\n"
-               f"Style: Header,{font_name},{max(22,round(height*.052))},&H00FFFFFF,&H00FFFFFF,&H003300A2,&H003300A2,-1,0,0,0,80,100,0,0,3,{padding:.2f},0,5,40,40,30,1\n"
-               f"Style: Part,{font_name},{max(18,round(height*.057))},&H00FFFFFF,&H00FFFFFF,&H003300A2,&H003300A2,-1,0,0,0,80,100,0,0,3,{padding:.2f},0,5,40,40,30,1\n\n"
+               f"Style: Karaoke,{font_name},{size},&H00{base_color},&H00{base_color},&H00{border},&H90000000,-1,0,0,0,80,100,0,0,1,{outline:.2f},{shadow:.2f},5,40,40,30,1\n"
+               f"Style: Header,{font_name},{max(22,round(height*.052))},&H00{heading_color},&H00{heading_color},&H00{heading_background},&H00{heading_background},-1,0,0,0,80,100,0,0,3,{padding:.2f},0,5,40,40,30,1\n"
+               f"Style: Part,{font_name},{max(18,round(height*.057))},&H00{heading_color},&H00{heading_color},&H00{heading_background},&H00{heading_background},-1,0,0,0,80,100,0,0,3,{padding:.2f},0,5,40,40,30,1\n\n"
                "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n")
     lines = [heading]
     # Tiêu đề và nhãn phần giữ suốt thời lượng video đang render.
@@ -272,7 +275,7 @@ def write_ass(words, destination, width, height, *, source_offset=0.0,
                     parts.append(" ")
                 token = _ass_text(word["text"].upper())
                 if j == active_index:
-                    parts.append(r"{\c&H" + highlight + "&}" + token + r"{\c&HFFFFFF&}")
+                    parts.append(r"{\c&H" + highlight + "&}" + token + r"{\c&H" + base_color + "&}")
                 else:
                     parts.append(token)
             layout = rf"{{\an5\pos({x},{y})\frz{-angle:.2f}\fs{top_size}}}"

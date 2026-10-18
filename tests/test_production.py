@@ -65,6 +65,19 @@ class PresetTests(unittest.TestCase):
         a[0]["config"]["offset"][0] = 0.2
         self.assertAlmostEqual(catalog()[0]["config"]["offset"][0], -0.047318612)
 
+    def test_part_count_and_colors_are_validated_and_old_configs_get_defaults(self):
+        config=normalize(dict(part_count=17,subtitle_color="#12abEF",subtitle_red="eF3412"))
+        self.assertEqual(config["subtitle_color"],"12ABEF")
+        self.assertEqual(config["subtitle_red"],"EF3412")
+        self.assertEqual(normalize({})["title_background"],"A20033")
+        self.assertIs(type(normalize(dict(part_count=5.0))["part_count"]),int)
+        for value in (-1,101,2.5,True):
+            with self.subTest(count=value),self.assertRaises(ValueError):
+                normalize(dict(part_count=value))
+        for key in ("subtitle_red","subtitle_color","subtitle_outline","title_color","title_background"):
+            with self.subTest(key=key),self.assertRaises(ValueError):
+                normalize({key:"#GG0000"})
+
 
 class QueueTests(unittest.TestCase):
     @classmethod

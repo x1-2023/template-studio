@@ -11,8 +11,8 @@ import uuid
 from pathlib import Path
 
 from PySide6.QtCore import Property, QObject, QUrl, Signal, Slot
-from PySide6.QtGui import QDesktopServices
-from PySide6.QtWidgets import QFileDialog
+from PySide6.QtGui import QColor, QDesktopServices
+from PySide6.QtWidgets import QColorDialog, QFileDialog
 
 from offline_studio.cancellation import TaskCancelled, check_cancelled
 from offline_studio.config import atomic_json
@@ -706,6 +706,13 @@ class Production(QObject):
             self._output = path
             self.save()
             self.changed.emit()
+
+    @Slot(str, result=str)
+    def chooseColor(self, current):
+        if self.host.busy:
+            return ""
+        color = QColorDialog.getColor(QColor("#" + current.removeprefix("#")), None, "Chọn màu chữ")
+        return color.name(QColor.NameFormat.HexRgb)[1:].upper() if color.isValid() else ""
 
     @Slot()
     def openOutput(self):

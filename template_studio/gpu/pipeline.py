@@ -171,6 +171,8 @@ def render(source, output, config, args, progress=lambda event: None):
         write_ass(words, subtitle_ass, w, h, source_offset=rate*timeline_offset+float(config.get("source_offset", 0)),
                   playback_rate=rate, angle=float(config.get("subtitle_angle", -11)),
                   red=config.get("subtitle_red", "FF374A"),
+                  color=config.get("subtitle_color", "FFFFFF"), outline_color=config.get("subtitle_outline", "000000"),
+                  title_color=config.get("title_color", "FFFFFF"), title_background=config.get("title_background", "A20033"),
                   title=config.get("subtitle_title", "").replace("{video}", source.stem.replace("_", " "))[:140],
                   part_label=config.get("subtitle_part_label", ""), duration=seconds,
                   context_start=float(config.get("source_offset", 0)) + rate*(part_range[0] if part_range else 0),
