@@ -32,3 +32,5 @@ Whisper nhận 1457 từ từ toàn bộ nguồn. Với mốc 180 giây, kế ho
 Video nguồn, Draft, phụ đề của mẫu và ảnh đối chiếu giữ local; không đóng gói vào EXE hay đưa lên Git.
 
 Đã bổ sung [đối chiếu đủ 11008 khung của cả hai part bằng EXE public 1.3.2](FULL_COMPARISON_132.md) ngày 19/10/2026, có video ba cột và kiểm tra âm thanh. Báo cáo bên trên ghi lại lượt bốn khung ban đầu; báo cáo mới ghi rõ các sai khác chuyển cảnh và âm thanh phát hiện khi so đủ thời lượng.
+
+Bản [sửa và đối chiếu 1.3.3](UPDATE_133.md) khắc phục seek/FPS, bù âm thanh, thêm nhập font, đọc mốc Draft và dựng lại màu từ khóa/emoji. Đây là trạng thái mới hơn các giới hạn trong báo cáo ban đầu bên trên.
