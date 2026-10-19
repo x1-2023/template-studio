@@ -21,6 +21,7 @@ from offline_studio.process import probe as media_probe
 
 from .renderer import Renderer
 from .resources import ROOT
+from .timing import audio_window, decode_window
 
 for stream in (sys.stdout, sys.stderr):
     if hasattr(stream, "reconfigure"):
@@ -148,35 +149,53 @@ def render(source, output, config, args, progress=lambda event: None):
         raise ValueError("Đường dẫn file dở không hợp lệ.")
     decode_log, encode_log, render_report = sidecars
     subtitle_ass = None
+    emoji_track = None
+    staged_fonts = False
+    fonts_directory = None
     if config.get("subtitle_mode", "off") != "off":
         from template_studio.karaoke import (
-            find_caption_file, load_words, write_ass,
+            caption_groups, find_caption_file, load_words, write_ass,
         )
         mode = config["subtitle_mode"]
         if mode == "sidecar":
             caption_file = find_caption_file(source)
             if caption_file is None:
                 raise FileNotFoundError("Thiếu phụ đề cạnh video: video.words.json hoặc video.srt")
-            words = load_words(caption_file)
+            words = load_words(caption_file, source_timeline=True)
         elif mode == "file":
             if not config.get("subtitle_file"):
                 raise ValueError("Chọn đường dẫn phụ đề .srt/.json")
-            words = load_words(config["subtitle_file"])
+            words = load_words(config["subtitle_file"], source_timeline=True)
         elif mode == "auto":
             raise ValueError("Cần nhận lời thoại trước khi render. Chạy preset từ màn hình Xuất video.")
         else:
             raise ValueError("Chế độ phụ đề không được hỗ trợ")
         subtitle_ass = (Path(diagnostics).resolve() / "karaoke.ass" if diagnostics else
                         output.parent / (".beta-karaoke-" + uuid.uuid4().hex + ".ass"))
+        font_name = config.get("subtitle_font_name", "Arial Black")
+        if config.get("subtitle_font_file"):
+            from template_studio.fonts import stage_font
+            fonts_directory = "fonts" if diagnostics else subtitle_ass.stem + "-fonts"
+            font_name = stage_font(config["subtitle_font_file"], subtitle_ass.parent, fonts_directory)
+            staged_fonts = True
+        context_start = float(config.get("source_offset", 0)) + rate*(part_range[0] if part_range else 0)
+        context_end = float(config.get("source_offset", 0)) + rate*part_range[1] if part_range else None
         write_ass(words, subtitle_ass, w, h, source_offset=rate*timeline_offset+float(config.get("source_offset", 0)),
                   playback_rate=rate, angle=float(config.get("subtitle_angle", -11)),
+                  font_name=font_name, font_scale_x=100 if staged_fonts else 80,
+                  font_file=config.get("subtitle_font_file", ""),
+                  keyword_colors=config.get("subtitle_keywords", False),
                   red=config.get("subtitle_red", "FF374A"),
                   color=config.get("subtitle_color", "FFFFFF"), outline_color=config.get("subtitle_outline", "000000"),
                   title_color=config.get("title_color", "FFFFFF"), title_background=config.get("title_background", "A20033"),
                   title=config.get("subtitle_title", "").replace("{video}", source.stem.replace("_", " "))[:140],
                   part_label=config.get("subtitle_part_label", ""), duration=seconds,
-                  context_start=float(config.get("source_offset", 0)) + rate*(part_range[0] if part_range else 0),
-                  context_end=float(config.get("source_offset", 0)) + rate*part_range[1] if part_range else None)
+                  context_start=context_start, context_end=context_end)
+        if config.get("subtitle_emoji", False):
+            from template_studio.caption_style import EmojiTrack
+            groups = caption_groups(words, base=offset, rate=rate, duration=seconds,
+                                    context_start=context_start, context_end=context_end)
+            emoji_track = EmojiTrack(groups, w, h, float(config.get("subtitle_angle", -11)))
     renderer = Renderer((dw, dh), (w, h), config, args.skin, args.cache)
     gpu_name = renderer.ctx.info["GL_RENDERER"]
     started = time.perf_counter()
@@ -196,19 +215,22 @@ def render(source, output, config, args, progress=lambda event: None):
             decode_log.open("wb") as de,
             encode_log.open("wb") as en,
         ):
+            seek, timing_filter = decode_window(video, info["format"], offset, rate, fps, dw, dh)
             decode = [
                 binary("ffmpeg"),
                 "-hide_banner",
                 "-loglevel",
                 "error",
+                "-copyts",
+                "-start_at_zero",
                 "-ss",
-                str(offset),
+                str(seek),
                 "-i",
                 str(source),
                 "-t",
                 str(seconds),
                 "-vf",
-                f"setpts=(PTS-STARTPTS)/{rate},fps={fps}:round=up,scale={dw}:{dh},setsar=1",
+                timing_filter,
                 "-an",
                 "-pix_fmt",
                 "rgb24",
@@ -234,23 +256,29 @@ def render(source, output, config, args, progress=lambda event: None):
                 "pipe:0",
             ]
             if audio:
-                encode += ["-ss", str(offset), "-i", str(source)]
+                part_start = float(config.get("source_offset", 0)) + rate*(part_range[0] if part_range else 0)
+                audio_seek, audio_filter = audio_window(offset, rate, seconds, config.get("audio_delay_ms", 0), part_start)
+                encode += ["-ss", str(audio_seek), "-i", str(source)]
             encode += ["-map", "0:v:0", "-t", str(seconds)]
             if audio:
                 encode += [
                     "-map",
                     "1:a:0",
                     "-af",
-                    f"atempo={rate},asetpts=PTS-STARTPTS",
+                    audio_filter,
                     "-c:a",
                     "aac",
                     "-b:a",
                     "192k",
                 ]
             encode += encoder_options
+            if emoji_track and emoji_track.cues:
+                encode += ["-metadata", "comment=Emoji: Twemoji, Twitter, Inc and contributors; CC-BY-4.0; https://twemoji.twitter.com/; images resized and rotated"]
             if subtitle_ass is not None:
                 # File ASS có tên ASCII cố định trong cwd riêng của worker.
                 overlay = "setsar=1,ass=filename=" + subtitle_ass.name
+                if staged_fonts:
+                    overlay += ":fontsdir=" + fonts_directory
             else:
                 overlay = "setsar=1"
             encode += [
@@ -358,6 +386,8 @@ def render(source, output, config, args, progress=lambda event: None):
                     mask,
                     effect_offset=effect_offset,
                 )
+                if emoji_track:
+                    result = emoji_track.apply(result, frame_count / fps)
                 process_times.append((time.perf_counter() - begin) * 1000)
                 gpu_times.append(renderer.last_gpu_ms)
                 encoder.stdin.write(result.tobytes())
@@ -468,6 +498,10 @@ def render(source, output, config, args, progress=lambda event: None):
             temporary.unlink()
         if subtitle_ass is not None:
             subtitle_ass.unlink(missing_ok=True)
+            if fonts_directory and not diagnostics:
+                folder = subtitle_ass.parent / fonts_directory
+                (folder / ("caption" + Path(config["subtitle_font_file"]).suffix.lower())).unlink(missing_ok=True)
+                folder.rmdir()
 
 
 def parser():

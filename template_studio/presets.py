@@ -29,6 +29,10 @@ BASE = dict(
     rotation_deg=0.0,
     subtitle_mode="off",
     subtitle_file="",
+    subtitle_font_name="Arial Black",
+    subtitle_font_file="",
+    subtitle_keywords=False,
+    subtitle_emoji=False,
     subtitle_angle=-11.0,
     subtitle_red="FF374A",
     subtitle_color="FFFFFF",
@@ -60,6 +64,7 @@ BASE = dict(
     video_bitrate=9.65,
     skin="none",
     mute=False,
+    audio_delay_ms=0.0,
     resolution=1080,
 )
 
@@ -71,7 +76,8 @@ SYSTEM = [
         config=dict(width=1080, height=1440, scale=1.1248, rotation_deg=-9.0059,
                     offset=[-0.047318612, 0], playback_rate=1.02931464386368,
                     intro_enabled=True, filter_enabled=True, effect_end=2.166667, effect_loop_seconds=0, part_count=0,
-                    subtitle_mode="auto", subtitle_title="{video}", subtitle_red="FF0000", video_bitrate=9.65),
+                    subtitle_mode="auto", subtitle_title="{video}", subtitle_red="FF0000", video_bitrate=9.65,
+                    subtitle_keywords=True, subtitle_emoji=True, audio_delay_ms=50.0),
     ),
     dict(
         id="pentagon-3x4",
@@ -149,10 +155,17 @@ def normalize(value):
         raise ValueError("Preset có trường không được hỗ trợ.")
     s = copy.deepcopy(BASE)
     s.update(copy.deepcopy(value))
+    # Snapshot 1012 trước 1.3.3 chưa có ba trường này. Giữ giá trị người dùng đã lưu rõ ràng.
+    if (abs(float(s["rotation_deg"]) + 9.0059) < .0001 and
+            abs(float(s["playback_rate"]) - 1.02931464386368) < .000001 and s["subtitle_mode"] != "off"):
+        for key, default in (("audio_delay_ms", 50.0), ("subtitle_keywords", True), ("subtitle_emoji", True)):
+            if key not in value:
+                s[key] = default
     for key, lo, hi in [
         ("scale", 0.3, 1.5),
         ("rotation_deg", -30, 30),
         ("subtitle_angle", -30, 30),
+        ("audio_delay_ms", -1000, 1000),
         ("effect_loop_seconds", 0, 60),
         ("part_seconds", 30, 1800),
         ("playback_rate", 0.5, 2),
@@ -190,7 +203,7 @@ def normalize(value):
     s["offset"] = [float(v) for v in s["offset"]]
     if any(not math.isfinite(v) or abs(v) > 0.5 for v in s["offset"]):
         raise ValueError("Vị trí X/Y phải trong ±50%.")
-    for key in ("flip", "intro_enabled", "filter_enabled", "mute"):
+    for key in ("flip", "intro_enabled", "filter_enabled", "mute", "subtitle_keywords", "subtitle_emoji"):
         if not isinstance(s[key], bool):
             raise ValueError(f"{key} phải là boolean.")
     for key, choices in [
@@ -213,6 +226,12 @@ def normalize(value):
         raise ValueError("Nhãn part quá dài")
     if not isinstance(s["subtitle_file"], str) or len(s["subtitle_file"]) > 1024:
         raise ValueError("Đường dẫn phụ đề không hợp lệ")
+    if not isinstance(s["subtitle_font_name"], str) or not s["subtitle_font_name"].strip() or len(s["subtitle_font_name"]) > 120:
+        raise ValueError("Tên font phụ đề không hợp lệ")
+    if any(c in s["subtitle_font_name"] for c in ",\r\n{}"):
+        raise ValueError("Tên font phụ đề có ký tự không hợp lệ")
+    if not isinstance(s["subtitle_font_file"], str) or len(s["subtitle_font_file"]) > 1024:
+        raise ValueError("Đường dẫn font phụ đề không hợp lệ")
     for key in ("subtitle_red", "subtitle_color", "subtitle_outline", "title_color", "title_background"):
         if not isinstance(s[key], str) or not re.fullmatch("#?[0-9a-fA-F]{6}", s[key]):
             raise ValueError("Màu chữ cần có dạng #RRGGBB.")

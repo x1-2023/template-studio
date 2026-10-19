@@ -208,6 +208,32 @@ class ImportUiTests(unittest.TestCase):
         self.click("cancelConfigButton")
         self.assertEqual(self.p.config["subtitle_file"], "")
 
+    def test_font_picker_copies_font_and_cancel_keeps_previous_config(self):
+        font = Path('C:/Windows/Fonts/arial.ttf')
+        if not font.is_file():
+            self.skipTest('Kiểm thử GUI nhập font dùng Arial của Windows.')
+        self.p.choosePreset('karaoke-1012')
+        self.click('editConfigButton')
+        dialog = self.window.findChild(QObject,'configDialog')
+        flick = self.window.findChild(QQuickItem,'configurationScroll').property('contentItem')
+        QTest.qWait(60)
+        item = self.window.findChild(QQuickItem,'subtitleFontPicker')
+        y = item.mapToScene(QPointF(0,0)).y()
+        flick.setProperty('contentY',flick.property('contentY')+y-260)
+        QTest.qWait(70)
+        with patch('template_studio.production.QFileDialog.getOpenFileName',return_value=(str(font),'')):
+            self.click('subtitleFontPicker')
+        draft = dialog.property('draft').toVariant()
+        self.assertEqual(draft['subtitle_font_name'],'Arial')
+        imported = Path(draft['subtitle_font_file'])
+        self.assertTrue(imported.is_relative_to(self.home/'runtime/fonts'))
+        self.assertEqual(imported.read_bytes(),font.read_bytes())
+        with patch('template_studio.production.QFileDialog.getOpenFileName',return_value=('','')):
+            self.click('subtitleFontPicker')
+        self.assertEqual(dialog.property('draft').toVariant()['subtitle_font_file'],str(imported))
+        self.click('cancelConfigButton')
+        self.assertEqual(self.p.config['subtitle_font_file'],'')
+
     def test_color_picker_and_custom_part_count_save_with_preset(self):
         self.p.choosePreset("karaoke-1012")
         self.click("editConfigButton")

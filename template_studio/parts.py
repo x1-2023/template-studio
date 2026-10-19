@@ -25,7 +25,7 @@ def plan_parts(duration, config, words=None):
     if count == 0:
         if words is None and config.get("subtitle_mode") == "file":
             from .karaoke import load_words
-            words = load_words(config["subtitle_file"])
+            words = load_words(config["subtitle_file"], source_timeline=True)
         words = words or []
         rate, offset = config["playback_rate"], config["source_offset"]
         candidates = []
@@ -104,7 +104,7 @@ def plan_source_parts(source, config, metadata=None):
     words = None
     if caption is not None:
         from .karaoke import load_words
-        words = load_words(caption)
+        words = load_words(caption, source_timeline=True)
     return plan_parts(float(video.get("duration", metadata["format"]["duration"])), config, words)
 
 

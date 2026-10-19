@@ -1,0 +1,82 @@
+{
+  "source": "twitter/twemoji",
+  "tag": "v14.0.2",
+  "license": "CC-BY-4.0",
+  "files": [
+    {
+      "file": "1f389.png",
+      "url": "https://raw.githubusercontent.com/twitter/twemoji/v14.0.2/assets/72x72/1f389.png",
+      "sha256": "7289a4aa98f9a81a1108f98abfcebd214dab96df64c8ea67ed6e83116a8e4ce8"
+    },
+    {
+      "file": "1f3a4.png",
+      "url": "https://raw.githubusercontent.com/twitter/twemoji/v14.0.2/assets/72x72/1f3a4.png",
+      "sha256": "f90956be5bea11d8a25e15f8b6280cf976f836b648648b20dec1148f824e632b"
+    },
+    {
+      "file": "1f3c0.png",
+      "url": "https://raw.githubusercontent.com/twitter/twemoji/v14.0.2/assets/72x72/1f3c0.png",
+      "sha256": "9fc51addbd8ea22a2bcd317359948ebe206cc14fab44bbffe769e72de9b07c6f"
+    },
+    {
+      "file": "1f3e0.png",
+      "url": "https://raw.githubusercontent.com/twitter/twemoji/v14.0.2/assets/72x72/1f3e0.png",
+      "sha256": "4a3ff7cc7a31c7623d0bc52bc2844ef31477092c400e9aae58e27dda38af07c6"
+    },
+    {
+      "file": "1f44d.png",
+      "url": "https://raw.githubusercontent.com/twitter/twemoji/v14.0.2/assets/72x72/1f44d.png",
+      "sha256": "42b43325b3edacba2a0e72b742bdc6fc5e4bc2ad38adca271fcc6d8353639887"
+    },
+    {
+      "file": "1f4b0.png",
+      "url": "https://raw.githubusercontent.com/twitter/twemoji/v14.0.2/assets/72x72/1f4b0.png",
+      "sha256": "356cbaf73b1793d3073c3f153e9b80e6e93793f7dca9e620094ca9abccc8f401"
+    },
+    {
+      "file": "1f4bc.png",
+      "url": "https://raw.githubusercontent.com/twitter/twemoji/v14.0.2/assets/72x72/1f4bc.png",
+      "sha256": "c0b6b6ab9baf3d71dae69fa6646e25506509cc0fdbef028595bed6f36f42cab7"
+    },
+    {
+      "file": "1f4c5.png",
+      "url": "https://raw.githubusercontent.com/twitter/twemoji/v14.0.2/assets/72x72/1f4c5.png",
+      "sha256": "71462858483307e28b27b196ddb845cb6962bca811014cb65bf631c4d0dc2a50"
+    },
+    {
+      "file": "1f4cd.png",
+      "url": "https://raw.githubusercontent.com/twitter/twemoji/v14.0.2/assets/72x72/1f4cd.png",
+      "sha256": "f99fea4210c67cc8be5fed72f46d02bf7be39c62b4aea0b8142b16e02e37d505"
+    },
+    {
+      "file": "1f4f0.png",
+      "url": "https://raw.githubusercontent.com/twitter/twemoji/v14.0.2/assets/72x72/1f4f0.png",
+      "sha256": "ee2c61075a4b3acc9c36c113bd28b6c109195679917d9e8e466663af5c640f7c"
+    },
+    {
+      "file": "1f50e.png",
+      "url": "https://raw.githubusercontent.com/twitter/twemoji/v14.0.2/assets/72x72/1f50e.png",
+      "sha256": "f34ce1d629b08e552c4590b1a15e356b4200700f10582768ee698932c019b0bf"
+    },
+    {
+      "file": "1f681.png",
+      "url": "https://raw.githubusercontent.com/twitter/twemoji/v14.0.2/assets/72x72/1f681.png",
+      "sha256": "463a7eeb6c90686d6f7ea7916a32a2c5d9f3cc5b0dc2d3f43fc74a6f8f19339c"
+    },
+    {
+      "file": "1f914.png",
+      "url": "https://raw.githubusercontent.com/twitter/twemoji/v14.0.2/assets/72x72/1f914.png",
+      "sha256": "5116f7d07677f06785887c0af23c189b541a306d6b792d605ffaf3ed9f0e912d"
+    },
+    {
+      "file": "1f91d.png",
+      "url": "https://raw.githubusercontent.com/twitter/twemoji/v14.0.2/assets/72x72/1f91d.png",
+      "sha256": "32bdc6cd0c499c35f06893f27f0a2104abc2fd47ffb9f57ca1fbac92b4badcc1"
+    },
+    {
+      "file": "LICENSE-GRAPHICS",
+      "url": "https://raw.githubusercontent.com/twitter/twemoji/v14.0.2/LICENSE-GRAPHICS",
+      "sha256": "8ae9438818c26e4873b91d8c6ad620526c011e27e125677f13031eda903f007c"
+    }
+  ]
+}

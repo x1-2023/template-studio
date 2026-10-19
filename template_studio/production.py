@@ -738,6 +738,22 @@ class Production(QObject):
         path, _ = QFileDialog.getOpenFileName(None, "Chọn phụ đề", "", "Phụ đề (*.srt *.json)")
         return path
 
+    @Slot(result="QVariantMap")
+    def chooseSubtitleFont(self):
+        if self.host.busy:
+            return {}
+        path, _ = QFileDialog.getOpenFileName(
+            None, "Chọn font phụ đề", "", "Font chữ (*.ttf *.otf *.ttc)"
+        )
+        if not path:
+            return {}
+        from .fonts import import_font
+        try:
+            return import_font(path, self.home)
+        except (OSError, ValueError) as error:
+            self.host.message(str(error))
+            return {}
+
     @Slot(bool)
     def showSource(self, enabled):
         self._mode = "source" if enabled else "result"

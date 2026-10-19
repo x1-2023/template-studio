@@ -7,6 +7,7 @@ Mã nguồn Beta Render do dự án cung cấp được cấp phép GPL-3.0-only
 | Video-FX | [commit 7513159](https://github.com/tomastimelock/video-fx/tree/751315965bc5e740b62136153ec4a9bf4e21ea20) | MIT, bản quyền 2026 Trollfabriken AITrix AB |
 | PySide6 / Shiboken6 / Qt | 6.11.2, [mã nguồn Qt for Python](https://code.qt.io/cgit/pyside/pyside-setup.git/), [mã nguồn Qt](https://code.qt.io/cgit/qt/) | Các lựa chọn GPL/LGPL và thông báo riêng của Qt |
 | Pillow | 12.2.0, [mã nguồn](https://github.com/python-pillow/Pillow) | HPND và giấy phép của thư viện đi kèm |
+| Twemoji | 14 ảnh PNG từ [v14.0.2](https://github.com/twitter/twemoji/tree/v14.0.2/assets/72x72), bản quyền Twitter, Inc và những người đóng góp | Đồ họa CC-BY-4.0, xem `template_studio/assets/emoji/LICENSE-GRAPHICS` và manifest SHA-256. App thu nhỏ/xoay và ghép ảnh vào video. |
 | NumPy | Xem requirements-lock.txt, [mã nguồn](https://github.com/numpy/numpy) | BSD và giấy phép của thư viện đi kèm |
 | ModernGL | 5.13.0, [mã nguồn](https://github.com/moderngl/moderngl) | MIT |
 | glcontext | 3.1.0, [mã nguồn](https://github.com/moderngl/glcontext) | MIT |

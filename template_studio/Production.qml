@@ -475,6 +475,7 @@ ApplicationWindow {
                         SettingRow { label: "Độ mờ nền"; setting: "background_sigma_ratio"; low: 0; high: .1; factor: 100; decimals: 1; unit: "%" }
                         Check { text: "Lật ngang"; checked: configDialog.draft.flip; enabled: !studio.busy; onClicked: configDialog.edit("flip",checked) }
                         Check { text: "Giữ âm thanh gốc"; checked: !configDialog.draft.mute; enabled: !studio.busy; onClicked: configDialog.edit("mute",!checked) }
+                        SettingRow { label: "Độ trễ âm thanh"; setting: "audio_delay_ms"; low: -1000; high: 1000; decimals: 0; unit: "ms"; visible: !configDialog.draft.mute }
                     }
                     FoldSection { objectName: "introSection"; title: p.effectName; expanded: true
                         Check { objectName: "introCheck"; text: "Bật hiệu ứng"; checked: configDialog.draft.intro_enabled; enabled: !studio.busy; onClicked: configDialog.edit("intro_enabled",checked) }
@@ -494,7 +495,7 @@ ApplicationWindow {
                                 onActivated: configDialog.edit("subtitle_mode", ids[currentIndex]); Layout.fillWidth: true }
                         }
                         RowLayout { visible: configDialog.draft.subtitle_mode==="file"; Layout.fillWidth: true
-                            Field { objectName: "subtitleFile"; placeholderText: "File SRT hoặc JSON"; Layout.fillWidth: true
+                            Field { objectName: "subtitleFile"; placeholderText: "SRT, JSON từng từ hoặc draft_content.json"; Layout.fillWidth: true
                                 text: configDialog.draft.subtitle_file; enabled: !studio.busy
                                 onEditingFinished: configDialog.edit("subtitle_file", text) }
                             Action { objectName: "subtitlePicker"; text: "Chọn file…"; enabled: !studio.busy; onClicked: { var path=p.chooseSubtitleFile(); if(path)configDialog.edit("subtitle_file",path) } }
@@ -503,13 +504,24 @@ ApplicationWindow {
                         Field { objectName: "subtitleTitle"; placeholderText: "Tiêu đề trên cùng (để trống để tắt)"; visible: configDialog.draft.subtitle_title!=="{video}"
                             Layout.fillWidth: true; text: configDialog.draft.subtitle_title; enabled: !studio.busy
                             onEditingFinished: configDialog.edit("subtitle_title", text) }
+                        RowLayout { Layout.fillWidth: true
+                            Caption { text: "Font chữ"; Layout.preferredWidth: 132 }
+                            Field { objectName: "subtitleFontName"; text: configDialog.draft.subtitle_font_name; readOnly: true; Layout.fillWidth: true }
+                            Action { objectName: "subtitleFontPicker"; text: "Chọn font…"; enabled: !studio.busy
+                                onClicked: {var font=p.chooseSubtitleFont();if(font.path){configDialog.edit("subtitle_font_file",font.path);configDialog.edit("subtitle_font_name",font.name)}} }
+                            Action { objectName: "subtitleFontReset"; text: "Mặc định"; enabled: !studio.busy
+                                onClicked: {configDialog.edit("subtitle_font_file","");configDialog.edit("subtitle_font_name","Arial Black")} }
+                        }
+                        Check { objectName: "subtitleKeywords"; text: "Nhấn màu từ khóa"; checked: configDialog.draft.subtitle_keywords; enabled: !studio.busy; onClicked: configDialog.edit("subtitle_keywords",checked) }
+                        Check { objectName: "subtitleEmoji"; text: "Emoji theo từ khóa"; checked: configDialog.draft.subtitle_emoji; enabled: !studio.busy; onClicked: configDialog.edit("subtitle_emoji",checked) }
                         SettingRow { label: "Độ nghiêng phụ đề"; setting: "subtitle_angle"; low: -30; high: 30; decimals: 1; unit: "°" }
                         ColorRow { label: "Chữ phụ đề"; setting: "subtitle_color" }
                         ColorRow { label: "Từ đang đọc"; setting: "subtitle_red" }
                         ColorRow { label: "Viền phụ đề"; setting: "subtitle_outline" }
                         ColorRow { label: "Chữ tiêu đề/PART"; setting: "title_color" }
                         ColorRow { label: "Nền tiêu đề/PART"; setting: "title_background" }
-                        Caption { text: configDialog.draft.subtitle_mode==="auto" ? "Tự nhận lời thoại trên máy. Lần đầu tải bộ nhận giọng nói khoảng 150 MB; những lần sau dùng lại. Kiểm tra lời và thời điểm bằng bản xem thử." : "SRT dùng thời gian từng từ ước lượng; JSON dùng mốc thời gian trong file."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                        Caption { text: configDialog.draft.subtitle_mode==="auto" ? "Tự nhận lời thoại trên máy. Lần đầu tải bộ nhận giọng nói khoảng 150 MB; những lần sau dùng lại. Kiểm tra lời và thời điểm bằng bản xem thử." : "Draft giữ lời và mốc từng từ, quy đổi về video gốc. Chỉ hỗ trợ Draft dựng từ một nguồn. SRT ước lượng mốc từng từ."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                        Caption { text: "Màu và emoji chọn theo từ khóa, có thể tắt riêng. Font đã chọn được lưu trong dữ liệu app."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     }
                     FoldSection { objectName: "colorSection"; title: p.filterName
                         Check { text: "Bật bộ lọc"; checked: configDialog.draft.filter_enabled; enabled: !studio.busy; onClicked: configDialog.edit("filter_enabled",checked) }
@@ -584,6 +596,7 @@ ApplicationWindow {
                 Caption { text: "Khung 3:4 dùng để kiểm tra với bản CapCut đã xuất. Chọn preset TikTok ở màn hình chính để xuất video dọc 9:16."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 Action { text: "Dùng cấu hình video mẫu 3:4"; enabled: !studio.busy; Layout.fillWidth: true; onClicked: {p.choosePreset("reference");settings.close()} }
                 Section { text: "Phiên bản " + studio.version }
+                Caption { text: "Emoji: Twemoji © Twitter và các tác giả, CC-BY-4.0."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 Caption { text: studio.updateNotice; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 Action { text: "Kiểm tra cập nhật"; enabled: !studio.busy; onClicked: studio.checkUpdates(); Layout.fillWidth: true }
                 Action { text: "Cập nhật và mở lại"; visible: studio.updateAvailable; enabled: !studio.busy; primary: true; onClicked: studio.installUpdate(); Layout.fillWidth: true }
