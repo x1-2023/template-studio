@@ -87,6 +87,14 @@ class ImportUiTests(unittest.TestCase):
         pos = item.mapToScene(QPointF(item.width() / 2, item.height() / 2)).toPoint()
         QTest.mouseClick(self.window, Qt.LeftButton, Qt.NoModifier, pos)
         self.wait()
+        if name == "editConfigButton":
+            # Trên Windows, visible có thể true trong khi Popup còn đang chạy enter.
+            # Chờ onOpened khởi tạo draft trước khi kiểm thử tương tác với nội dung.
+            dialog = self.window.findChild(QObject, "configDialog")
+            deadline = time.monotonic()+2
+            while not dialog.property("opened") and time.monotonic() < deadline:
+                QTest.qWait(10)
+            self.assertTrue(dialog.property("opened"))
 
     def drop(self, paths, over_row=False):
         item = self.window.findChild(
@@ -251,8 +259,10 @@ class ImportUiTests(unittest.TestCase):
         with patch("template_studio.production.QColorDialog.getColor",return_value=QColor()):
             self.click("subtitle_redPicker")
         self.assertEqual(dialog.property("draft").toVariant()["subtitle_red"],"FF0000")
-        with patch("template_studio.production.QColorDialog.getColor",return_value=QColor("#33CCAA")):
+        with patch("template_studio.production.QColorDialog.getColor",return_value=QColor("#33CCAA")) as picker:
             self.click("subtitle_redPicker")
+        picker.assert_called_once()
+        self.assertEqual(dialog.property("draft").toVariant()["subtitle_red"],"33CCAA")
         scroll_to("subtitle_colorField")
         self.click("subtitle_colorField")
         QTest.keyClick(self.window,Qt.Key_A,Qt.ControlModifier)
