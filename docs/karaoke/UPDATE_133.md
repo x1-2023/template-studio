@@ -26,3 +26,9 @@ EXE đã xuất đủ 11008 khung của hai part, tốc độ lần lượt 38.8
 CI Windows đã qua 95 kiểm thử, lint và hai màn hình GUI. Kiểm thử bổ sung gồm nhập font qua nút GUI, hủy hộp cấu hình, bảo toàn font riêng, an toàn nội dung ASS, token nhiều tiếng, ánh xạ tốc độ/cắt Draft, lịch emoji, màu từ đang đọc và nâng cấu hình 1012 cũ.
 
 Gói local đã kiểm thử có SHA-256 `2f1e4082377d71dc2b9ad59a9b1931e30c3fd0c38142342158fe13235e4f0989`. Gói public giữ nguyên byte này; không kèm video, Draft hoặc font riêng.
+
+## Updater public
+
+Đã public [v1.3.3](https://github.com/x1-2023/template-studio/releases/tag/v1.3.3), ZIP 257666970 byte, digest GitHub và file checksum cùng khớp SHA-256 bên trên. Bản sao public 1.3.2 đã tải qua chính updater, xác minh gói, thay EXE và mở lại 1.3.3 thành công; có `healthy.json` và backup đúng hash EXE cũ.
+
+Kiểm tra giữ nguyên các giá trị cấu hình cũ trong preset/hàng chờ, số part và màu tự chọn, file font trong `runtime/fonts/`, dữ liệu riêng, thư mục xuất và runtime. Ba tùy chọn mới của snapshot 1012 được bổ sung đúng, không tạo bản sao cấu hình lỗi. Chính EXE tải từ GitHub sau nâng cấp đã render offline preview GPU 90 khung/540 × 720 với font riêng, emoji và âm thanh. Bằng chứng giữ trong `.runtime/qa-updater-133/verified.json`, không đưa dữ liệu QA lên Git.
