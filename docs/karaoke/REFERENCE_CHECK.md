@@ -30,3 +30,5 @@ Whisper nhận 1457 từ từ toàn bộ nguồn. Với mốc 180 giây, kế ho
 Đã kiểm tra cập nhật thực bằng gói [1.3.1 public](https://github.com/x1-2023/template-studio/releases/tag/v1.3.1), SHA256 `a486c52441f456c83cc0e6766cc59d4fb6eaea5f2781535c6cbc64df365fc3ea`: tải qua updater, kiểm tra hash, giải nén, cài lên bản sao 1.2.1 và mở lại app thành công. Cấu hình cũ, dữ liệu, video xuất và runtime được giữ; backup EXE cũ đúng SHA256. EXE public sau cập nhật render GPU offline 90 khung 1080×1440 với phụ đề ASR và tiêu đề tự động, PATH chỉ có Windows. Thử nghiệm dùng thư mục QA riêng, không thay app người dùng đang mở.
 
 Video nguồn, Draft, phụ đề của mẫu và ảnh đối chiếu giữ local; không đóng gói vào EXE hay đưa lên Git.
+
+Đã bổ sung [đối chiếu đủ 11008 khung của cả hai part bằng EXE public 1.3.2](FULL_COMPARISON_132.md) ngày 19/10/2026, có video ba cột và kiểm tra âm thanh. Báo cáo bên trên ghi lại lượt bốn khung ban đầu; báo cáo mới ghi rõ các sai khác chuyển cảnh và âm thanh phát hiện khi so đủ thời lượng.
