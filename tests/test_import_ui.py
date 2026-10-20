@@ -260,9 +260,13 @@ class ImportUiTests(unittest.TestCase):
             return item
 
         scroll_to("subtitle_redPicker")
-        with patch("template_studio.production.QColorDialog.getColor",return_value=QColor()):
+        with patch("template_studio.production.QColorDialog.getColor",return_value=QColor()) as picker:
             self.click("subtitle_redPicker")
+        picker.assert_called_once()
         self.assertEqual(dialog.property("draft").toVariant()["subtitle_red"],"FF0000")
+        # Dialog giả lập trả ngay; tránh hai click liên tiếp thành double-click trên Windows.
+        QTest.qWait(self.app.doubleClickInterval()+30)
+        scroll_to("subtitle_redPicker")
         with patch("template_studio.production.QColorDialog.getColor",return_value=QColor("#33CCAA")) as picker:
             self.click("subtitle_redPicker")
         picker.assert_called_once()
