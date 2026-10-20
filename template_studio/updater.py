@@ -17,6 +17,7 @@ from pathlib import Path, PurePosixPath
 from offline_studio.cancellation import check_cancelled
 from offline_studio.config import atomic_json
 from .version import VERSION, REPOSITORY, ASSET_NAME
+from .network import error_hint, open_https
 
 MAX_DOWNLOAD = 1024 ** 3
 MAX_EXTRACTED = 3 * 1024 ** 3
@@ -37,7 +38,7 @@ def _open(url):
         'Accept': 'application/vnd.github+json' if url.startswith('https://api.github.com/') else 'application/octet-stream',
         'X-GitHub-Api-Version': '2022-11-28',
     })
-    response = urllib.request.urlopen(request, timeout=20)
+    response = open_https(request, timeout=20)
     final = urllib.parse.urlsplit(response.geturl())
     if final.scheme != 'https' or final.hostname not in {
         'api.github.com', 'github.com', 'release-assets.githubusercontent.com',
@@ -81,8 +82,8 @@ def check_update():
         if error.code == 404:
             return None
         raise RuntimeError(f'GitHub trả mã {error.code}; thử kiểm tra lại sau.') from error
-    except (urllib.error.URLError, TimeoutError) as error:
-        raise RuntimeError('Không kết nối được GitHub; vẫn có thể dùng app offline.') from error
+    except (urllib.error.URLError, TimeoutError, OSError) as error:
+        raise RuntimeError('Không kết nối được GitHub để kiểm tra cập nhật. '+error_hint(error)) from error
 
 
 def extract_package(archive, destination, version):

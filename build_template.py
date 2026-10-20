@@ -96,6 +96,7 @@ def main():
             '--paths', str(ROOT), '--collect-submodules', 'template_studio', '--collect-submodules', 'offline_studio',
             '--collect-all', 'video_fx',
             '--collect-all', 'moderngl', '--collect-all', 'glcontext',
+            '--collect-data', 'certifi',
             '--exclude-module', 'tkinter', '--exclude-module', 'PySide6.QtWebEngineWidgets',
             '--exclude-module', 'PySide6.QtWebEngineCore', '--exclude-module', 'PySide6.QtWebEngineQuick',
             '--add-data', f'{ROOT / "template_studio/Main.qml"};template_studio',

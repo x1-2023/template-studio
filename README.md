@@ -17,6 +17,8 @@ Mã nguồn [công khai GPL-3.0-only](https://github.com/x1-2023/template-studio
 
 Nếu máy báo thiếu `ffprobe`/`ffmpeg`, bản 1.3.4 kiểm tra và sửa bộ công cụ trước khi đọc video. Lỗi tải runtime hiện ngay ở màn hình chính, không bị thông báo GPU che đi; bấm **Thử lại FFmpeg** khi mạng đã có lại. Sau khi tải thành công, app giữ ZIP đã xác minh trong `cache/` để sửa lại công cụ bị thiếu/hỏng khi offline. Có thể tải [ZIP FFmpeg 7.1.1 essentials của Gyan](https://github.com/GyanD/codexffmpeg/releases/download/7.1.1/ffmpeg-7.1.1-essentials_build.zip) trên máy khác rồi vào **Cài đặt → Cài từ ZIP FFmpeg đã tải…**; app vẫn kiểm tra SHA-256. Các video bản cũ đánh dấu lỗi thiếu công cụ được đọc lại và đưa về hàng chờ sau khi sửa runtime, giữ preset đã chọn. Không cần cài FFmpeg vào PATH.
 
+Từ **1.3.7**, app có bộ chứng chỉ CA Mozilla đóng kèm cho tải FFmpeg, Whisper/model và updater; đồng thời dùng chứng chỉ tin cậy của Windows. Luôn xác minh chứng chỉ/tên máy chủ, không hạ kết nối xuống HTTP. Nếu bản cũ báo `CERTIFICATE_VERIFY_FAILED` và không cập nhật được trong app, tải ZIP mới bằng trình duyệt, tắt app rồi chép **nội dung thư mục TemplateStudio trong ZIP** đè vào thư mục app cũ; giữ `data/`, `runtime/`, `exports/`. Máy sai ngày/giờ hoặc mạng kiểm tra HTTPS vẫn cần sửa ngày/giờ và chứng chỉ tin cậy của mạng đó.
+
 ## Preset và cấu hình
 
 - Ba preset TikTok xuất **video dọc 9:16, 1080 × 1920, 30 FPS**, MP4/H.264 và âm thanh AAC. [TikTok khuyến nghị video dọc 9:16 và xuất 1080 × 1920](https://ads.tiktok.com/business/en/guides/video-advertising-guide).

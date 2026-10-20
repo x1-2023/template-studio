@@ -19,12 +19,12 @@ class SpeechTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             target = Path(folder)/"model.bin"
             target.write_bytes(b"old")
-            with patch("urllib.request.urlopen", return_value=io.BytesIO(b"new")):
+            with patch("template_studio.speech.open_https", return_value=io.BytesIO(b"new")):
                 with self.assertRaisesRegex(ValueError, "Checksum"):
                     _download("https://example.com/model", target, "invalid", 10, lambda event: None)
             self.assertEqual(target.read_bytes(), b"old")
             self.assertEqual(list(Path(folder).iterdir()), [target])
-            with patch("urllib.request.urlopen", return_value=io.BytesIO(b"new")):
+            with patch("template_studio.speech.open_https", return_value=io.BytesIO(b"new")):
                 _download("https://example.com/model", target, hashlib.sha256(b"new").hexdigest(), 10, lambda event: None)
             self.assertEqual(target.read_bytes(), b"new")
 

@@ -17,6 +17,7 @@ from pathlib import Path
 from offline_studio.cancellation import check_cancelled, managed_process
 from offline_studio.config import atomic_json
 from offline_studio.process import NO_WINDOW, binary, probe, run
+from .network import error_hint, open_https
 
 RUNTIME_VERSION = "b5454"
 RUNTIME_URL = f"https://github.com/ggml-org/whisper.cpp/releases/download/{RUNTIME_VERSION}/whisper-bin-x64.zip"
@@ -36,7 +37,7 @@ def _download(url, target, expected, limit, emit, staging=None):
     received = 0
     try:
         request = urllib.request.Request(url, headers={"User-Agent": "BetaRender"})
-        with urllib.request.urlopen(request, timeout=30) as response, pending.open("xb") as stream:
+        with open_https(request, timeout=30) as response, pending.open("xb") as stream:
             while chunk := response.read(1024**2):
                 check_cancelled()
                 received += len(chunk)
@@ -48,6 +49,8 @@ def _download(url, target, expected, limit, emit, staging=None):
             raise ValueError("Checksum bộ nhận giọng nói không khớp; chưa cài.")
         check_cancelled()
         os.replace(pending, target)
+    except OSError as error:
+        raise RuntimeError("Không tải được bộ nhận giọng nói. " + error_hint(error)) from error
     finally:
         pending.unlink(missing_ok=True)
 

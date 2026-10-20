@@ -1,10 +1,10 @@
-Beta Render 1.3.6 tích hợp sẵn font ZY Trend cho preset 1012.
+Beta Render 1.3.7 bổ sung CA đóng kèm để sửa lỗi xác minh HTTPS khi tải runtime và cập nhật.
 
-- Font có sẵn trong ZIP app, dùng cho phụ đề, tiêu đề và nhãn PART. Không cần nhập TTF hoặc cài font vào Windows.
-- Cấu hình 1012 cũ đang dùng Arial Black mặc định chuyển sang ZY Trend. Font riêng đã nhập, màu sắc, cách chia part và các thông số khác được giữ.
-- Nút **ZY Trend** trong **Chỉnh cấu hình → Phụ đề karaoke** đưa về font có sẵn; **Chọn font…** vẫn cho dùng font khác.
-- Preset lưu font có sẵn bằng mã `zy-trend`, không lưu đường dẫn trên máy tạo preset. Preview và xuất dùng cùng font/cỡ chữ đã đối chiếu.
+- Tải FFmpeg/ffprobe, Whisper/model và updater dùng chung HTTPS với Mozilla CA đóng kèm, bổ sung chứng chỉ tin cậy của Windows.
+- Giữ xác minh chứng chỉ và tên máy chủ; chặn chuyển hướng xuống HTTP. Vẫn kiểm tra SHA-256 gói/runtime trước khi cài.
+- Lỗi chứng chỉ được báo riêng trong cập nhật và nhận giọng nói; không thử tải FFmpeg lặp lại ba lần với cùng lỗi chứng chỉ.
+- Giữ ZY Trend có sẵn, bảng màu riêng cho tiêu đề/PART, phụ đề tự động, cách chia part và dữ liệu người dùng.
 
-Cập nhật qua **Cài đặt → Kiểm tra cập nhật → Cập nhật và mở lại**; hoặc tải ZIP app, giải nén toàn bộ rồi mở `TemplateStudio.exe`. Giữ dữ liệu, preset, font và video xuất. Máy chưa từng chuẩn bị runtime cần mạng cho lần tải đầu, hoặc chọn ZIP FFmpeg đã tải sẵn.
+Cập nhật qua **Cài đặt → Kiểm tra cập nhật → Cập nhật và mở lại** nếu bản cũ còn kết nối được. Nếu bản cũ báo lỗi SSL như `unable to get local issuer certificate`, tải ZIP bằng trình duyệt, tắt app và chép **nội dung thư mục TemplateStudio trong ZIP** đè vào thư mục app cũ. Giữ `data/`, `runtime/`, `exports/`. Sau đó mở app và bấm **Thử lại FFmpeg** nếu chưa có runtime. Máy mới vẫn cần mạng cho lần tải FFmpeg/Whisper đầu tiên.
 
-Giữ bảng 10 màu và màu riêng cho tiêu đề/PART của 1.3.5, các sửa lỗi runtime và chức năng tự nhận phụ đề/chia part hiện có.
+Ngày/giờ Windows phải đúng; mạng có proxy/phần mềm kiểm tra HTTPS cần chứng chỉ tin cậy tương ứng trong Windows.

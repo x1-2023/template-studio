@@ -11,6 +11,7 @@ from pathlib import Path
 
 from offline_studio.cancellation import check_cancelled
 from offline_studio.process import NO_WINDOW, binary
+from .network import error_hint, is_certificate_error, open_https
 
 MEDIA_VERSION = '7.1.1'
 MEDIA_URL = 'https://github.com/GyanD/codexffmpeg/releases/download/7.1.1/ffmpeg-7.1.1-essentials_build.zip'
@@ -114,7 +115,7 @@ def ensure_media(home, progress=lambda value: None, archive=None):
         for attempt in range(3):
             check_cancelled()
             try:
-                with urllib.request.urlopen(request, timeout=30) as response, temporary.open('wb') as output:
+                with open_https(request, timeout=30) as response, temporary.open('wb') as output:
                     received = 0
                     while True:
                         check_cancelled()
@@ -128,9 +129,9 @@ def ensure_media(home, progress=lambda value: None, archive=None):
                         progress(f'Đang tải FFmpeg · {received / 1024 ** 2:.0f} MiB')
                 break
             except (OSError, EOFError) as error:
-                if attempt == 2:
+                if attempt == 2 or is_certificate_error(error):
                     raise RuntimeError('Không tải được FFmpeg/ffprobe. Kiểm tra mạng rồi bấm Thử lại FFmpeg. '
-                                       'Có thể chọn ZIP FFmpeg đã tải trong Cài đặt. Chi tiết: '+str(error)) from error
+                                       'Có thể chọn ZIP FFmpeg đã tải trong Cài đặt. Chi tiết: '+error_hint(error)) from error
                 progress(f'Tải FFmpeg bị gián đoạn. Đang thử lại ({attempt+2}/3)…')
                 time.sleep(.5)
         progress('Đang xác minh và giải nén FFmpeg…')

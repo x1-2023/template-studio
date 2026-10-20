@@ -28,6 +28,9 @@ class ProgressWriter:
 
 
 def execute(request, emit, diagnostics=None):
+    if request["action"] == "network":
+        from .network import check_connections
+        return check_connections()
     if request["action"] == "transcribe":
         import os
         from .paths import data_home

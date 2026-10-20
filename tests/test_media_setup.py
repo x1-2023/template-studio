@@ -40,7 +40,7 @@ class MediaSetupTests(unittest.TestCase):
                     patch.object(media_setup,'FILES',files), \
                     patch.object(media_setup,'MEDIA_SHA256',hashlib.sha256(archive.read_bytes()).hexdigest()), \
                     patch.object(media_setup,'binary',side_effect=FileNotFoundError('ffprobe')), \
-                    patch.object(media_setup.urllib.request,'urlopen') as network:
+                    patch.object(media_setup,'open_https') as network:
                 media_setup.ensure_media(home)
                 network.assert_not_called()
             self.assertEqual((destination/'ffprobe.exe').read_bytes(),b'MZ-ffprobe-thu')
@@ -56,7 +56,7 @@ class MediaSetupTests(unittest.TestCase):
                     patch.object(media_setup,'MEDIA_SHA256',hashlib.sha256(contents).hexdigest()), \
                     patch.object(media_setup,'binary',side_effect=FileNotFoundError('ffprobe')), \
                     patch.object(media_setup.time,'sleep'), \
-                    patch.object(media_setup.urllib.request,'urlopen',side_effect=[OSError('mất mạng'),io.BytesIO(contents)]) as network:
+                    patch.object(media_setup,'open_https',side_effect=[OSError('mất mạng'),io.BytesIO(contents)]) as network:
                 media_setup.ensure_media(home)
                 self.assertEqual(network.call_count,2)
             self.assertEqual((home/'cache'/f'ffmpeg-{media_setup.MEDIA_VERSION}-verified.zip').read_bytes(),contents)
@@ -80,7 +80,7 @@ class MediaSetupTests(unittest.TestCase):
             with patch.dict(os.environ,{'TEMPLATE_STUDIO_HOME':str(home)}), \
                     patch.object(media_setup,'media_available',return_value=False), \
                     patch.object(media_setup.time,'sleep'), \
-                    patch.object(media_setup.urllib.request,'urlopen',side_effect=OSError('mạng bị chặn')) as network:
+                    patch.object(media_setup,'open_https',side_effect=OSError('mạng bị chặn')) as network:
                 with self.assertRaisesRegex(RuntimeError,'Thử lại FFmpeg'):
                     media_setup.ensure_media(home)
                 self.assertEqual(network.call_count,3)
