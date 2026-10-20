@@ -24,3 +24,9 @@ Giải nén ZIP 1.3.4 vào thư mục QA sạch, không copy runtime từ máy p
 Máy QA dùng RTX 2070 SUPER. Không truy cập máy GTX 1660 SUPER qua UltraViewer; ảnh người dùng chỉ được dùng để chẩn đoán triệu chứng.
 
 Gói cuối đã kiểm tra SHA-256: `81c8e5aee079e2b02dd780692e5c6ab18865321e37a2925d34a8ce46a0ac02b8`. Bằng chứng riêng: `.runtime/qa-native-134b/verified.json`; không commit runtime, video hoặc dữ liệu người dùng. 102 kiểm thử đã qua trên local và CI Windows, gồm checksum/cache/tải ngắt, tách lỗi runtime khỏi nguồn, phục hồi cấu hình và không để trạng thái GPU che lỗi cài đặt. CI đã kiểm tra cả hai màn hình GUI.
+
+## Updater public
+
+Đã public [v1.3.4](https://github.com/x1-2023/template-studio/releases/tag/v1.3.4), ZIP 257672418 byte, digest GitHub khớp checksum trên. Bản sao public 1.3.3 có runtime thiếu ffprobe đã tải qua updater, thay EXE, báo `healthy.json` phiên bản 1.3.4 và giữ backup đúng hash EXE cũ. Giữ nguyên dữ liệu riêng, font đã nhập, preset, số part, màu, cấu hình từng nguồn và thư mục xuất; mục cũ lỗi thiếu công cụ được đọc lại về hàng chờ.
+
+Sau nâng cấp, mở chính EXE vừa tải với PATH chỉ có Windows và mạng chặn: runtime riêng tự phục hồi ffprobe từ ZIP cache, nhận GPU rồi xuất offline 90 khung có âm thanh. Bằng chứng riêng: `.runtime/qa-updater-134/verified.json`. Không truy cập hoặc cài trực tiếp trên máy từ ảnh UltraViewer.
