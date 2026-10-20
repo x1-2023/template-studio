@@ -154,11 +154,20 @@ class ImportUiTests(unittest.TestCase):
         self.wait()
 
     def enter_text(self, name, value):
+        if self.window.findChild(QObject, "configDialog").property("opened"):
+            self.scroll_to_config_item(name)
         self.click(name)
+        item = self.find_item(name)
+        deadline = time.monotonic()+2
+        while not item.property("activeFocus") and time.monotonic() < deadline:
+            QTest.qWait(10)
+        self.assertTrue(item.property("activeFocus"), name)
         QTest.keyClick(self.window, Qt.Key_A, Qt.ControlModifier)
         for char in value:
             QTest.keyClick(self.window, Qt.Key(ord(char)))
+        self.assertEqual(item.property("text"), value, name)
         QTest.keyClick(self.window, Qt.Key_Tab)
+        QTest.qWait(30)
 
     def test_common_range_three_parts_and_color_adjustments_save_and_cancel(self):
         self.drop([self.source])
