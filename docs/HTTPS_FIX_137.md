@@ -29,6 +29,8 @@ Gói kiểm chứng: ZIP 257.818.100 byte, SHA-256:
 
 CA bundle 238.856 byte, SHA-256 `50f79f98dac192b20dbf73f35c56f0b0c557ab267ff5199d1117cc1180b70785`. Kết quả cục bộ trong `.runtime/qa-https-137/verified.json`; kịch bản `.runtime/qa_https_137.py`.
 
+Đã công bố [v1.3.7](https://github.com/x1-2023/template-studio/releases/tag/v1.3.7); digest và kích thước asset GitHub khớp gói kiểm chứng. Chạy updater thật từ bản sao public 1.3.6 sang 1.3.7: tải/xác minh/cài/mở lại, giữ backup, dữ liệu, preset, màu, số part và font riêng. EXE public sau nâng cấp render 90 khung có tiếng, đồng thời kiểm tra HTTPS thành công ở cả ba nguồn với xác minh chứng chỉ/hostname còn bật. Kết quả `.runtime/qa-updater-137/verified.json`.
+
 ## Cập nhật từ máy đang lỗi SSL
 
 Nếu bản cũ không kết nối được updater, tải ZIP mới bằng trình duyệt. Tắt app, chép **nội dung thư mục TemplateStudio trong ZIP** đè vào thư mục app cũ; giữ `data/`, `runtime/`, `exports/`. Mở lại app và bấm **Thử lại FFmpeg** nếu runtime chưa có. Những lần sau có thể dùng updater bình thường khi kết nối HTTPS đã được xác minh.
