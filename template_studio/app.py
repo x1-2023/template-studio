@@ -622,7 +622,8 @@ def main(root, home):
                               gpuReady=controller.production.ready,
                               mediaReady=controller.mediaReady, ffmpeg=binary('ffmpeg') if controller.mediaReady else '')
             atomic_json(home / 'check-result.json', diagnostic)
-            print(json.dumps(diagnostic, ensure_ascii=False))
+            # EXE trên Windows có thể ghi log bằng cp1252; JSON ASCII vẫn giữ nguyên dữ liệu.
+            print(json.dumps(diagnostic, ensure_ascii=True))
             app.exit(1 if errors else 0)
         QTimer.singleShot(1500, finish)
     return app.exec()

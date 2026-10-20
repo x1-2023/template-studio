@@ -254,9 +254,16 @@ class ImportUiTests(unittest.TestCase):
 
         def scroll_to(name):
             item=self.window.findChild(QQuickItem,name)
-            y=item.mapToScene(QPointF(0,0)).y()
-            flick.setProperty("contentY",flick.property("contentY")+y-260)
+            # Dùng viewport thực; cửa sổ trên runner có thể cao khác máy local.
+            self.app.processEvents()
+            y=item.mapToScene(QPointF(item.width()/2,item.height()/2)).y()
+            center=flick.mapToScene(QPointF(flick.width()/2,flick.height()/2)).y()
+            maximum=max(0,flick.property("contentHeight")-flick.height())
+            flick.setProperty("contentY",min(maximum,max(0,flick.property("contentY")+y-center)))
             QTest.qWait(70)
+            y=item.mapToScene(QPointF(item.width()/2,item.height()/2)).y()
+            top=flick.mapToScene(QPointF(0,0)).y()
+            self.assertTrue(top<y<top+flick.height(),(name,y,top,flick.height()))
             return item
 
         scroll_to("subtitle_redPicker")
