@@ -23,7 +23,8 @@ class ControllerTests(unittest.TestCase):
         self.assertFalse(controller.pool.active)
 
     def test_auto_update_waits_for_startup_and_render_then_checks(self):
-        with tempfile.TemporaryDirectory() as folder, patch.dict(os.environ, {'TEMPLATE_STUDIO_HOME': folder}):
+        with tempfile.TemporaryDirectory() as folder, patch.dict(os.environ, {'TEMPLATE_STUDIO_HOME': folder}), \
+                patch('template_studio.app.ensure_media'):
             controller = Controller(Path.cwd(), Path(folder))
             self.wait(controller)
             with patch.object(controller, 'checkUpdates') as check:
@@ -42,7 +43,7 @@ class ControllerTests(unittest.TestCase):
     def test_preview_draft_applies_atomically_and_persists(self):
         with tempfile.TemporaryDirectory() as temporary:
             home = Path(temporary)
-            with patch.dict(os.environ, {'TEMPLATE_STUDIO_HOME': str(home)}):
+            with patch.dict(os.environ, {'TEMPLATE_STUDIO_HOME': str(home)}), patch('template_studio.app.ensure_media'):
                 controller = Controller(Path.cwd(), home)
                 self.wait(controller)
                 controller._rows = [dict(path='old.mp4', name='old.mp4', status='Hoàn tất', percent=100, result='previous-output.mp4')]

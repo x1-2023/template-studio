@@ -52,6 +52,10 @@ class ImportUiTests(unittest.TestCase):
         self.metadata = patch("template_studio.production.probe", return_value=METADATA)
         self.metadata.start()
         self.addCleanup(self.metadata.stop)
+        # Metadata đã giả lập; kiểm thử thao tác không tải runtime cho từng TEMP.
+        self.media_setup = patch("template_studio.production.ensure_media")
+        self.media_setup.start()
+        self.addCleanup(self.media_setup.stop)
         self.engine = QQmlApplicationEngine()
         self.errors = []
         self.engine.warnings.connect(
