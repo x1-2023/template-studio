@@ -19,7 +19,8 @@ Giải nén ZIP 1.3.4 vào thư mục QA sạch, không copy runtime từ máy p
 2. Xóa riêng `ffprobe.exe` trong bản sao QA rồi chặn mạng: app giải nén lại từ cache và nhận GPU thành công.
 3. Ghi dữ liệu hỏng vào riêng `ffmpeg.exe` trong QA: app phát hiện hash sai và sửa lại khi offline.
 4. Chính EXE sau sửa xuất NVENC 90 khung, 1080 × 1920/30 FPS, có âm thanh. Tên nguồn có dấu và ký tự `#`.
+5. Thư mục dữ liệu mới chưa có runtime, chặn mạng hoàn toàn: vẫn giữ rõ lỗi tải kể cả GPU đã nhận, ghi log và thoát đúng mã 1 ở chế độ kiểm tra. Log JSON tương thích bảng mã cp1252 của Windows, không bị `UnicodeEncodeError` khi thông báo có dấu.
 
 Máy QA dùng RTX 2070 SUPER. Không truy cập máy GTX 1660 SUPER qua UltraViewer; ảnh người dùng chỉ được dùng để chẩn đoán triệu chứng.
 
-Gói đã kiểm tra SHA-256: `bfc0a10a24dffd22e33efd4a5794160098db7762fc4ce4ad3a5f5956993249c8`. Bằng chứng riêng: `.runtime/qa-native-134/verified.json`; không commit runtime, video hoặc dữ liệu người dùng. 102 kiểm thử local đã qua, gồm checksum/cache/tải ngắt, tách lỗi runtime khỏi nguồn, phục hồi cấu hình và không để trạng thái GPU che lỗi cài đặt.
+Gói cuối đã kiểm tra SHA-256: `81c8e5aee079e2b02dd780692e5c6ab18865321e37a2925d34a8ce46a0ac02b8`. Bằng chứng riêng: `.runtime/qa-native-134b/verified.json`; không commit runtime, video hoặc dữ liệu người dùng. 102 kiểm thử đã qua trên local và CI Windows, gồm checksum/cache/tải ngắt, tách lỗi runtime khỏi nguồn, phục hồi cấu hình và không để trạng thái GPU che lỗi cài đặt. CI đã kiểm tra cả hai màn hình GUI.
