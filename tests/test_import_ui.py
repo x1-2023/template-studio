@@ -277,6 +277,26 @@ class ImportUiTests(unittest.TestCase):
                 return item
         self.fail((name,y,top,flick.height(),flick.property('contentHeight')))
 
+    def test_bundled_font_is_default_and_can_be_restored_without_picker(self):
+        self.p.choosePreset('karaoke-1012')
+        self.assertEqual(self.p.config['subtitle_font_builtin'],'zy-trend')
+        self.click('editConfigButton')
+        dialog=self.window.findChild(QObject,'configDialog')
+        self.assertEqual(self.find_item('subtitleFontName').property('text'),'ZY Trend')
+        dialog.setProperty('draft',{**self.p.config,'subtitle_font_builtin':'',
+            'subtitle_font_name':'Font riêng','subtitle_font_file':'font-rieng.ttf'})
+        self.scroll_to_config_item('subtitleFontReset')
+        with patch('template_studio.production.QFileDialog.getOpenFileName') as picker:
+            self.click('subtitleFontReset')
+            picker.assert_not_called()
+        draft=dialog.property('draft').toVariant()
+        self.assertEqual(draft['subtitle_font_name'],'ZY Trend')
+        self.assertEqual(draft['subtitle_font_file'],'')
+        self.assertEqual(draft['subtitle_font_builtin'],'zy-trend')
+        self.click('saveConfigButton')
+        self.p.savePreset('Font có sẵn')
+        self.assertEqual(self.p.mainPresets[-1]['config']['subtitle_font_builtin'],'zy-trend')
+
     def test_basic_palette_saves_independent_title_and_part_colors_and_cancel_discards(self):
         self.p.choosePreset('karaoke-1012')
         self.click('editConfigButton')

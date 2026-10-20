@@ -2,3 +2,4 @@
 *.bat text eol=crlf
 # Giữ nguyên byte để manifest SHA256 của shader/LUT khớp trên mọi máy.
 template_studio/assets/effects/** -text -whitespace
+template_studio/assets/fonts/*.ttf -text

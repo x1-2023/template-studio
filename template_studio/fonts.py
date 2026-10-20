@@ -1,4 +1,4 @@
-"""Nhập font vào dữ liệu riêng và chuẩn bị đường dẫn ASCII cho libass."""
+"""Font có sẵn, font riêng và đường dẫn ASCII cho libass."""
 
 import hashlib
 import shutil
@@ -7,6 +7,23 @@ from pathlib import Path
 from PIL import ImageFont
 
 MAX_FONT_BYTES = 20 * 1024**2
+TREND_FILE = Path(__file__).with_name("assets") / "fonts/ZYTrend.ttf"
+TREND_SHA256 = "e6b721d49a34786e34a4d198a1734b73f2ffff3b8b23461efc827e7dedc1b3db"
+
+
+def bundled_font():
+    """Đọc tài nguyên cạnh module, dùng được cả source và EXE đã giải nén."""
+    if not TREND_FILE.is_file() or hashlib.sha256(TREND_FILE.read_bytes()).hexdigest() != TREND_SHA256:
+        raise ValueError("Font ZY Trend trong app bị thiếu hoặc hỏng. Hãy cài lại bản cập nhật.")
+    return TREND_FILE
+
+
+def resolve_font(config):
+    if config.get("subtitle_font_file"):
+        return Path(config["subtitle_font_file"])
+    if config.get("subtitle_font_builtin") == "zy-trend":
+        return bundled_font()
+    return None
 
 
 def inspect_font(source):

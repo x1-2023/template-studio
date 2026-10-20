@@ -548,9 +548,10 @@ ApplicationWindow {
                             Caption { text: "Font chữ"; Layout.preferredWidth: 132 }
                             Field { objectName: "subtitleFontName"; text: configDialog.draft.subtitle_font_name; readOnly: true; Layout.fillWidth: true }
                             Action { objectName: "subtitleFontPicker"; text: "Chọn font…"; enabled: !studio.busy
-                                onClicked: {var font=p.chooseSubtitleFont();if(font.path){configDialog.edit("subtitle_font_file",font.path);configDialog.edit("subtitle_font_name",font.name)}} }
-                            Action { objectName: "subtitleFontReset"; text: "Mặc định"; enabled: !studio.busy
-                                onClicked: {configDialog.edit("subtitle_font_file","");configDialog.edit("subtitle_font_name","Arial Black")} }
+                                onClicked: {var font=p.chooseSubtitleFont();if(font.path){configDialog.edit("subtitle_font_file",font.path);configDialog.edit("subtitle_font_name",font.name);configDialog.edit("subtitle_font_builtin","")}} }
+                            Action { objectName: "subtitleFontReset"; text: "ZY Trend"; enabled: !studio.busy
+                                ToolTip.visible: hovered; ToolTip.text: "Dùng font có sẵn trong app"
+                                onClicked: {configDialog.edit("subtitle_font_file","");configDialog.edit("subtitle_font_name","ZY Trend");configDialog.edit("subtitle_font_builtin","zy-trend")} }
                         }
                         Check { objectName: "subtitleKeywords"; text: "Nhấn màu từ khóa"; checked: configDialog.draft.subtitle_keywords; enabled: !studio.busy; onClicked: configDialog.edit("subtitle_keywords",checked) }
                         Check { objectName: "subtitleEmoji"; text: "Emoji theo từ khóa"; checked: configDialog.draft.subtitle_emoji; enabled: !studio.busy; onClicked: configDialog.edit("subtitle_emoji",checked) }
@@ -563,7 +564,7 @@ ApplicationWindow {
                         ColorRow { label: "Chữ PART"; setting: "part_color" }
                         ColorRow { label: "Nền PART"; setting: "part_background" }
                         Caption { text: configDialog.draft.subtitle_mode==="auto" ? "Tự nhận lời thoại trên máy. Lần đầu tải bộ nhận giọng nói khoảng 150 MB; những lần sau dùng lại. Kiểm tra lời và thời điểm bằng bản xem thử." : "Draft giữ lời và mốc từng từ, quy đổi về video gốc. Chỉ hỗ trợ Draft dựng từ một nguồn. SRT ước lượng mốc từng từ."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-                        Caption { text: "Màu và emoji chọn theo từ khóa, có thể tắt riêng. Font đã chọn được lưu trong dữ liệu app."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                        Caption { text: "ZY Trend có sẵn trong app. Có thể chọn font khác nếu muốn. Màu từ khóa và emoji bật/tắt riêng."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     }
                     FoldSection { objectName: "colorSection"; title: p.filterName
                         Check { text: "Bật bộ lọc"; checked: configDialog.draft.filter_enabled; enabled: !studio.busy; onClicked: configDialog.edit("filter_enabled",checked) }

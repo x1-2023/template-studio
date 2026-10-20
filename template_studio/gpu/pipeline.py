@@ -173,17 +173,18 @@ def render(source, output, config, args, progress=lambda event: None):
         subtitle_ass = (Path(diagnostics).resolve() / "karaoke.ass" if diagnostics else
                         output.parent / (".beta-karaoke-" + uuid.uuid4().hex + ".ass"))
         font_name = config.get("subtitle_font_name", "Arial Black")
-        if config.get("subtitle_font_file"):
-            from template_studio.fonts import stage_font
+        from template_studio.fonts import resolve_font, stage_font
+        font_file = resolve_font(config)
+        if font_file is not None:
             fonts_directory = "fonts" if diagnostics else subtitle_ass.stem + "-fonts"
-            font_name = stage_font(config["subtitle_font_file"], subtitle_ass.parent, fonts_directory)
+            font_name = stage_font(font_file, subtitle_ass.parent, fonts_directory)
             staged_fonts = True
         context_start = float(config.get("source_offset", 0)) + rate*(part_range[0] if part_range else 0)
         context_end = float(config.get("source_offset", 0)) + rate*part_range[1] if part_range else None
         write_ass(words, subtitle_ass, w, h, source_offset=rate*timeline_offset+float(config.get("source_offset", 0)),
                   playback_rate=rate, angle=float(config.get("subtitle_angle", -11)),
                   font_name=font_name, font_scale_x=100 if staged_fonts else 80,
-                  font_file=config.get("subtitle_font_file", ""),
+                  font_file=str(font_file or ""),
                   keyword_colors=config.get("subtitle_keywords", False),
                   red=config.get("subtitle_red", "FF374A"),
                   color=config.get("subtitle_color", "FFFFFF"), outline_color=config.get("subtitle_outline", "000000"),
@@ -501,7 +502,7 @@ def render(source, output, config, args, progress=lambda event: None):
             subtitle_ass.unlink(missing_ok=True)
             if fonts_directory and not diagnostics:
                 folder = subtitle_ass.parent / fonts_directory
-                (folder / ("caption" + Path(config["subtitle_font_file"]).suffix.lower())).unlink(missing_ok=True)
+                (folder / ("caption" + font_file.suffix.lower())).unlink(missing_ok=True)
                 folder.rmdir()
 
 

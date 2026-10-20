@@ -10,7 +10,7 @@ from unittest.mock import patch
 import numpy as np
 
 from template_studio.caption_style import ASSETS, EmojiTrack, keyword_style
-from template_studio.fonts import import_font, inspect_font, stage_font
+from template_studio.fonts import TREND_SHA256, bundled_font, import_font, inspect_font, resolve_font, stage_font
 from template_studio.gpu.timing import audio_window, decode_window
 from template_studio.karaoke import caption_groups, parse_capcut_source_words, write_ass
 from template_studio.presets import catalog, normalize
@@ -112,6 +112,46 @@ class CaptionStyleTests(unittest.TestCase):
                 self.assertTrue((folder/'job/fonts/caption.ttf').is_file())
             with self.assertRaisesRegex(ValueError,'Không đọc'):
                 inspect_font(source)
+
+    def test_bundled_font_is_portable_and_stages_without_external_import(self):
+        config=next(p['config'] for p in catalog() if p['id']=='karaoke-1012')
+        self.assertEqual(config['subtitle_font_file'],'')
+        self.assertEqual(config['subtitle_font_builtin'],'zy-trend')
+        self.assertEqual(config['subtitle_font_name'],'ZY Trend')
+        font=resolve_font(config)
+        self.assertEqual(hashlib.sha256(font.read_bytes()).hexdigest(),TREND_SHA256)
+        self.assertEqual(inspect_font(font),'ZY Trend')
+        with tempfile.TemporaryDirectory() as folder:
+            self.assertEqual(stage_font(font,folder),'ZY Trend')
+            self.assertEqual((Path(folder)/'fonts/caption.ttf').read_bytes(),font.read_bytes())
+        self.assertIsNone(resolve_font(normalize({})))
+        self.assertEqual(resolve_font(dict(config,subtitle_font_file='font-rieng.ttf')),Path('font-rieng.ttf'))
+
+    def test_missing_or_corrupt_bundled_font_is_reported(self):
+        with tempfile.TemporaryDirectory() as folder:
+            font=Path(folder)/'thieu.ttf'
+            with patch('template_studio.fonts.TREND_FILE',font):
+                with self.assertRaisesRegex(ValueError,'thiếu hoặc hỏng'):
+                    bundled_font()
+                font.write_bytes(b'font-hong')
+                with self.assertRaisesRegex(ValueError,'thiếu hoặc hỏng'):
+                    bundled_font()
+
+    def test_old_1012_default_font_migrates_but_explicit_font_choice_survives(self):
+        config=next(p['config'] for p in catalog() if p['id']=='karaoke-1012')
+        config.pop('subtitle_font_builtin')
+        config['subtitle_font_name']='Arial Black'
+        migrated=normalize(config)
+        self.assertEqual(migrated['subtitle_font_builtin'],'zy-trend')
+        self.assertEqual(migrated['subtitle_font_name'],'ZY Trend')
+        chosen=normalize(dict(config,subtitle_font_builtin=''))
+        self.assertEqual(chosen['subtitle_font_name'],'Arial Black')
+        self.assertIsNone(resolve_font(chosen))
+        custom=normalize(dict(config,subtitle_font_file='font-rieng.ttf',subtitle_font_name='Font riêng'))
+        self.assertEqual(custom['subtitle_font_name'],'Font riêng')
+        self.assertEqual(custom['subtitle_font_builtin'],'')
+        with self.assertRaisesRegex(ValueError,'Font có sẵn'):
+            normalize(dict(subtitle_font_builtin='khong-co'))
 
 
 if __name__ == '__main__':

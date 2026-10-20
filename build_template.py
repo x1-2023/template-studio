@@ -57,7 +57,10 @@ def main():
     from template_studio.version import VERSION, ASSET_NAME
     from template_studio.assets_local import validate
     from template_studio.gpu.resources import bundled_cache
+    from template_studio.fonts import bundled_font, inspect_font
     validate(bundled_cache(ROOT))
+    if inspect_font(bundled_font()) != 'ZY Trend':
+        raise ValueError('Font ZY Trend đóng kèm không đúng tên họ.')
     for stream in (sys.stdout, sys.stderr):
         if stream is not None and hasattr(stream, 'reconfigure'):
             stream.reconfigure(encoding='utf-8', errors='replace')

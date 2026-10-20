@@ -1,10 +1,10 @@
-Beta Render 1.3.5 thêm màu riêng cho tiêu đề và PART.
+Beta Render 1.3.6 tích hợp sẵn font ZY Trend cho preset 1012.
 
-- Trong **Chỉnh cấu hình → Phụ đề karaoke**, chọn riêng **Chữ tiêu đề**, **Nền tiêu đề**, **Chữ PART** và **Nền PART**.
-- Mỗi mục màu có 10 ô chọn nhanh: trắng, đen, đỏ, vàng, xanh lá, xanh dương, xanh ngọc, tím, cam và hồng. Vẫn có bảng màu tùy ý và ô HEX.
-- Lưu màu cùng preset; preview và video xuất dùng cùng cấu hình. **Hủy** bỏ lần chỉnh chưa lưu.
-- Preset và hàng chờ cũ giữ đúng màu chữ/nền PART đã dùng trước đây, kể cả màu tự chỉnh.
+- Font có sẵn trong ZIP app, dùng cho phụ đề, tiêu đề và nhãn PART. Không cần nhập TTF hoặc cài font vào Windows.
+- Cấu hình 1012 cũ đang dùng Arial Black mặc định chuyển sang ZY Trend. Font riêng đã nhập, màu sắc, cách chia part và các thông số khác được giữ.
+- Nút **ZY Trend** trong **Chỉnh cấu hình → Phụ đề karaoke** đưa về font có sẵn; **Chọn font…** vẫn cho dùng font khác.
+- Preset lưu font có sẵn bằng mã `zy-trend`, không lưu đường dẫn trên máy tạo preset. Preview và xuất dùng cùng font/cỡ chữ đã đối chiếu.
 
 Cập nhật qua **Cài đặt → Kiểm tra cập nhật → Cập nhật và mở lại**; hoặc tải ZIP app, giải nén toàn bộ rồi mở `TemplateStudio.exe`. Giữ dữ liệu, preset, font và video xuất. Máy chưa từng chuẩn bị runtime cần mạng cho lần tải đầu, hoặc chọn ZIP FFmpeg đã tải sẵn.
 
-Giữ các sửa lỗi runtime 1.3.4 và các chức năng font, phụ đề, emoji, chia part hiện có.
+Giữ bảng 10 màu và màu riêng cho tiêu đề/PART của 1.3.5, các sửa lỗi runtime và chức năng tự nhận phụ đề/chia part hiện có.
