@@ -88,6 +88,15 @@ class PresetTests(unittest.TestCase):
         self.assertEqual(separate['part_color'],'FF0000')
         self.assertEqual(separate['part_background'],'FFFF00')
 
+    def test_optional_seconds_per_fixed_part_defaults_to_equal_split_and_validates(self):
+        self.assertEqual(normalize({})['part_fixed_seconds'], 0)
+        self.assertEqual(normalize(dict(part_count=3,part_fixed_seconds=180))['part_fixed_seconds'], 180)
+        for seconds in (-1, .5, 1801, float('nan'), float('inf')):
+            with self.subTest(seconds=seconds), self.assertRaises(ValueError):
+                normalize(dict(part_fixed_seconds=seconds))
+        with self.assertRaises(ValueError):
+            normalize(dict(part_remainder='unknown'))
+
 
 class QueueTests(unittest.TestCase):
     @classmethod
@@ -257,6 +266,31 @@ class QueueTests(unittest.TestCase):
                 p.preview(501)
             transcribe.assert_not_called()
 
+    def test_fixed_seconds_caps_preview_and_estimate_and_describes_both_remainder_options(self):
+        from unittest.mock import Mock
+        with tempfile.TemporaryDirectory() as folder:
+            host = Host(Path(folder))
+            host.mediaReady,host._nvenc = True,True
+            p = Production(host)
+            p._ready,p._cache = True,'cache'
+            config = normalize(dict(source_end=600,part_count=3,part_fixed_seconds=180))
+            p._rows = [dict(path='video.mp4',duration=1200,config=config,status='Chờ xử lý')]
+            p._index=0
+            self.assertEqual(p.previewDuration,540)
+            self.assertIn('03:00 / 03:00 / 03:00',p.partSummary(config,1200))
+            self.assertIn('Không xuất 01:00',p.partSummary(config,1200))
+            cropped_estimate=p.estimate
+            config['part_remainder']='last'
+            self.assertEqual(p.previewDuration,600)
+            self.assertIn('03:00 / 03:00 / 04:00',p.partSummary(config,1200))
+            self.assertNotEqual(p.estimate,cropped_estimate)
+            config['part_remainder']='drop'
+            p.pool=Mock()
+            p.pool.submit.side_effect=lambda work,**kwargs:work(lambda event:None)
+            with patch('template_studio.production.prepare_captions') as transcribe,self.assertRaisesRegex(ValueError,'sẽ xuất'):
+                p.preview(550)
+            transcribe.assert_not_called()
+
     def test_batch_continues_after_error_and_keeps_reports_outside_exports(self):
         with tempfile.TemporaryDirectory() as folder:
             home = Path(folder)
@@ -303,6 +337,33 @@ class QueueTests(unittest.TestCase):
             with patch("template_studio.production.QDesktopServices.openUrl") as opened:
                 p.openErrorLog()
             self.assertEqual(opened.call_args.args[0].toLocalFile(), str(log).replace("\\", "/"))
+
+    def test_short_source_in_parts_mode_completes_when_only_one_part_fits(self):
+        from unittest.mock import Mock
+        with tempfile.TemporaryDirectory() as folder:
+            home=Path(folder)
+            source=home/'nguồn.mp4'
+            source.write_bytes(b'source')
+            host=Host(home)
+            host.mediaReady,host._nvenc,host._closing=True,True,False
+            p=Production(host)
+            p._ready,p._cache=True,'cache'
+            p._rows=[dict(id='row',path=str(source),name=source.name,status='Chờ xử lý',percent=0,
+                detail='',result='',duration=55,meta='',presetName='Mẫu',
+                config=normalize(dict(part_count=3,part_fixed_seconds=180)))]
+            p.pool=Mock()
+            def submit(work,result,error,event,finished):
+                result(work(event))
+                finished()
+            p.pool.submit.side_effect=submit
+            def render_parts(root,home,row_id,src,config,output,request,progress,completed):
+                target=output/'nguồn_part1.mp4'
+                target.write_bytes(b'video')
+                return dict(output=str(target),parts=[str(target)],wall_seconds=1)
+            with patch('template_studio.production.render_parts',side_effect=render_parts):
+                p.runBatch()
+            self.assertEqual(p._rows[0]['status'],'Hoàn tất')
+            self.assertEqual(Path(p._rows[0]['result']).name,'nguồn_part1.mp4')
 
     def test_preview_uses_correct_part_badge_and_stops_at_part_boundary(self):
         from template_studio.parts import plan_parts

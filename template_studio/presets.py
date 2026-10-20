@@ -46,6 +46,8 @@ BASE = dict(
     subtitle_part_label="",
     part_count=1,
     part_seconds=180.0,
+    part_fixed_seconds=0.0,
+    part_remainder="drop",
     effect_loop_seconds=0.0,
     offset=[0, 0],
     playback_rate=1.0,
@@ -187,6 +189,7 @@ def normalize(value):
         ("audio_delay_ms", -1000, 1000),
         ("effect_loop_seconds", 0, 60),
         ("part_seconds", 30, 1800),
+        ("part_fixed_seconds", 0, 1800),
         ("playback_rate", 0.5, 2),
         ("background_sigma_ratio", 0, 0.1),
         ("effect_start", 0, 60),
@@ -211,6 +214,8 @@ def normalize(value):
         s[key] = x
     if s["effect_end"] < s["effect_start"]:
         raise ValueError("Thời điểm kết thúc intro phải sau bắt đầu.")
+    if 0 < s["part_fixed_seconds"] < 1:
+        raise ValueError("Giây mỗi part phải từ 1 đến 1800, hoặc để trống để chia đều.")
     if s["source_end"] and s["source_end"] <= s["source_offset"]:
         raise ValueError("Mốc kết thúc phải sau mốc bắt đầu video.")
     if not isinstance(s["source_skip"], list) or len(s["source_skip"]) > 20:
@@ -251,6 +256,7 @@ def normalize(value):
         ("quality", ("small", "standard", "high")),
         ("skin", ("none", "chroma")),
         ("filter_stage", ("before", "after")),
+        ("part_remainder", ("drop", "last")),
     ]:
         if s[key] not in choices:
             raise ValueError(f"Giá trị {key} không hợp lệ.")

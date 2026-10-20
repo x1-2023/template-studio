@@ -420,7 +420,7 @@ ApplicationWindow {
                     Label { text: "Phụ đề: "+({"auto":"Tự nhận lời thoại","file":"File đã chọn","sidecar":"File cạnh video","off":"Tắt"})[p.config.subtitle_mode]+" · "+(p.config.part_count===0 ? "Tự chia part" : p.config.part_count===1 ? "Xuất 1 video" : "Xuất "+p.config.part_count+" phần"); visible: p.config.subtitle_mode!=="off" || p.config.part_count!==1; color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Caption { text: "Đoạn chung: "+p.formatTime(p.config.source_offset)+" → "+(p.config.source_end ? p.formatTime(p.config.source_end) : "Hết video")+(p.config.source_skip.length ? " · Bỏ "+p.config.source_skip.length+" khoảng" : ""); Layout.fillWidth: true; wrapMode: Text.WordWrap }
                     Action { objectName: "editConfigButton"; text: "Chỉnh cấu hình…"; primary: true; Layout.fillWidth: true; topPadding: 12; bottomPadding: 12; enabled: !studio.busy; onClicked: configDialog.open() }
-                    Caption { text: p.config.part_count===0 ? "Khoảng "+p.config.part_seconds+" giây/part, ưu tiên khoảng nghỉ lời thoại gần mốc cắt." : p.config.part_count>1 ? "Chia thành "+p.config.part_count+" phần đều nhau." : p.config.height/p.config.width>1.5 ? "Xuất video dọc 9:16 để đăng TikTok." : "Xuất video khung 3:4."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    Caption { text: p.config.part_count===0 ? "Khoảng "+p.config.part_seconds+" giây/part, ưu tiên khoảng nghỉ lời thoại gần mốc cắt." : p.partSummary(p.config,0); wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Caption { text: "Áp dụng cho các video chưa xuất."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Item { Layout.preferredHeight: 8 }
                     Label { text: "Lưu cấu hình thành preset"; color: ink; font.pixelSize: 13; font.bold: true }
@@ -575,14 +575,41 @@ ApplicationWindow {
                             Select { objectName: "partCountSelect"; model: ["Tự chia theo thời lượng", "1 video", "Chọn số part"]; currentIndex: configDialog.draft.part_count===0 ? 0 : configDialog.draft.part_count===1 ? 1 : 2; enabled: !studio.busy; onActivated: configDialog.edit("part_count",currentIndex<2 ? currentIndex : Math.max(2,configDialog.draft.part_count)); Layout.fillWidth: true }
                         }
                         RowLayout { Layout.fillWidth: true; visible: configDialog.draft.part_count>1
-                            Caption { text: "Số part"; Layout.preferredWidth: 132 }
+                            Caption { text: configDialog.draft.part_fixed_seconds>0 ? "Số part tối đa" : "Số part"; Layout.preferredWidth: 132 }
                             Field { objectName: "partCountField"; text: String(configDialog.draft.part_count); validator: IntValidator {bottom:2;top:100} enabled: !studio.busy; Layout.fillWidth: true
                                 onEditingFinished: {if(acceptableInput)configDialog.edit("part_count",Number(text));else text=String(configDialog.draft.part_count)} }
+                        }
+                        RowLayout { Layout.fillWidth: true; visible: configDialog.draft.part_count>1
+                            Caption { text: "Giây mỗi part\n(tùy chọn)"; Layout.preferredWidth: 132 }
+                            Field {
+                                id: partFixedSeconds
+                                objectName: "partFixedSecondsField"; Layout.fillWidth: true; enabled: !studio.busy
+                                property bool dirty: false
+                                text: configDialog.draft.part_fixed_seconds>0 ? String(configDialog.draft.part_fixed_seconds) : ""
+                                placeholderText: "Để trống để chia đều"
+                                validator: DoubleValidator {bottom:1;top:1800;decimals:2;locale:"en_US"}
+                                onTextEdited: dirty=true
+                                function commit() {
+                                    if(!dirty)return
+                                    if(dirty && text.trim()==="")configDialog.edit("part_fixed_seconds",0)
+                                    else if(dirty && acceptableInput)configDialog.edit("part_fixed_seconds",Number(text))
+                                    dirty=false
+                                    text=Qt.binding(function(){return configDialog.draft.part_fixed_seconds>0 ? String(configDialog.draft.part_fixed_seconds) : ""})
+                                }
+                                onActiveFocusChanged: if(!activeFocus)commit()
+                                onAccepted: commit()
+                            }
+                        }
+                        RowLayout { Layout.fillWidth: true; visible: configDialog.draft.part_count>1 && configDialog.draft.part_fixed_seconds>0
+                            Caption { text: "Phần dư"; Layout.preferredWidth: 132 }
+                            Select { objectName: "partRemainderSelect"; model: ["Bỏ phần dư", "Gộp vào part cuối"]; currentIndex: configDialog.draft.part_remainder==="last" ? 1 : 0; enabled: !studio.busy; Layout.fillWidth: true; onActivated: configDialog.edit("part_remainder",currentIndex===1 ? "last" : "drop") }
                         }
                         RowLayout { Layout.fillWidth: true; visible: configDialog.draft.part_count===0
                             Caption { text: "Giây mỗi part"; Layout.preferredWidth: 132 }
                             Field { objectName: "partSecondsField"; text: String(configDialog.draft.part_seconds); validator: IntValidator {bottom:30;top:1800} enabled: !studio.busy; onEditingFinished: if(acceptableInput)configDialog.edit("part_seconds",Number(text)); Layout.fillWidth: true }
                         }
+                        Caption { objectName: "partPlanSummary"; text: p.partSummary(Object.assign({},configDialog.draft,commonRangeEditor.parsed),current ? current.duration : 0); Layout.fillWidth: true; wrapMode: Text.WordWrap }
+                        Caption { text: "Giây mỗi part tính sau khi cắt và đổi tốc độ. Mốc Đến luôn là giới hạn cuối nguồn được lấy."; visible: configDialog.draft.part_count>1; Layout.fillWidth: true; wrapMode: Text.WordWrap }
                         Caption { text: "Chia phần nội dung còn lại sau khi cắt. Mốc quảng cáo khác nhau: chọn video bên trái rồi bấm Chọn đoạn riêng…"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
                     }
                     FoldSection { objectName: "videoSection"; title: "Thiết lập video"; expanded: true
@@ -687,7 +714,7 @@ ApplicationWindow {
             RowLayout { Layout.fillWidth: true
                 Item { Layout.fillWidth: true }
                 Action { objectName: "cancelConfigButton"; text: "Hủy"; onClicked: configDialog.close() }
-                Action { objectName: "saveConfigButton"; text: "Lưu thay đổi"; primary: true; enabled: !studio.busy; onClicked: {var range=commonRangeEditor.parsed;if(range.error){configDialog.error=range.error;return}for(var key in range)configDialog.edit(key,range[key]);if(p.applyConfig(configDialog.draft))configDialog.close();else configDialog.error=studio.notice} }
+                Action { objectName: "saveConfigButton"; text: "Lưu thay đổi"; primary: true; enabled: !studio.busy; onClicked: {partFixedSeconds.commit();var range=commonRangeEditor.parsed;if(range.error){configDialog.error=range.error;return}for(var key in range)configDialog.edit(key,range[key]);if(p.applyConfig(configDialog.draft))configDialog.close();else configDialog.error=studio.notice} }
             }
         }
     }

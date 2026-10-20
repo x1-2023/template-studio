@@ -17,11 +17,26 @@ from .worker_client import run_worker
 from .version import VERSION
 
 
+def parts_duration(duration, config):
+    """Giới hạn trên trục đã cắt/đổi tốc độ khi người dùng chọn bỏ phần dư."""
+    seconds = config.get("part_fixed_seconds", 0)
+    if config["part_count"] > 1 and seconds > 0 and config.get("part_remainder", "drop") == "drop":
+        step = round(seconds * config["fps"])
+        return min(duration, config["part_count"] * step / config["fps"])
+    return duration
+
+
 def plan_parts(duration, config, words=None):
     timeline = SourceTimeline(duration, config)
     duration = timeline.duration
     fps, count = config["fps"], config["part_count"]
     frames = math.ceil(duration * fps - 1e-6)
+    if count > 1 and config.get("part_fixed_seconds", 0) > 0:
+        step = round(config["part_fixed_seconds"] * fps)
+        starts = list(range(0, min(frames, count*step), step))
+        end = parts_duration(duration, config)
+        return [dict(start=start/fps, seconds=(end if i == len(starts)-1 else
+                    min(duration, (start+step)/fps))-start/fps) for i, start in enumerate(starts)]
     if count == 0:
         if words is None and config.get("subtitle_mode") == "file":
             from .karaoke import load_words

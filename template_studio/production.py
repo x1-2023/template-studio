@@ -23,7 +23,7 @@ from offline_studio.process import probe
 from .assets_local import discover, import_cache, validate
 from .gpu.resources import bundled_cache
 from .output_files import archive_output_artifacts, reports_directory
-from .parts import plan_source_parts, render_parts
+from .parts import parts_duration, plan_parts, plan_source_parts, render_parts
 from .speech import prepare_captions
 from .presets import (
     DEFAULT_PRESET_ID, EFFECT_NAME, FILTER_NAME, LEGACY_NAMES,
@@ -237,7 +237,7 @@ class Production(QObject):
             return 0
         row = self._rows[self._index]
         try:
-            return SourceTimeline(row.get("duration", 0), row["config"]).duration
+            return parts_duration(SourceTimeline(row.get("duration", 0), row["config"]).duration, row["config"])
         except ValueError:
             return 0
 
@@ -326,7 +326,7 @@ class Production(QObject):
                 continue
             config = row["config"]
             try:
-                duration = SourceTimeline(row.get("duration", 0), config).duration
+                duration = parts_duration(SourceTimeline(row.get("duration", 0), config).duration, config)
             except ValueError:
                 continue
             if config["quality"] == "high":
@@ -506,6 +506,33 @@ class Production(QObject):
             timeline = SourceTimeline(duration, {**self._config, **value})
             return f"Nguồn {format_time(duration)} · Sau cắt và đổi tốc độ: {format_time(timeline.duration)}."
         except ValueError as error:
+            return str(error)
+
+    @Slot("QVariantMap", float, result=str)
+    def partSummary(self, value, duration):
+        if value.get("error"):
+            return value["error"]
+        try:
+            config = normalize(value)
+            count, seconds = config["part_count"], config["part_fixed_seconds"]
+            if count <= 1:
+                return "Tự chia theo thời lượng, ưu tiên khoảng nghỉ lời thoại." if count == 0 else "Xuất một video từ đoạn nguồn đã chọn."
+            if not seconds:
+                return f"Chia đều đoạn đã chọn thành {count} part. Để trống giây mỗi part để giữ cách chia này."
+            policy = "Bỏ phần dư trong đoạn đã chọn." if config["part_remainder"] == "drop" else "Phần dư trong đoạn đã chọn được gộp vào part cuối."
+            if not duration:
+                return f"Tối đa {count} part × {seconds:g} giây. {policy} Nguồn thiếu thì part cuối ngắn hơn."
+            timeline = SourceTimeline(duration, config)
+            intervals = plan_parts(duration, config)
+            used = sum(part["seconds"] for part in intervals)
+            lengths = " / ".join(format_time(part["seconds"]) for part in intervals[:6])
+            if len(intervals) > 6:
+                lengths += " / …"
+            dropped = max(0, timeline.duration-used)
+            return f"Đoạn này: {len(intervals)} part ({lengths}). " + (
+                f"Không xuất {format_time(dropped)} cuối đoạn đã chọn." if dropped > 1e-6 else
+                "Giữ hết đoạn đã chọn; không lấy phần ngoài mốc Từ/Đến.")
+        except (ValueError, TypeError) as error:
             return str(error)
 
     @Slot(int, "QVariantMap", bool, result=bool)
@@ -915,7 +942,9 @@ class Production(QObject):
             self.host.message("Đã tạo bản xem thử.")
 
         def work(emit):
-            SourceTimeline(source_duration or video_metadata(source)["duration"], config).source_at(offset)
+            timeline = SourceTimeline(source_duration or video_metadata(source)["duration"], config)
+            if not math.isfinite(offset) or not 0 <= offset < parts_duration(timeline.duration, config):
+                raise ValueError("Mốc xem thử nằm ngoài phần video sẽ xuất.")
             prepared = prepare_captions(self.root, self.home, source, config,
                                         lambda text: emit(dict(notice=text)))
             seconds = 3
@@ -1074,7 +1103,7 @@ class Production(QObject):
                         signature=signature,
                         sourceStamp=[stamp.st_size, stamp.st_mtime_ns],
                         detail=f"{len(outputs)} phần · {result['wall_seconds']:.1f}s" if len(outputs) > 1 else
-                               f"{result['wall_seconds']:.1f}s · {destination.stat().st_size / 1024**2:.1f} MiB",
+                               f"{result['wall_seconds']:.1f}s · {Path(outputs[0]).stat().st_size / 1024**2:.1f} MiB",
                     )
                 except TaskCancelled:
                     raise

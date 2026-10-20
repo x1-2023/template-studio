@@ -96,6 +96,41 @@ class PartTests(unittest.TestCase):
         self.assertEqual(plan_parts(10,normalize(dict(part_count=2))),
                          [dict(start=0,seconds=5),dict(start=5,seconds=5)])
 
+    def test_fixed_count_with_optional_seconds_drops_or_merges_remainder_within_selection(self):
+        config = normalize(dict(source_end=600, part_count=3, part_fixed_seconds=180))
+        self.assertEqual(plan_parts(1200, config), [dict(start=0,seconds=180),
+            dict(start=180,seconds=180),dict(start=360,seconds=180)])
+        config['part_remainder'] = 'last'
+        self.assertEqual(plan_parts(1200, config), [dict(start=0,seconds=180),
+            dict(start=180,seconds=180),dict(start=360,seconds=240)])
+        config['part_fixed_seconds'] = 0
+        self.assertEqual(plan_parts(1200, config), [dict(start=0,seconds=200),
+            dict(start=200,seconds=200),dict(start=400,seconds=200)])
+
+    def test_fixed_seconds_uses_edited_duration_speed_and_frame_grid(self):
+        config = normalize(dict(source_offset=60, source_end=660, source_skip=[[150,180]],
+            playback_rate=1.5, part_count=3, part_fixed_seconds=100))
+        parts = plan_parts(1200, config)
+        self.assertEqual(parts, [dict(start=0,seconds=100),dict(start=100,seconds=100),dict(start=200,seconds=100)])
+        config['part_remainder'] = 'last'
+        self.assertEqual(plan_parts(1200, config)[-1], dict(start=200,seconds=180))
+        config = normalize(dict(part_count=3,part_fixed_seconds=1.01))
+        parts = plan_parts(10, config)
+        self.assertTrue(all(p['seconds']==1 for p in parts))
+
+    def test_short_source_has_short_final_part_without_empty_parts(self):
+        for policy in ('drop','last'):
+            config = normalize(dict(part_count=3,part_fixed_seconds=180,part_remainder=policy))
+            self.assertEqual(plan_parts(400,config), [dict(start=0,seconds=180),
+                dict(start=180,seconds=180),dict(start=360,seconds=40)])
+            self.assertEqual(plan_parts(55,config), [dict(start=0,seconds=55)])
+
+    def test_optional_fixed_seconds_does_not_change_auto_or_single_video_mode(self):
+        for count in (0,1):
+            normal = normalize(dict(part_count=count))
+            fixed = normalize(dict(normal,part_fixed_seconds=100,part_remainder='drop'))
+            self.assertEqual(plan_parts(600,normal),plan_parts(600,fixed))
+
     def test_custom_part_count_keeps_every_frame_at_nonunit_speed(self):
         config=normalize(dict(part_count=7,source_offset=.2,playback_rate=1.0293))
         parts=plan_parts(20,config)
