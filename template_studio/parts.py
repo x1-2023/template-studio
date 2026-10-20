@@ -12,26 +12,25 @@ from offline_studio.config import atomic_json
 from offline_studio.process import probe
 
 from .presets import safe_name
+from .timeline import SourceTimeline
 from .worker_client import run_worker
 from .version import VERSION
 
 
 def plan_parts(duration, config, words=None):
-    duration = (duration - config["source_offset"]) / config["playback_rate"]
+    timeline = SourceTimeline(duration, config)
+    duration = timeline.duration
     fps, count = config["fps"], config["part_count"]
-    if not math.isfinite(duration) or duration <= 0:
-        raise ValueError("Video không còn nội dung sau mốc cắt đầu.")
     frames = math.ceil(duration * fps - 1e-6)
     if count == 0:
         if words is None and config.get("subtitle_mode") == "file":
             from .karaoke import load_words
             words = load_words(config["subtitle_file"], source_timeline=True)
-        words = words or []
-        rate, offset = config["playback_rate"], config["source_offset"]
+        words = timeline.map_words(words or [])
         candidates = []
         for i, word in enumerate(words):
-            end = (word["end"] - offset) / rate
-            following = (words[i+1]["start"] - offset) / rate if i+1 < len(words) else duration
+            end = word["end"]
+            following = words[i+1]["start"] if i+1 < len(words) else duration
             if following >= end:
                 candidates.append((end, following, word["text"].endswith((".", "!", "?"))))
         boundaries = [0]
@@ -49,7 +48,7 @@ def plan_parts(duration, config, words=None):
             frame = min(nearby)[1] if nearby else round(target * fps)
             # Không cắt giữa một từ nếu không tìm được khoảng nghỉ gần mốc.
             for word in words:
-                start, end = ((word[k]-offset)/rate for k in ("start", "end"))
+                start, end = (word[k] for k in ("start", "end"))
                 if start < frame/fps < end:
                     frame = math.ceil(end*fps - 1e-6)
             if not boundaries[-1] < frame < frames or duration-frame/fps < 15:

@@ -50,6 +50,8 @@ BASE = dict(
     offset=[0, 0],
     playback_rate=1.0,
     source_offset=0.0,
+    source_end=0.0,
+    source_skip=[],
     background_sigma_ratio=1 / 24,
     effect_start=0.0,
     effect_end=2.166667,
@@ -60,6 +62,10 @@ BASE = dict(
     filter_start=0.0,
     filter_intensity=1.0,
     sharpness=0.6,
+    brightness=0.0,
+    contrast=0.0,
+    saturation=0.0,
+    hue=0.0,
     intro_enabled=True,
     filter_enabled=True,
     encoder="auto",
@@ -190,7 +196,12 @@ def normalize(value):
         ("bokeh_size", 0, 1.5),
         ("filter_intensity", 0, 1),
         ("sharpness", 0, 1),
-        ("source_offset", 0, 3600),
+        ("source_offset", 0, 86400),
+        ("source_end", 0, 86400),
+        ("brightness", -1, 1),
+        ("contrast", -1, 1),
+        ("saturation", -1, 1),
+        ("hue", -180, 180),
         ("filter_start", 0, 3600),
         ("video_bitrate", 0.5, 100),
     ]:
@@ -200,6 +211,22 @@ def normalize(value):
         s[key] = x
     if s["effect_end"] < s["effect_start"]:
         raise ValueError("Thời điểm kết thúc intro phải sau bắt đầu.")
+    if s["source_end"] and s["source_end"] <= s["source_offset"]:
+        raise ValueError("Mốc kết thúc phải sau mốc bắt đầu video.")
+    if not isinstance(s["source_skip"], list) or len(s["source_skip"]) > 20:
+        raise ValueError("Có thể bỏ tối đa 20 khoảng trong mỗi video.")
+    for interval in s["source_skip"]:
+        if (not isinstance(interval, list) or len(interval) != 2 or
+                any(type(x) not in (int, float) or not math.isfinite(x) for x in interval) or
+                not 0 <= interval[0] < interval[1] <= 86400):
+            raise ValueError("Khoảng bỏ cần hai mốc bắt đầu/kết thúc hợp lệ.")
+    merged = []
+    for a, b in sorted(s["source_skip"]):
+        if merged and a <= merged[-1][1]:
+            merged[-1][1] = max(b, merged[-1][1])
+        else:
+            merged.append([float(a), float(b)])
+    s["source_skip"] = merged
     if s["width"] not in (720, 1080) or s["height"] not in (960, 1280, 1440, 1920):
         raise ValueError("Khung xuất cần là 3:4 hoặc 9:16 ở 720/1080.")
     if (s["width"], s["height"]) not in (

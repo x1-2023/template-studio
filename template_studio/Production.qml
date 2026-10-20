@@ -91,6 +91,41 @@ ApplicationWindow {
         selectByMouse: true; selectionColor: win.accent; selectedTextColor: "#09221d"
         background: Rectangle { color: "#10232d"; radius: 6; border.color: field.activeFocus ? win.accent : "#3c5966"; opacity: field.enabled ? 1 : .5 }
     }
+    component SourceRangeEditor: ColumnLayout {
+        id: rangeEditor
+        property string prefix: "common"
+        property real sourceDuration: current ? current.duration : 0
+        property real playbackRate: p.config.playback_rate
+        readonly property var parsed: p.parseSourceRange(rangeStart.text,rangeEnd.text,rangeSkipped.text)
+        Layout.fillWidth: true; spacing: 8
+        function load(config) {
+            rangeStart.text=p.formatTime(config.source_offset)
+            rangeEnd.text=config.source_end ? p.formatTime(config.source_end) : ""
+            rangeSkipped.text=config.source_skip.map(function(pair){return p.formatTime(pair[0])+" - "+p.formatTime(pair[1])}).join("\n")
+        }
+        RowLayout { Layout.fillWidth: true; spacing: 8
+            Caption { text: "Từ"; Layout.preferredWidth: 36 }
+            Field { id: rangeStart; objectName: rangeEditor.prefix+"RangeStart"; placeholderText: "00:00"; Layout.fillWidth: true; enabled: !studio.busy }
+            Caption { text: "Đến" }
+            Field { id: rangeEnd; objectName: rangeEditor.prefix+"RangeEnd"; placeholderText: "Hết video"; Layout.fillWidth: true; enabled: !studio.busy }
+            Action { objectName: rangeEditor.prefix+"RangeReset"; text: "Toàn bộ"; enabled: !studio.busy; onClicked: {rangeStart.text="00:00";rangeEnd.text="";rangeSkipped.text=""} }
+        }
+        Caption { text: "Bỏ quảng cáo / đoạn không cần (mỗi khoảng một dòng)"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+        ScrollView {
+            Layout.fillWidth: true; Layout.preferredHeight: 92; contentWidth: availableWidth; clip: true
+            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+            ScrollBar.vertical: Scroller {}
+            TextArea {
+            id: rangeSkipped; objectName: rangeEditor.prefix+"RangeSkipped"
+            color: ink; placeholderTextColor: muted; font.family: "Segoe UI"; font.pixelSize: 13
+            placeholderText: "02:10 - 02:35\n07:00 - 07:20"; wrapMode: TextEdit.Wrap; selectByMouse: true
+            enabled: !studio.busy; selectionColor: accent; selectedTextColor: "#09221d"
+            background: Rectangle { color: "#10232d"; radius: 6; border.color: rangeSkipped.activeFocus ? accent : "#3c5966" }
+            }
+        }
+        Caption { objectName: rangeEditor.prefix+"RangeSummary"; text: p.rangeSummary(Object.assign({},rangeEditor.parsed,{playback_rate:rangeEditor.playbackRate}),rangeEditor.sourceDuration); color: rangeEditor.parsed.error ? "#ffb9bd" : muted; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+        Caption { text: "Nhập phút:giây hoặc giờ:phút:giây theo video gốc. Để trống Đến để lấy hết. Các khoảng bỏ được nối lại trước khi chia part."; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+    }
     component ColorRow: ColumnLayout {
         id: colorRow
         required property string label
@@ -246,10 +281,10 @@ ApplicationWindow {
         Caption { text: row.unit; Layout.preferredWidth: 24 }
     }
 
-    Shortcut { sequence: "Ctrl+O"; enabled: !configDialog.visible; onActivated: p.importFiles() }
-    Shortcut { sequence: "Ctrl+Shift+O"; enabled: !configDialog.visible; onActivated: p.importFolder() }
-    Shortcut { sequence: "Ctrl+Return"; enabled: !configDialog.visible; onActivated: p.runBatch() }
-    Shortcut { sequence: "F5"; enabled: !configDialog.visible; onActivated: p.preview(0) }
+    Shortcut { sequence: "Ctrl+O"; enabled: !configDialog.visible && !sourceRangeDialog.visible; onActivated: p.importFiles() }
+    Shortcut { sequence: "Ctrl+Shift+O"; enabled: !configDialog.visible && !sourceRangeDialog.visible; onActivated: p.importFolder() }
+    Shortcut { sequence: "Ctrl+Return"; enabled: !configDialog.visible && !sourceRangeDialog.visible; onActivated: p.runBatch() }
+    Shortcut { sequence: "F5"; enabled: !configDialog.visible && !sourceRangeDialog.visible; onActivated: p.preview(0) }
     Shortcut { sequence: "Escape"; enabled: studio.busy; onActivated: studio.stop() }
     onClosing: function(event) { event.accepted = studio.requestClose() }
     Connections { target: studio; function onCloseReady() { Qt.quit() } }
@@ -335,7 +370,7 @@ ApplicationWindow {
                                                 MouseArea { id: nameMouse; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
                                             }
                                             Caption { text: modelData.meta; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
-                                            Caption { text: modelData.presetName; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true
+                                            Caption { text: modelData.presetName+(modelData.sourceRangeCustom ? " · Đoạn riêng" : ""); font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true
                                                 ToolTip.visible: presetMouse.containsMouse; ToolTip.text: text
                                                 MouseArea { id: presetMouse; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
                                             }
@@ -354,6 +389,7 @@ ApplicationWindow {
                         }
                     }
                     Caption { text: p.summary; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+                    Action { objectName: "editSourceRangeButton"; text: "Chọn đoạn riêng…"; Layout.fillWidth: true; enabled: !studio.busy && current!==null && current.duration>0; onClicked: sourceRangeDialog.open() }
                     Action { objectName: "errorLogButton"; text: "Nhật ký lỗi"; Layout.fillWidth: true; visible: p.currentIndex>=0 && p.currentIndex<p.rows.length && p.rows[p.currentIndex].status==="Lỗi"; onClicked: p.openErrorLog() }
                     Action { text: "Bỏ khỏi danh sách"; Layout.fillWidth: true; enabled: !studio.busy && p.rows.length>0; onClicked: p.removeSelected(); ToolTip.visible: hovered; ToolTip.text: "Bỏ mục đã chọn, giữ file trên máy." }
                     RowLayout { Layout.fillWidth: true; spacing: 8
@@ -382,6 +418,7 @@ ApplicationWindow {
                     Label { text: "H.264 · "+(p.config.quality==="high" ? "CQ18" : (p.config.video_bitrate*(p.config.quality==="small" ? .6 : 1)).toFixed(2)+" Mb/s")+" · "+(p.config.encoder==="auto" ? "Encoder tự động" : p.config.encoder==="h264_nvenc" ? "NVENC" : "CPU"); color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Label { text: "Bộ lọc: "+(p.config.filter_enabled ? p.filterName+" · "+Math.round(p.config.filter_intensity*100)+"% · Độ nét "+Math.round(p.config.sharpness*100)+"%" : "Tắt"); color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Label { text: "Phụ đề: "+({"auto":"Tự nhận lời thoại","file":"File đã chọn","sidecar":"File cạnh video","off":"Tắt"})[p.config.subtitle_mode]+" · "+(p.config.part_count===0 ? "Tự chia part" : p.config.part_count===1 ? "Xuất 1 video" : "Xuất "+p.config.part_count+" phần"); visible: p.config.subtitle_mode!=="off" || p.config.part_count!==1; color: ink; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    Caption { text: "Đoạn chung: "+p.formatTime(p.config.source_offset)+" → "+(p.config.source_end ? p.formatTime(p.config.source_end) : "Hết video")+(p.config.source_skip.length ? " · Bỏ "+p.config.source_skip.length+" khoảng" : ""); Layout.fillWidth: true; wrapMode: Text.WordWrap }
                     Action { objectName: "editConfigButton"; text: "Chỉnh cấu hình…"; primary: true; Layout.fillWidth: true; topPadding: 12; bottomPadding: 12; enabled: !studio.busy; onClicked: configDialog.open() }
                     Caption { text: p.config.part_count===0 ? "Khoảng "+p.config.part_seconds+" giây/part, ưu tiên khoảng nghỉ lời thoại gần mốc cắt." : p.config.part_count>1 ? "Chia thành "+p.config.part_count+" phần đều nhau." : p.config.height/p.config.width>1.5 ? "Xuất video dọc 9:16 để đăng TikTok." : "Xuất video khung 3:4."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Caption { text: "Áp dụng cho các video chưa xuất."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
@@ -427,7 +464,7 @@ ApplicationWindow {
                     Caption { text: win.timeText(previewPlayer.position)+" / "+win.timeText(previewPlayer.duration); Layout.alignment: Qt.AlignRight; visible: p.previewUrl!==""; font.pixelSize: 11 }
                     RowLayout { Layout.fillWidth: true
                         Caption { text: "Từ giây"; font.pixelSize: 12 }
-                        NumberField { id: offset; objectName: "previewOffset"; from: 0; to: current ? Math.max(0,Math.floor((current.duration-p.config.source_offset)/p.config.playback_rate)-3) : 0; Layout.fillWidth: true }
+                        NumberField { id: offset; objectName: "previewOffset"; from: 0; to: Math.max(0,Math.ceil(p.previewDuration)-1); Layout.fillWidth: true }
                     }
                     Action { objectName: "previewButton"; text: "Xem thử 3 giây"; Layout.fillWidth: true; enabled: !studio.busy && p.ready && p.currentIndex>=0; onClicked: p.preview(offset.value) }
                     Action { text: "Mở video đã xuất"; Layout.fillWidth: true; enabled: current!==null && !!current.result; onClicked: p.openResult() }
@@ -470,6 +507,31 @@ ApplicationWindow {
     }
 
     Dialog {
+        id: sourceRangeDialog; objectName: "sourceRangeDialog"
+        anchors.centerIn: Overlay.overlay; width: Math.min(850,win.width-60); height: Math.min(580,win.height-50)
+        modal: true; padding: 16; closePolicy: Popup.CloseOnEscape
+        property int rowIndex: -1
+        property string error: ""
+        onOpened: {rowIndex=p.currentIndex;error="";videoRangeEditor.load(p.rows[rowIndex].config)}
+        background: Rectangle { color: "#0b1b25"; border.color: "#40616f"; radius: 5 }
+        Overlay.modal: Rectangle { color: "#a0000000" }
+        contentItem: ColumnLayout {
+            spacing: 12
+            Label { text: "Chọn đoạn cho video này"; color: ink; font.pixelSize: 19; font.bold: true }
+            Caption { text: sourceRangeDialog.rowIndex>=0 && sourceRangeDialog.rowIndex<p.rows.length ? p.rows[sourceRangeDialog.rowIndex].name : ""; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+            SourceRangeEditor { id: videoRangeEditor; prefix: "video"; playbackRate: sourceRangeDialog.rowIndex>=0 && sourceRangeDialog.rowIndex<p.rows.length ? p.rows[sourceRangeDialog.rowIndex].config.playback_rate : 1 }
+            Item { Layout.fillHeight: true }
+            Caption { text: sourceRangeDialog.error || "Chỉ áp dụng cho video này. Chọn preset khác vẫn giữ các mốc đã cắt."; color: sourceRangeDialog.error ? "#ffb9bd" : muted; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+            RowLayout { Layout.fillWidth: true
+                Action { objectName: "useCommonRangeButton"; text: "Dùng đoạn chung"; enabled: !studio.busy; onClicked: {if(p.applySourceRange(sourceRangeDialog.rowIndex,{},false))sourceRangeDialog.close();else sourceRangeDialog.error=studio.notice} }
+                Item { Layout.fillWidth: true }
+                Action { objectName: "cancelSourceRangeButton"; text: "Hủy"; onClicked: sourceRangeDialog.close() }
+                Action { objectName: "saveSourceRangeButton"; text: "Lưu đoạn"; primary: true; enabled: !studio.busy; onClicked: {var range=videoRangeEditor.parsed;if(range.error){sourceRangeDialog.error=range.error;return}if(p.applySourceRange(sourceRangeDialog.rowIndex,range,true))sourceRangeDialog.close();else sourceRangeDialog.error=studio.notice} }
+            }
+        }
+    }
+
+    Dialog {
         id: configDialog; objectName: "configDialog"
         anchors.centerIn: Overlay.overlay
         width: Math.min(850,win.width-60); height: Math.min(840,win.height-50)
@@ -491,7 +553,7 @@ ApplicationWindow {
             else s[key]=value
             draft=s
         }
-        onOpened: {draft=JSON.parse(JSON.stringify(p.config));error=""}
+        onOpened: {draft=JSON.parse(JSON.stringify(p.config));error="";commonRangeEditor.load(draft)}
         background: Rectangle { color: "#0b1b25"; border.color: "#40616f"; radius: 5 }
         Overlay.modal: Rectangle { color: "#a0000000" }
         contentItem: ColumnLayout {
@@ -506,6 +568,23 @@ ApplicationWindow {
                 ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                 ScrollBar.vertical: Scroller { objectName: "configurationBar"; x: configurationScroll.width-width; y: 0; height: configurationScroll.availableHeight; policy: ScrollBar.AlwaysOn }
                 ColumnLayout { width: configurationScroll.availableWidth; spacing: 8
+                    FoldSection { objectName: "sourceSection"; title: "Đoạn nguồn & chia part"; expanded: true
+                        SourceRangeEditor { id: commonRangeEditor; prefix: "common"; playbackRate: configDialog.draft.playback_rate }
+                        RowLayout { Layout.fillWidth: true
+                            Caption { text: "Chia video"; Layout.preferredWidth: 132 }
+                            Select { objectName: "partCountSelect"; model: ["Tự chia theo thời lượng", "1 video", "Chọn số part"]; currentIndex: configDialog.draft.part_count===0 ? 0 : configDialog.draft.part_count===1 ? 1 : 2; enabled: !studio.busy; onActivated: configDialog.edit("part_count",currentIndex<2 ? currentIndex : Math.max(2,configDialog.draft.part_count)); Layout.fillWidth: true }
+                        }
+                        RowLayout { Layout.fillWidth: true; visible: configDialog.draft.part_count>1
+                            Caption { text: "Số part"; Layout.preferredWidth: 132 }
+                            Field { objectName: "partCountField"; text: String(configDialog.draft.part_count); validator: IntValidator {bottom:2;top:100} enabled: !studio.busy; Layout.fillWidth: true
+                                onEditingFinished: {if(acceptableInput)configDialog.edit("part_count",Number(text));else text=String(configDialog.draft.part_count)} }
+                        }
+                        RowLayout { Layout.fillWidth: true; visible: configDialog.draft.part_count===0
+                            Caption { text: "Giây mỗi part"; Layout.preferredWidth: 132 }
+                            Field { objectName: "partSecondsField"; text: String(configDialog.draft.part_seconds); validator: IntValidator {bottom:30;top:1800} enabled: !studio.busy; onEditingFinished: if(acceptableInput)configDialog.edit("part_seconds",Number(text)); Layout.fillWidth: true }
+                        }
+                        Caption { text: "Chia phần nội dung còn lại sau khi cắt. Mốc quảng cáo khác nhau: chọn video bên trái rồi bấm Chọn đoạn riêng…"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+                    }
                     FoldSection { objectName: "videoSection"; title: "Thiết lập video"; expanded: true
                         SettingRow { label: "Tốc độ"; setting: "playback_rate"; low: .5; high: 2; decimals: 2; unit: "×" }
                         SettingRow { label: "Tỷ lệ phóng to"; setting: "scale"; low: .3; high: 1.5; factor: 100; unit: "%" }
@@ -559,8 +638,10 @@ ApplicationWindow {
                         ColorRow { label: "Chữ phụ đề"; setting: "subtitle_color" }
                         ColorRow { label: "Từ đang đọc"; setting: "subtitle_red" }
                         ColorRow { label: "Viền phụ đề"; setting: "subtitle_outline" }
+                        Label { text: "Màu tiêu đề"; color: accent; font.bold: true }
                         ColorRow { label: "Chữ tiêu đề"; setting: "title_color" }
                         ColorRow { label: "Nền tiêu đề"; setting: "title_background" }
+                        Label { text: "Màu PART (đặt riêng)"; color: accent; font.bold: true }
                         ColorRow { label: "Chữ PART"; setting: "part_color" }
                         ColorRow { label: "Nền PART"; setting: "part_background" }
                         Caption { text: configDialog.draft.subtitle_mode==="auto" ? "Tự nhận lời thoại trên máy. Lần đầu tải bộ nhận giọng nói khoảng 150 MB; những lần sau dùng lại. Kiểm tra lời và thời điểm bằng bản xem thử." : "Draft giữ lời và mốc từng từ, quy đổi về video gốc. Chỉ hỗ trợ Draft dựng từ một nguồn. SRT ước lượng mốc từng từ."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
@@ -572,20 +653,15 @@ ApplicationWindow {
                         SettingRow { label: "Độ nét"; setting: "sharpness"; factor: 100; unit: "%" }
                         Select { objectName: "skinSelect"; model: ["Toàn khung hình","Tách vùng da theo màu"]; currentIndex: configDialog.draft.skin==="chroma" ? 1 : 0; enabled: !studio.busy; onActivated: configDialog.edit("skin",currentIndex===1 ? "chroma" : "none"); Layout.fillWidth: true }
                     }
+                    FoldSection { objectName: "adjustSection"; title: "Chỉnh màu video"; expanded: true
+                        SettingRow { label: "Độ sáng"; setting: "brightness"; low: -1; high: 1; factor: 100; unit: "%" }
+                        SettingRow { label: "Tương phản"; setting: "contrast"; low: -1; high: 1; factor: 100; unit: "%" }
+                        SettingRow { label: "Bão hòa"; setting: "saturation"; low: -1; high: 1; factor: 100; unit: "%" }
+                        SettingRow { label: "Tông màu"; setting: "hue"; low: -180; high: 180; unit: "°" }
+                        Action { objectName: "resetAdjustmentsButton"; text: "Đặt lại màu video"; enabled: !studio.busy; onClicked: {configDialog.edit("brightness",0);configDialog.edit("contrast",0);configDialog.edit("saturation",0);configDialog.edit("hue",0)} }
+                        Caption { text: "Áp dụng sau hiệu ứng và bộ lọc, không đổi màu chữ. Mức 0 giữ màu hiện tại. Các chỉnh sửa được lưu cùng preset."; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+                    }
                     FoldSection { objectName: "outputSection"; title: "Thiết lập đầu ra"; expanded: true
-                        RowLayout { Layout.fillWidth: true
-                            Caption { text: "Chia video"; Layout.preferredWidth: 132 }
-                            Select { objectName: "partCountSelect"; model: ["Tự chia theo thời lượng", "1 video", "Chọn số part"]; currentIndex: configDialog.draft.part_count===0 ? 0 : configDialog.draft.part_count===1 ? 1 : 2; enabled: !studio.busy; onActivated: configDialog.edit("part_count",currentIndex<2 ? currentIndex : Math.max(2,configDialog.draft.part_count)); Layout.fillWidth: true }
-                        }
-                        RowLayout { Layout.fillWidth: true; visible: configDialog.draft.part_count>1
-                            Caption { text: "Số part"; Layout.preferredWidth: 132 }
-                            Field { objectName: "partCountField"; text: String(configDialog.draft.part_count); validator: IntValidator {bottom:2;top:100} enabled: !studio.busy; Layout.fillWidth: true
-                                onEditingFinished: {if(acceptableInput)configDialog.edit("part_count",Number(text));else text=String(configDialog.draft.part_count)} }
-                        }
-                        RowLayout { Layout.fillWidth: true; visible: configDialog.draft.part_count===0
-                            Caption { text: "Giây mỗi part"; Layout.preferredWidth: 132 }
-                            Field { objectName: "partSecondsField"; text: String(configDialog.draft.part_seconds); validator: IntValidator {bottom:30;top:1800} enabled: !studio.busy; onEditingFinished: if(acceptableInput)configDialog.edit("part_seconds",Number(text)); Layout.fillWidth: true }
-                        }
                         RowLayout { Layout.fillWidth: true
                             Caption { text: "Chất lượng"; Layout.preferredWidth: 132 }
                             Select { objectName: "qualitySelect"; model: ["Tiết kiệm","Tiêu chuẩn","Chất lượng cao"]; property var ids: ["small","standard","high"]; currentIndex: ids.indexOf(configDialog.draft.quality); enabled: !studio.busy; onActivated: configDialog.edit("quality",ids[currentIndex]); Layout.fillWidth: true }
@@ -607,11 +683,11 @@ ApplicationWindow {
                     }
                 }
             }
-            Caption { text: configDialog.error || "Lưu để áp dụng cho các video chưa xuất."; color: configDialog.error ? "#ffb9bd" : muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Caption { text: configDialog.error || "Áp dụng cho video chưa xuất. Video đã đặt đoạn riêng vẫn giữ mốc cắt riêng."; color: configDialog.error ? "#ffb9bd" : muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             RowLayout { Layout.fillWidth: true
                 Item { Layout.fillWidth: true }
                 Action { objectName: "cancelConfigButton"; text: "Hủy"; onClicked: configDialog.close() }
-                Action { objectName: "saveConfigButton"; text: "Lưu thay đổi"; primary: true; enabled: !studio.busy; onClicked: {if(p.applyConfig(configDialog.draft))configDialog.close();else configDialog.error=studio.notice} }
+                Action { objectName: "saveConfigButton"; text: "Lưu thay đổi"; primary: true; enabled: !studio.busy; onClicked: {var range=commonRangeEditor.parsed;if(range.error){configDialog.error=range.error;return}for(var key in range)configDialog.edit(key,range[key]);if(p.applyConfig(configDialog.draft))configDialog.close();else configDialog.error=studio.notice} }
             }
         }
     }

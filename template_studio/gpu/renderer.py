@@ -24,6 +24,25 @@ in vec2 v_uv; out vec4 frag; uniform sampler2D image;
 void main(){frag=texture(image,v_uv);}
 """
 
+ADJUST = """#version 330
+in vec2 v_uv; out vec4 frag; uniform sampler2D image;
+uniform float brightness; uniform float contrast; uniform float saturation; uniform float hue;
+void main(){
+    vec4 pixel=texture(image,v_uv);
+    vec3 c=(pixel.rgb-.5)*(1.+contrast)+.5+brightness;
+    if(abs(hue)>.000001){
+        float y=dot(c,vec3(.299,.587,.114));
+        float i=dot(c,vec3(.595716,-.274453,-.321263));
+        float q=dot(c,vec3(.211456,-.522591,.311135));
+        float angle=radians(hue);
+        vec2 iq=mat2(cos(angle),sin(angle),-sin(angle),cos(angle))*vec2(i,q);
+        c=vec3(y+.9563*iq.x+.6210*iq.y,y-.2721*iq.x-.6474*iq.y,y-1.1070*iq.x+1.7046*iq.y);
+    }
+    c=mix(vec3(dot(c,vec3(.2126,.7152,.0722))),c,1.+saturation);
+    frag=vec4(clamp(c,0.,1.),pixel.a);
+}
+"""
+
 LAYOUT = """#version 330
 in vec2 v_uv; out vec4 frag;
 uniform sampler2D image; uniform sampler2D background;
@@ -174,6 +193,7 @@ class Renderer:
         )
         for name, source in (
             ("copy", COPY),
+            ("adjust", ADJUST),
             ("layout", LAYOUT),
             ("gaussian", GAUSSIAN),
             ("chroma", CHROMA),
@@ -448,6 +468,10 @@ class Renderer:
                 image = self.layer(image, "blend", base=transformed)
             if apply_tone and self.preset.get("filter_stage", "before") == "after":
                 image = self.filter(image, mask)
+            adjustments = {key: float(self.preset.get(key, 0)) for key in
+                           ("brightness", "contrast", "saturation", "hue")}
+            if any(adjustments.values()):
+                image = self.run("adjust", "adjusted", {"image": image}, adjustments)
             self.run("copy", "final", {"image": image})
         raw = self.targets["final"][1].read(components=3, alignment=1)
         self.last_gpu_ms = query.elapsed / 1e6

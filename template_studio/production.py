@@ -5,6 +5,7 @@ import csv
 import hashlib
 import json
 import math
+import re
 import shutil
 import threading
 import time
@@ -31,6 +32,7 @@ from .presets import (
 from .version import VERSION
 from .worker_client import run_worker
 from .media_setup import ensure_media
+from .timeline import RANGE_KEYS, SourceTimeline, format_time, parse_time
 
 EXTENSIONS = {".mp4", ".mov", ".mkv", ".webm", ".avi", ".flv", ".m4v"}
 
@@ -229,6 +231,16 @@ class Production(QObject):
     def config(self):
         return self._config
 
+    @Property(float, notify=changed)
+    def previewDuration(self):
+        if self._index < 0:
+            return 0
+        row = self._rows[self._index]
+        try:
+            return SourceTimeline(row.get("duration", 0), row["config"]).duration
+        except ValueError:
+            return 0
+
     @Property(str, notify=changed)
     def presetId(self):
         return self._preset
@@ -308,23 +320,24 @@ class Production(QObject):
 
     @Property(str, notify=changed)
     def estimate(self):
-        duration = sum(
-            r.get("duration", 0) / r["config"]["playback_rate"]
-            for r in self._rows
-            if r["status"] != "Hoàn tất"
-        )
-        if not duration:
-            return ""
-        if self._config["quality"] == "high":
-            return "Dung lượng tùy nội dung video."
-        bitrate = self._config["video_bitrate"] * (
-            0.6 if self._config["quality"] == "small" else 1
-        )
-        return f"Dung lượng xuất dự kiến: {duration * (bitrate + 0.192) * 1_000_000 / 8 / 1024**2:.0f} MiB"
+        size = 0
+        for row in self._rows:
+            if row["status"] == "Hoàn tất":
+                continue
+            config = row["config"]
+            try:
+                duration = SourceTimeline(row.get("duration", 0), config).duration
+            except ValueError:
+                continue
+            if config["quality"] == "high":
+                return "Dung lượng tùy nội dung video."
+            bitrate = config["video_bitrate"] * (.6 if config["quality"] == "small" else 1)
+            size += duration * (bitrate + (0 if config["mute"] else .192)) * 1_000_000 / 8 / 1024**2
+        return f"Dung lượng xuất dự kiến: {size:.0f} MiB" if size else ""
 
     def preview_signature(self):
         return json.dumps(
-            [self._rows[self._index]["path"] if self._index >= 0 else "", self._config],
+            [self._rows[self._index]["path"], self._rows[self._index]["config"]] if self._index >= 0 else ["", self._config],
             sort_keys=True,
         )
 
@@ -449,10 +462,69 @@ class Production(QObject):
     def apply_pending(self):
         for row in self._rows:
             if row["status"] != "Hoàn tất":
-                row["config"] = copy.deepcopy(self._config)
+                row["config"] = self.pending_config(row)
                 row["presetName"] = self.presetName
         self.save()
         self.changed.emit()
+
+    def pending_config(self, row):
+        config = copy.deepcopy(self._config)
+        if row.get("sourceRangeCustom"):
+            config.update({key: copy.deepcopy(row["config"][key]) for key in RANGE_KEYS})
+        return config
+
+    @Slot(float, result=str)
+    def formatTime(self, seconds):
+        return format_time(seconds)
+
+    @Slot(str, str, str, result="QVariantMap")
+    def parseSourceRange(self, start, end, skipped):
+        try:
+            intervals = []
+            for line in skipped.splitlines():
+                if not line.strip():
+                    continue
+                pair = re.split(r"\s*[-–→]\s*", line.strip())
+                if len(pair) != 2:
+                    raise ValueError("Mỗi khoảng bỏ nhập một dòng, ví dụ 02:10 - 02:35.")
+                intervals.append([parse_time(pair[0]), parse_time(pair[1])])
+            if end.strip() and parse_time(end) == 0:
+                raise ValueError("Đến phải sau mốc bắt đầu; để trống nếu muốn lấy hết video.")
+            config = normalize(dict(source_offset=parse_time(start or "0"),
+                                    source_end=parse_time(end) if end.strip() else 0, source_skip=intervals))
+            return {key: config[key] for key in RANGE_KEYS}
+        except (TypeError, ValueError) as error:
+            return dict(error=str(error))
+
+    @Slot("QVariantMap", float, result=str)
+    def rangeSummary(self, value, duration):
+        if value.get("error"):
+            return value["error"]
+        if not duration:
+            return "Thời gian tính trên video gốc, trước khi đổi tốc độ. Để trống Đến để lấy hết video."
+        try:
+            timeline = SourceTimeline(duration, {**self._config, **value})
+            return f"Nguồn {format_time(duration)} · Sau cắt và đổi tốc độ: {format_time(timeline.duration)}."
+        except ValueError as error:
+            return str(error)
+
+    @Slot(int, "QVariantMap", bool, result=bool)
+    def applySourceRange(self, index, value, custom=True):
+        if self.host.busy or not 0 <= index < len(self._rows):
+            return False
+        row = self._rows[index]
+        try:
+            settings = value if custom else self._config
+            config = normalize({**row["config"], **{key: settings[key] for key in RANGE_KEYS}})
+            SourceTimeline(row["duration"], config)
+        except (ValueError, TypeError, KeyError) as error:
+            self.host.message(str(error))
+            return False
+        row.update(config=config, sourceRangeCustom=custom, status="Chờ xử lý", percent=0,
+                   detail="Đoạn riêng đã lưu." if custom else "Đang dùng đoạn chung.")
+        self.save()
+        self.changed.emit()
+        return True
 
     @Slot(str, "QVariant")
     def configure(self, key, value):
@@ -719,7 +791,7 @@ class Production(QObject):
                     status="Chờ xử lý",
                     percent=0,
                     detail="",
-                    config=copy.deepcopy(self._config),
+                    config=self.pending_config(row),
                     presetName=self.presetName,
                 )
         self.save()
@@ -817,7 +889,8 @@ class Production(QObject):
             self.host.message(self.runtimeNotice)
             return
         source = self._rows[self._index]["path"]
-        config = copy.deepcopy(self._config)
+        config = copy.deepcopy(self._rows[self._index]["config"])
+        source_duration = self._rows[self._index].get("duration", 0)
         folder = self.home / "cache/previews"
         folder.mkdir(parents=True, exist_ok=True)
         # Chỉ dọn preview do GUI này tạo, không đụng tới video nguồn/đầu ra.
@@ -842,6 +915,7 @@ class Production(QObject):
             self.host.message("Đã tạo bản xem thử.")
 
         def work(emit):
+            SourceTimeline(source_duration or video_metadata(source)["duration"], config).source_at(offset)
             prepared = prepare_captions(self.root, self.home, source, config,
                                         lambda text: emit(dict(notice=text)))
             seconds = 3
@@ -954,6 +1028,7 @@ class Production(QObject):
                     if not Path(row["path"]).is_file():
                         raise FileNotFoundError("Không tìm thấy video nguồn.")
                     signature = fingerprint(row["path"], config)
+                    SourceTimeline(row.get("duration", 0) or video_metadata(row["path"])["duration"], config)
                     config = prepare_captions(self.root, self.home, row["path"], config,
                         lambda text: emit(dict(row=token, values=dict(detail=text), notice=text)))
                     destination = output / (

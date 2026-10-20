@@ -21,7 +21,8 @@ from offline_studio.process import probe as media_probe
 
 from .renderer import Renderer
 from .resources import ROOT
-from .timing import audio_window, decode_window
+from .timing import audio_window, decode_window, edited_audio_window, video_windows
+from template_studio.timeline import SourceTimeline
 
 for stream in (sys.stdout, sys.stderr):
     if hasattr(stream, "reconfigure"):
@@ -47,6 +48,34 @@ def load_preset(name):
     if not path.is_file():
         path = ROOT / "presets" / f"{name}.json"
     return json.loads(path.read_text(encoding="utf-8-sig"))
+
+
+def decoded_frames(source, video, container, windows, rate, fps, width, height, log, commands):
+    """Seek từng khoảng được giữ; truyền thẳng frame sang GPU, không tạo video trung gian."""
+    for index, window in enumerate(windows):
+        seek, filters = decode_window(video, container, window["source"], rate, fps, width, height)
+        command = [binary("ffmpeg"), "-hide_banner", "-loglevel", "error", "-copyts", "-start_at_zero",
+                   "-ss", str(seek), "-i", str(source), "-frames:v", str(window["frames"]),
+                   "-vf", filters, "-an", "-pix_fmt", "rgb24", "-f", "rawvideo", "pipe:1"]
+        commands.append(command)
+        with managed_process(command, stdout=subprocess.PIPE, stderr=log, bufsize=10**7,
+                             creationflags=NO_WINDOW) as decoder:
+            received = 0
+            while received < window["frames"]:
+                check_cancelled()
+                data = read_exact(decoder.stdout, width*height*3)
+                if not data:
+                    break
+                if len(data) != width*height*3:
+                    raise RuntimeError("FFmpeg trả khung hình không đầy đủ")
+                received += 1
+                yield np.frombuffer(data, np.uint8).reshape(height, width, 3)
+            decoder.stdout.close()
+            if decoder.wait(timeout=60):
+                raise RuntimeError("FFmpeg lỗi đọc đoạn nguồn; xem decode.log.")
+            missing = window["frames"] - received
+            if missing and (index != len(windows)-1 or missing > 1):
+                raise RuntimeError("Đoạn nguồn kết thúc sớm, chưa nối đủ khung hình.")
 
 
 def video_encoder_args(encoder, bitrate_mbps=None):
@@ -104,7 +133,8 @@ def render(source, output, config, args, progress=lambda event: None):
         args, "mute", False
     )
     stamp = (source.stat().st_size, source.stat().st_mtime_ns)
-    rate, offset = float(config["playback_rate"]), float(config.get("source_offset", 0))
+    rate = float(config["playback_rate"])
+    timeline = SourceTimeline(float(video.get("duration", info["format"]["duration"])), config)
     timeline_offset = max(0, float(getattr(args, "timeline_offset", 0)))
     effect_offset = float(getattr(args, "effect_offset", 0))
     if not math.isfinite(effect_offset) or not 0 <= effect_offset <= timeline_offset:
@@ -114,12 +144,12 @@ def render(source, output, config, args, progress=lambda event: None):
             any(not isinstance(x, (int, float)) or not math.isfinite(x) for x in part_range) or
             not 0 <= part_range[0] <= timeline_offset < part_range[1]):
         raise ValueError("Phạm vi part không hợp lệ.")
-    offset += timeline_offset * rate
+    offset = timeline.source_at(timeline_offset)
     bitrate_mbps = args.video_bitrate
     encoder_options = video_encoder_args(args.encoder, bitrate_mbps)
     if not 0.5 <= rate <= 2 or offset < 0:
         raise ValueError("playback_rate phải trong [0.5,2]; source_offset >= 0")
-    seconds = (float(video.get("duration", info["format"]["duration"])) - offset) / rate
+    seconds = timeline.duration - timeline_offset
     if args.seconds is not None:
         seconds = min(seconds, args.seconds)
     if seconds <= 0:
@@ -170,6 +200,9 @@ def render(source, output, config, args, progress=lambda event: None):
             raise ValueError("Cần nhận lời thoại trước khi render. Chạy preset từ màn hình Xuất video.")
         else:
             raise ValueError("Chế độ phụ đề không được hỗ trợ")
+        edited_captions = bool(config.get("source_skip"))
+        if edited_captions:
+            words = timeline.map_words(words)
         subtitle_ass = (Path(diagnostics).resolve() / "karaoke.ass" if diagnostics else
                         output.parent / (".beta-karaoke-" + uuid.uuid4().hex + ".ass"))
         font_name = config.get("subtitle_font_name", "Arial Black")
@@ -179,10 +212,13 @@ def render(source, output, config, args, progress=lambda event: None):
             fonts_directory = "fonts" if diagnostics else subtitle_ass.stem + "-fonts"
             font_name = stage_font(font_file, subtitle_ass.parent, fonts_directory)
             staged_fonts = True
-        context_start = float(config.get("source_offset", 0)) + rate*(part_range[0] if part_range else 0)
-        context_end = float(config.get("source_offset", 0)) + rate*part_range[1] if part_range else None
-        write_ass(words, subtitle_ass, w, h, source_offset=rate*timeline_offset+float(config.get("source_offset", 0)),
-                  playback_rate=rate, angle=float(config.get("subtitle_angle", -11)),
+        caption_base, caption_rate = (timeline_offset, 1) if edited_captions else (offset, rate)
+        context_start = (part_range[0] if part_range else 0) if edited_captions else (
+            float(config.get("source_offset", 0)) + rate*(part_range[0] if part_range else 0))
+        context_end = (part_range[1] if part_range else timeline.duration) if edited_captions else (
+            float(config.get("source_offset", 0)) + rate*(part_range[1] if part_range else timeline.duration))
+        write_ass(words, subtitle_ass, w, h, source_offset=caption_base,
+                  playback_rate=caption_rate, angle=float(config.get("subtitle_angle", -11)),
                   font_name=font_name, font_scale_x=100 if staged_fonts else 80,
                   font_file=str(font_file or ""),
                   keyword_colors=config.get("subtitle_keywords", False),
@@ -195,13 +231,13 @@ def render(source, output, config, args, progress=lambda event: None):
                   context_start=context_start, context_end=context_end)
         if config.get("subtitle_emoji", False):
             from template_studio.caption_style import EmojiTrack
-            groups = caption_groups(words, base=offset, rate=rate, duration=seconds,
+            groups = caption_groups(words, base=caption_base, rate=caption_rate, duration=seconds,
                                     context_start=context_start, context_end=context_end)
             emoji_track = EmojiTrack(groups, w, h, float(config.get("subtitle_angle", -11)))
     renderer = Renderer((dw, dh), (w, h), config, args.skin, args.cache)
     gpu_name = renderer.ctx.info["GL_RENDERER"]
     started = time.perf_counter()
-    decoder = encoder = mask_decoder = None
+    encoder = mask_decoder = None
     mask_still = None
     frame_count = 0
     gpu_times, process_times = [], []
@@ -217,29 +253,7 @@ def render(source, output, config, args, progress=lambda event: None):
             decode_log.open("wb") as de,
             encode_log.open("wb") as en,
         ):
-            seek, timing_filter = decode_window(video, info["format"], offset, rate, fps, dw, dh)
-            decode = [
-                binary("ffmpeg"),
-                "-hide_banner",
-                "-loglevel",
-                "error",
-                "-copyts",
-                "-start_at_zero",
-                "-ss",
-                str(seek),
-                "-i",
-                str(source),
-                "-t",
-                str(seconds),
-                "-vf",
-                timing_filter,
-                "-an",
-                "-pix_fmt",
-                "rgb24",
-                "-f",
-                "rawvideo",
-                "pipe:1",
-            ]
+            decode = []
             encode = [
                 binary("ffmpeg"),
                 "-hide_banner",
@@ -258,15 +272,20 @@ def render(source, output, config, args, progress=lambda event: None):
                 "pipe:0",
             ]
             if audio:
-                part_start = float(config.get("source_offset", 0)) + rate*(part_range[0] if part_range else 0)
-                audio_seek, audio_filter = audio_window(offset, rate, seconds, config.get("audio_delay_ms", 0), part_start)
+                edited_audio = bool(config.get("source_skip") or config.get("source_end"))
+                if edited_audio:
+                    audio_seek, audio_filter = edited_audio_window(timeline, timeline_offset, seconds,
+                        config.get("audio_delay_ms", 0), part_range[0] if part_range else 0)
+                else:
+                    part_start = float(config.get("source_offset", 0)) + rate*(part_range[0] if part_range else 0)
+                    audio_seek, audio_filter = audio_window(offset, rate, seconds, config.get("audio_delay_ms", 0), part_start)
                 encode += ["-ss", str(audio_seek), "-i", str(source)]
             encode += ["-map", "0:v:0", "-t", str(seconds)]
             if audio:
                 encode += [
                     "-map",
-                    "1:a:0",
-                    "-af",
+                    "[audio]" if edited_audio else "1:a:0",
+                    "-filter_complex" if edited_audio else "-af",
                     audio_filter,
                     "-c:a",
                     "aac",
@@ -298,15 +317,6 @@ def render(source, output, config, args, progress=lambda event: None):
                 "+faststart",
                 str(temporary),
             ]
-            decoder = stack.enter_context(
-                managed_process(
-                    decode,
-                    stdout=subprocess.PIPE,
-                    stderr=de,
-                    bufsize=10**7,
-                    creationflags=NO_WINDOW,
-                )
-            )
             encoder = stack.enter_context(
                 managed_process(
                     encode,
@@ -317,6 +327,9 @@ def render(source, output, config, args, progress=lambda event: None):
                     creationflags=NO_WINDOW,
                 )
             )
+            frames = decoded_frames(source, video, info["format"],
+                video_windows(timeline, timeline_offset, seconds, fps), rate, fps, dw, dh, de, decode)
+            stack.callback(frames.close)
             if args.skin == "mask":
                 mask_path = Path(args.skin_mask).resolve()
                 if mask_path.suffix.lower() in (".png", ".jpg", ".jpeg", ".bmp"):
@@ -365,14 +378,8 @@ def render(source, output, config, args, progress=lambda event: None):
                 f"GPU: {gpu_name}; {w}x{h}/{fps:g} fps; decode {dw}x{dh}; {expected} frames",
                 flush=True,
             )
-            while frame_count < expected:
+            for frame in frames:
                 check_cancelled()
-                data = read_exact(decoder.stdout, dw * dh * 3)
-                if not data:
-                    break
-                if len(data) != dw * dh * 3:
-                    raise RuntimeError("FFmpeg trả khung hình không đầy đủ")
-                frame = np.frombuffer(data, np.uint8).reshape(dh, dw, 3)
                 mask = mask_still
                 if mask_decoder:
                     raw_mask = read_exact(mask_decoder.stdout, w * h)
@@ -403,15 +410,14 @@ def render(source, output, config, args, progress=lambda event: None):
                         )
                     )
                     print(f"Đã render {frame_count}/{expected} frames", flush=True)
-            decoder.stdout.close()
             encoder.stdin.close()
             if mask_decoder:
                 mask_decoder.stdout.close()
-            dc, ec = decoder.wait(timeout=60), encoder.wait(timeout=60)
+            ec = encoder.wait(timeout=60)
             mc = mask_decoder.wait(timeout=30) if mask_decoder else 0
-            if dc or ec or mc:
+            if ec or mc:
                 raise RuntimeError(
-                    f"FFmpeg lỗi decode={dc}, encode={ec}, mask={mc}; xem {decode_log.name}, {encode_log.name}"
+                    f"FFmpeg lỗi encode={ec}, mask={mc}; xem {decode_log.name}, {encode_log.name}"
                 )
             if abs(frame_count - expected) > 1:
                 raise RuntimeError(f"Thiếu frames: {frame_count}/{expected}")
@@ -458,7 +464,8 @@ def render(source, output, config, args, progress=lambda event: None):
             "process_ms_mean": float(np.mean(process_times)),
             "proxy": args.proxy,
             "decode_size": [dw, dh],
-            "ffmpeg_decode": decode,
+            "ffmpeg_decode": decode[0] if len(decode) == 1 else decode,
+            "source_windows": timeline.windows(timeline_offset, seconds),
             "ffmpeg_encode": encode,
             "output_probe": probe(output),
         }
@@ -484,7 +491,7 @@ def render(source, output, config, args, progress=lambda event: None):
         )
         return stats
     finally:
-        for proc in (decoder, encoder, mask_decoder):
+        for proc in (encoder, mask_decoder):
             if proc and proc.poll() is None:
                 proc.kill()
                 proc.wait()

@@ -145,12 +145,77 @@ class ImportUiTests(unittest.TestCase):
 
     def edit_speed(self, value):
         self.click("editConfigButton")
+        self.scroll_to_config_item("playback_rateField")
         self.click("playback_rateField")
         QTest.keyClick(self.window, Qt.Key_A, Qt.ControlModifier)
         for char in value:
             QTest.keyClick(self.window, Qt.Key(ord(char)))
         QTest.keyClick(self.window, Qt.Key_Tab)
         self.wait()
+
+    def enter_text(self, name, value):
+        self.click(name)
+        QTest.keyClick(self.window, Qt.Key_A, Qt.ControlModifier)
+        for char in value:
+            QTest.keyClick(self.window, Qt.Key(ord(char)))
+        QTest.keyClick(self.window, Qt.Key_Tab)
+
+    def test_common_range_three_parts_and_color_adjustments_save_and_cancel(self):
+        self.drop([self.source])
+        self.p._rows[0]["duration"] = 1200
+        self.p.changed.emit()
+        self.click("editConfigButton")
+        self.enter_text("commonRangeStart", "0:00")
+        self.enter_text("commonRangeEnd", "10:00")
+        self.enter_text("commonRangeSkipped", "2:00 - 2:30")
+        self.scroll_to_config_item("partCountSelect")
+        self.click("partCountSelect")
+        QTest.keyClick(self.window, Qt.Key_End)
+        QTest.keyClick(self.window, Qt.Key_Return)
+        self.scroll_to_config_item("partCountField")
+        self.enter_text("partCountField", "3")
+        for key, value in (("brightness", "15"), ("contrast", "-10"), ("saturation", "20"), ("hue", "30")):
+            self.scroll_to_config_item(key+"Field")
+            self.enter_text(key+"Field", value)
+        self.click("saveConfigButton")
+        self.assertEqual(self.p.config["source_end"], 600)
+        self.assertEqual(self.p.config["source_skip"], [[120, 150]])
+        self.assertEqual(self.p.config["part_count"], 3)
+        self.assertEqual(self.p.config["brightness"], .15)
+        self.assertEqual(self.p.config["contrast"], -.1)
+        self.assertEqual(self.p.config["saturation"], .2)
+        self.assertEqual(self.p.config["hue"], 30)
+        self.assertEqual(self.p._rows[0]["config"], self.p.config)
+        self.p.savePreset("Mười phút, ba part")
+        self.assertEqual(self.p.mainPresets[-1]["config"], self.p.config)
+        self.click("editConfigButton")
+        self.enter_text("commonRangeEnd", "09:00")
+        self.click("cancelConfigButton")
+        self.assertEqual(self.p.config["source_end"], 600)
+
+    def test_video_range_is_independent_and_invalid_times_do_not_save(self):
+        self.drop([self.source])
+        self.p._rows[0]["duration"] = 1200
+        self.p.changed.emit()
+        self.click("editSourceRangeButton")
+        dialog = self.window.findChild(QObject, "sourceRangeDialog")
+        deadline = time.monotonic()+2
+        while not dialog.property("opened") and time.monotonic() < deadline:
+            QTest.qWait(10)
+        self.enter_text("videoRangeStart", "01:00")
+        self.enter_text("videoRangeEnd", "10:00")
+        self.enter_text("videoRangeSkipped", "02:00 - 02:30")
+        self.click("saveSourceRangeButton")
+        self.assertFalse(dialog.property("visible"), self.controller.notice)
+        self.assertEqual(self.p._rows[0]["config"]["source_end"], 600)
+        self.assertTrue(self.p._rows[0]["sourceRangeCustom"])
+        self.assertEqual(self.p.config["source_end"], 0)
+        self.click("editConfigButton")
+        self.enter_text("commonRangeEnd", "1:99")
+        self.click("saveConfigButton")
+        self.assertTrue(self.window.findChild(QObject, "configDialog").property("visible"))
+        self.assertEqual(self.p.config["source_end"], 0)
+        self.click("cancelConfigButton")
 
     def test_error_log_button_opens_selected_worker_log(self):
         self.drop([self.source])

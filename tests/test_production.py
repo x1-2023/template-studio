@@ -201,6 +201,62 @@ class QueueTests(unittest.TestCase):
             source.write_bytes(b"changed")
             self.assertNotEqual(first, fingerprint(source, normalize({})))
 
+    def test_source_ranges_parse_save_per_video_and_survive_preset_changes_and_restart(self):
+        with tempfile.TemporaryDirectory() as folder:
+            home = Path(folder)
+            source = home/"nguồn.mp4"
+            source.write_bytes(b"video")
+            host = Host(home)
+            p = Production(host)
+            p._rows = [dict(id=str(i), path=str(source), name=source.name, duration=1200, status="Chờ xử lý",
+                percent=0, detail="", result="", config=copy.deepcopy(p.config), presetName=p.presetName) for i in range(2)]
+            p._index = 0
+            value = p.parseSourceRange("01:00", "10:00", "02:00 - 02:30\n02:20 - 02:40")
+            self.assertEqual(value, dict(source_offset=60, source_end=600, source_skip=[[120, 160]]))
+            self.assertIn("error", p.parseSourceRange("1:99", "", ""))
+            self.assertIn("error", p.parseSourceRange("0", "", "2:00"))
+            self.assertTrue(p.applySourceRange(0, value, True))
+            self.assertAlmostEqual(p.previewDuration, 500)
+            signature = p.preview_signature()
+            p.choosePreset("karaoke-1012")
+            self.assertEqual(p._rows[0]["config"]["source_end"], 600)
+            self.assertEqual(p._rows[1]["config"]["source_end"], 0)
+            self.assertNotEqual(signature, p.preview_signature())
+            host.busy = True
+            self.assertFalse(p.applySourceRange(0, {}, False))
+            host.busy = False
+            self.assertFalse(p.applySourceRange(0, dict(source_offset=1300, source_end=0, source_skip=[]), True))
+            restored = Production(Host(home))
+            self.assertTrue(restored._rows[0]["sourceRangeCustom"])
+            self.assertEqual(restored._rows[0]["config"]["source_skip"], [[120, 160]])
+            restored._rows[0]["status"] = "Lỗi"
+            restored.retrySelected()
+            self.assertEqual(restored._rows[0]["config"]["source_end"], 600)
+            self.assertTrue(restored.applySourceRange(0, {}, False))
+            self.assertFalse(restored._rows[0]["sourceRangeCustom"])
+            self.assertEqual(restored._rows[0]["config"]["source_end"], 0)
+
+    def test_preview_uses_video_specific_range_and_rejects_outside_before_transcribing(self):
+        from unittest.mock import Mock
+        with tempfile.TemporaryDirectory() as folder:
+            host = Host(Path(folder))
+            host.mediaReady, host._nvenc = True, True
+            p = Production(host)
+            p._ready, p._cache = True, "cache"
+            selected = normalize(dict(source_offset=60, source_end=600, source_skip=[[120, 160]], part_count=1))
+            p._rows = [dict(path="video.mp4", duration=1200, config=selected)]
+            p._index = 0
+            p.pool = Mock()
+            p.pool.submit.side_effect = lambda work, **kwargs: work(lambda event: None)
+            with patch("template_studio.production.run_worker", return_value=dict(output="x.mp4")) as worker:
+                p.preview(65)
+                self.assertEqual(worker.call_args.args[2]["config"], selected)
+                self.assertEqual(worker.call_args.args[2]["offset"], 65)
+            host.busy = False
+            with patch("template_studio.production.prepare_captions") as transcribe, self.assertRaises(ValueError):
+                p.preview(501)
+            transcribe.assert_not_called()
+
     def test_batch_continues_after_error_and_keeps_reports_outside_exports(self):
         with tempfile.TemporaryDirectory() as folder:
             home = Path(folder)
@@ -259,7 +315,7 @@ class QueueTests(unittest.TestCase):
             p._ready, p._cache = True, "cache"
             p._config = next(item["config"] for item in catalog() if item["id"]=="karaoke-1012")
             p._config.update(part_count=3,playback_rate=1)
-            p._rows = [dict(path="video.mp4",duration=9)]
+            p._rows = [dict(path="video.mp4",duration=9,config=copy.deepcopy(p._config))]
             p._index = 0
             p.pool = Mock()
             p.pool.submit.side_effect = lambda work,**kwargs:work(lambda event:None)
@@ -285,7 +341,7 @@ class QueueTests(unittest.TestCase):
             p = Production(host)
             p._ready, p._cache = True, "cache"
             p._config = normalize(dict(part_count=0,part_seconds=180))
-            p._rows = [dict(path="video.mp4",duration=400)]
+            p._rows = [dict(path="video.mp4",duration=400,config=copy.deepcopy(p._config))]
             p._index = 0
             p.pool = Mock()
             p.pool.submit.side_effect = lambda work,**kwargs:work(lambda event:None)
