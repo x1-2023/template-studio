@@ -35,3 +35,9 @@ Mỗi khoảng hình được seek trực tiếp từ nguồn, truyền frame qu
 - `TemplateStudio-windows-x64.zip`: **257833073 byte**.
 - SHA-256: `b9ef1f2ac75134795a70ed00387bbde5d210907d3bb9662ea1d2a9b1b6056812`.
 - Giữ tên EXE/asset cũ để các máy đang dùng updater nhận được phiên bản mới. Bộ chứng chỉ CA, font ZY Trend, shader/LUT và thư viện ứng dụng được giữ trong gói. FFmpeg/Whisper vẫn được tải ở lần dùng đầu nếu máy chưa có runtime.
+
+## Kiểm chứng updater public
+
+[Beta Render 1.3.8](https://github.com/x1-2023/template-studio/releases/tag/v1.3.8) đã public với đúng kích thước và SHA-256 ở trên. Lượt thử dùng ZIP public 1.3.7, tải thật gói 1.3.8 từ API/release GitHub, xác minh checksum rồi chạy helper thay app và mở lại. Helper báo thành công, callback healthy xác nhận 1.3.8, backup EXE khớp bản 1.3.7.
+
+Preset, queue, màu riêng, font Arial đã nhập và các file đánh dấu trong data/runtime/exports đều được giữ. Cấu hình cũ nhận các giá trị mặc định mới qua `normalize`, không sinh bản sao `production-invalid`. EXE sau nâng cấp xuất **74 khung PART 2** với hai khoảng quảng cáo đã bỏ, tông màu 8° và font đóng kèm. Bằng chứng riêng: `.runtime/qa-updater-138/verified.json`. Không thay asset hoặc di chuyển tag sau phát hành.
