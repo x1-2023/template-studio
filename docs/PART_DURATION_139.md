@@ -33,3 +33,9 @@ Hai trường mới `part_fixed_seconds=0` và `part_remainder="drop"` được 
 - `TemplateStudio-windows-x64.zip`: **257836232 byte**.
 - SHA-256: `18a0753981b9c5abb88a703931b33d63576ae52a9c3e924cf10d1fe6d5e87bae`.
 - Tên EXE/asset và cơ chế updater được giữ. Không có dependency mới; thư viện, font, shader/LUT và CA đã đóng kèm như 1.3.8. FFmpeg/Whisper cần tải lần đầu nếu máy chưa có runtime.
+
+## Updater public
+
+[Bản 1.3.9](https://github.com/x1-2023/template-studio/releases/tag/v1.3.9) đã public đúng ZIP/checksum trên. Đã tải thật qua updater từ bản public 1.3.8, chạy helper và mở lại; healthy callback xác nhận 1.3.9, backup EXE khớp bản cũ. Preset, queue, font riêng, màu, mốc cắt riêng và file dữ liệu/runtime/exports được giữ.
+
+Cấu hình cũ nhận `part_fixed_seconds=0` nên vẫn chia đều, không tự giới hạn giây; không sinh `production-invalid`. Sau nâng, EXE public xuất PART 3 **103 khung**, chọn 2 giây/part và gộp phần dư, đúng kế hoạch kiểm định. Bằng chứng riêng `.runtime/qa-updater-139/verified.json`. Không thay asset hoặc di chuyển tag sau phát hành.
