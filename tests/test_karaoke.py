@@ -131,6 +131,21 @@ class KaraokeTests(unittest.TestCase):
             self.assertNotIn("PREVIOUS",text)
             self.assertNotIn("NEXT",text)
 
+    def test_part_colors_are_independent_from_header_and_old_calls_keep_shared_colors(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path=write_ass([],Path(folder)/'colors.ass',1080,1440,duration=1,title='TIÊU ĐỀ',part_label='PART 1',
+                title_color='FFFF00',title_background='000000',part_color='FF0000',part_background='00FFFF')
+            lines=path.read_text(encoding='utf-8-sig').splitlines()
+            header=next(line for line in lines if line.startswith('Style: Header,'))
+            part=next(line for line in lines if line.startswith('Style: Part,'))
+            self.assertIn('&H0000FFFF,&H0000FFFF,&H00000000,&H00000000',header)
+            self.assertIn('&H000000FF,&H000000FF,&H00FFFF00,&H00FFFF00',part)
+            path=write_ass([],Path(folder)/'old.ass',1080,1440,duration=1,title_color='123456',title_background='ABCDEF')
+            lines=path.read_text(encoding='utf-8-sig').splitlines()
+            header=next(line for line in lines if line.startswith('Style: Header,')).split(',')[3:7]
+            part=next(line for line in lines if line.startswith('Style: Part,')).split(',')[3:7]
+            self.assertEqual(header,part)
+
     def test_custom_colors_reach_styles_and_restore_base_after_highlight(self):
         with tempfile.TemporaryDirectory() as folder:
             path=write_ass([dict(text="XIN",start=0,end=.5),dict(text="CHÀO",start=.5,end=1)],

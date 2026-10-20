@@ -85,9 +85,21 @@ class ImportUiTests(unittest.TestCase):
         self.assertFalse(self.controller.pool.active)
         self.app.processEvents()
 
-    def click(self, name):
+    def find_item(self, name):
         item = self.window.findChild(QQuickItem, name)
-        self.assertIsNotNone(item)
+        if item is None:
+            # Delegate của Repeater có cha hiển thị khác với cha QObject.
+            pending = [self.window.contentItem()]
+            while pending:
+                child = pending.pop()
+                if child.objectName() == name:
+                    return child
+                pending.extend(child.childItems())
+        self.assertIsNotNone(item, name)
+        return item
+
+    def click(self, name):
+        item = self.find_item(name)
         pos = item.mapToScene(QPointF(item.width() / 2, item.height() / 2)).toPoint()
         QTest.mouseClick(self.window, Qt.LeftButton, Qt.NoModifier, pos)
         self.wait()
@@ -246,25 +258,51 @@ class ImportUiTests(unittest.TestCase):
         self.click('cancelConfigButton')
         self.assertEqual(self.p.config['subtitle_font_file'],'')
 
+    def scroll_to_config_item(self, name):
+        item=self.find_item(name)
+        flick=self.window.findChild(QQuickItem,'configurationScroll').property('contentItem')
+        self.app.processEvents()
+        y=item.mapToScene(QPointF(item.width()/2,item.height()/2)).y()
+        center=flick.mapToScene(QPointF(flick.width()/2,flick.height()/2)).y()
+        maximum=max(0,flick.property('contentHeight')-flick.height())
+        flick.setProperty('contentY',min(maximum,max(0,flick.property('contentY')+y-center)))
+        QTest.qWait(70)
+        y=item.mapToScene(QPointF(item.width()/2,item.height()/2)).y()
+        top=flick.mapToScene(QPointF(0,0)).y()
+        self.assertTrue(top<y<top+flick.height(),(name,y,top,flick.height()))
+        return item
+
+    def test_basic_palette_saves_independent_title_and_part_colors_and_cancel_discards(self):
+        self.p.choosePreset('karaoke-1012')
+        self.click('editConfigButton')
+        dialog=self.window.findChild(QObject,'configDialog')
+        selected=dict(title_color='FFFF00',title_background='000000',part_color='FF0000',part_background='00FFFF')
+        with patch('template_studio.production.QColorDialog.getColor') as picker:
+            for setting,value in selected.items():
+                name=setting+'Basic'+value
+                self.scroll_to_config_item(name)
+                self.click(name)
+                self.assertEqual(dialog.property('draft').toVariant()[setting],value)
+            picker.assert_not_called()
+        self.click('saveConfigButton')
+        for key,value in selected.items():
+            self.assertEqual(self.p.config[key],value)
+        self.p.savePreset('Tiêu đề vàng, PART đỏ')
+        saved=self.p.mainPresets[-1]['config']
+        for key,value in selected.items():
+            self.assertEqual(saved[key],value)
+        self.click('editConfigButton')
+        self.scroll_to_config_item('part_colorBasic00FF00')
+        self.click('part_colorBasic00FF00')
+        self.assertEqual(dialog.property('draft').toVariant()['part_color'],'00FF00')
+        self.click('cancelConfigButton')
+        self.assertEqual(self.p.config['part_color'],'FF0000')
+
     def test_color_picker_and_custom_part_count_save_with_preset(self):
         self.p.choosePreset("karaoke-1012")
         self.click("editConfigButton")
         dialog=self.window.findChild(QObject,"configDialog")
-        flick=self.window.findChild(QQuickItem,"configurationScroll").property("contentItem")
-
-        def scroll_to(name):
-            item=self.window.findChild(QQuickItem,name)
-            # Dùng viewport thực; cửa sổ trên runner có thể cao khác máy local.
-            self.app.processEvents()
-            y=item.mapToScene(QPointF(item.width()/2,item.height()/2)).y()
-            center=flick.mapToScene(QPointF(flick.width()/2,flick.height()/2)).y()
-            maximum=max(0,flick.property("contentHeight")-flick.height())
-            flick.setProperty("contentY",min(maximum,max(0,flick.property("contentY")+y-center)))
-            QTest.qWait(70)
-            y=item.mapToScene(QPointF(item.width()/2,item.height()/2)).y()
-            top=flick.mapToScene(QPointF(0,0)).y()
-            self.assertTrue(top<y<top+flick.height(),(name,y,top,flick.height()))
-            return item
+        scroll_to=self.scroll_to_config_item
 
         scroll_to("subtitle_redPicker")
         with patch("template_studio.production.QColorDialog.getColor",return_value=QColor()) as picker:

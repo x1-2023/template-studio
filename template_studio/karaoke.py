@@ -294,7 +294,8 @@ def write_ass(words, destination, width, height, *, source_offset=0.0,
               playback_rate=1.0, timeline_offset=0.0, font_name="Arial Black",
               red="FF374A", angle=-11.0, y_ratio=0.66534, max_words=6, title="", part_label="", duration=None,
               context_start=0.0, context_end=None, color="FFFFFF", outline_color="000000",
-              title_color="FFFFFF", title_background="A20033", keyword_colors=False, font_scale_x=80, font_file=""):
+              title_color="FFFFFF", title_background="A20033", part_color=None, part_background=None,
+              keyword_colors=False, font_scale_x=80, font_file=""):
     """Tạo ASS; source_offset tính theo nguồn, timeline_offset theo video xuất."""
     if not 0 < playback_rate <= 4 or not 0.1 <= y_ratio <= 0.9:
         raise ValueError("Thời gian hoặc vị trí phụ đề không hợp lệ.")
@@ -308,6 +309,8 @@ def write_ass(words, destination, width, height, *, source_offset=0.0,
         return (value[4:6]+value[2:4]+value[0:2]).upper()
     highlight, base_color, border, heading_color, heading_background = map(
         ass_color, (red, color, outline_color, title_color, title_background))
+    label_color = ass_color(title_color if part_color is None else part_color)
+    label_background = ass_color(title_background if part_background is None else part_background)
     base = float(source_offset) + float(timeline_offset) * float(playback_rate)
     if not math.isfinite(context_start) or context_start < 0 or (context_end is not None and
             (not math.isfinite(context_end) or context_end <= context_start)):
@@ -328,7 +331,7 @@ def write_ass(words, destination, width, height, *, source_offset=0.0,
                "[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n"
                f"Style: Karaoke,{font_name},{size},&H00{base_color},&H00{base_color},&H00{border},&H90000000,-1,0,0,0,{font_scale_x},100,0,0,1,{outline:.2f},{shadow:.2f},5,40,40,30,1\n"
                f"Style: Header,{font_name},{header_size},&H00{heading_color},&H00{heading_color},&H00{heading_background},&H00{heading_background},-1,0,0,0,{font_scale_x},100,0,0,3,{padding:.2f},0,5,40,40,30,1\n"
-               f"Style: Part,{font_name},{part_size},&H00{heading_color},&H00{heading_color},&H00{heading_background},&H00{heading_background},-1,0,0,0,{font_scale_x},100,0,0,3,{padding:.2f},0,5,40,40,30,1\n\n"
+               f"Style: Part,{font_name},{part_size},&H00{label_color},&H00{label_color},&H00{label_background},&H00{label_background},-1,0,0,0,{font_scale_x},100,0,0,3,{padding:.2f},0,5,40,40,30,1\n\n"
                "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n")
     lines = [heading]
     # Tiêu đề và nhãn phần giữ suốt thời lượng video đang render.

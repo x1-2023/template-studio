@@ -188,6 +188,7 @@ def render(source, output, config, args, progress=lambda event: None):
                   red=config.get("subtitle_red", "FF374A"),
                   color=config.get("subtitle_color", "FFFFFF"), outline_color=config.get("subtitle_outline", "000000"),
                   title_color=config.get("title_color", "FFFFFF"), title_background=config.get("title_background", "A20033"),
+                  part_color=config.get("part_color"), part_background=config.get("part_background"),
                   title=config.get("subtitle_title", "").replace("{video}", source.stem.replace("_", " "))[:140],
                   part_label=config.get("subtitle_part_label", ""), duration=seconds,
                   context_start=context_start, context_end=context_end)

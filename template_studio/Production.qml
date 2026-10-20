@@ -13,6 +13,13 @@ ApplicationWindow {
     property color ink: "#edf2fc"
     property color muted: "#a0adc1"
     property color accent: "#73e9ce"
+    readonly property var basicColors: [
+        {name:"Trắng",value:"FFFFFF"}, {name:"Đen",value:"000000"},
+        {name:"Đỏ",value:"FF0000"}, {name:"Vàng",value:"FFFF00"},
+        {name:"Xanh lá",value:"00FF00"}, {name:"Xanh dương",value:"0000FF"},
+        {name:"Xanh ngọc",value:"00FFFF"}, {name:"Tím",value:"8000FF"},
+        {name:"Cam",value:"FF8800"}, {name:"Hồng",value:"FF69B4"}
+    ]
     property var current: p.currentIndex >= 0 && p.currentIndex < p.rows.length ? p.rows[p.currentIndex] : null
     palette.window: "#141b28"; palette.windowText: ink; palette.text: ink
     palette.base: "#0e1420"; palette.button: "#34474f"; palette.buttonText: ink
@@ -84,23 +91,55 @@ ApplicationWindow {
         selectByMouse: true; selectionColor: win.accent; selectedTextColor: "#09221d"
         background: Rectangle { color: "#10232d"; radius: 6; border.color: field.activeFocus ? win.accent : "#3c5966"; opacity: field.enabled ? 1 : .5 }
     }
-    component ColorRow: RowLayout {
+    component ColorRow: ColumnLayout {
         id: colorRow
         required property string label
         required property string setting
-        Layout.fillWidth: true
-        Caption { text: colorRow.label; Layout.preferredWidth: 132 }
-        Action {
-            objectName: colorRow.setting+"Picker"; text: ""; implicitWidth: 46
-            Accessible.name: "Chọn "+colorRow.label.toLowerCase(); enabled: !studio.busy
-            Rectangle { anchors.centerIn: parent; width: 24; height: 20; radius: 3; border.color: "#a0adc1"; color: "#"+configDialog.draft[colorRow.setting]; opacity: studio.busy ? .5 : 1 }
-            onClicked: {var value=p.chooseColor(configDialog.draft[colorRow.setting]);if(value)configDialog.edit(colorRow.setting,value)}
+        Layout.fillWidth: true; spacing: 5
+        RowLayout {
+            Layout.fillWidth: true
+            Caption { text: colorRow.label; Layout.preferredWidth: 132 }
+            Action {
+                objectName: colorRow.setting+"Picker"; text: ""; implicitWidth: 46
+                Accessible.name: "Chọn "+colorRow.label.toLowerCase(); enabled: !studio.busy
+                Rectangle { anchors.centerIn: parent; width: 24; height: 20; radius: 3; border.color: "#a0adc1"; color: "#"+configDialog.draft[colorRow.setting]; opacity: studio.busy ? .5 : 1 }
+                onClicked: {var value=p.chooseColor(configDialog.draft[colorRow.setting]);if(value)configDialog.edit(colorRow.setting,value)}
+            }
+            Field {
+                objectName: colorRow.setting+"Field"; text: "#"+configDialog.draft[colorRow.setting]; Layout.fillWidth: true
+                property bool dirty: false
+                enabled: !studio.busy; maximumLength: 7
+                validator: RegularExpressionValidator { regularExpression: /#?[0-9a-fA-F]{6}/ }
+                onTextEdited: dirty=true
+                onEditingFinished: {
+                    if(dirty && acceptableInput)configDialog.edit(colorRow.setting,text.replace(/^#/,"").toUpperCase())
+                    dirty=false
+                    text=Qt.binding(function(){return "#"+configDialog.draft[colorRow.setting]})
+                }
+            }
         }
-        Field {
-            objectName: colorRow.setting+"Field"; text: "#"+configDialog.draft[colorRow.setting]; Layout.fillWidth: true
-            enabled: !studio.busy; maximumLength: 7
-            validator: RegularExpressionValidator { regularExpression: /#?[0-9a-fA-F]{6}/ }
-            onEditingFinished: {if(acceptableInput)configDialog.edit(colorRow.setting,text.replace(/^#/,"").toUpperCase());else text="#"+configDialog.draft[colorRow.setting]}
+        RowLayout {
+            objectName: colorRow.setting+"Palette"; Layout.leftMargin: 137; spacing: 6
+            Repeater {
+                model: win.basicColors
+                delegate: Button {
+                    id: swatch
+                    required property var modelData
+                    objectName: colorRow.setting+"Basic"+modelData.value
+                    Layout.preferredWidth: 25; Layout.preferredHeight: 25; padding: 0
+                    enabled: !studio.busy
+                    Accessible.name: colorRow.label+": "+modelData.name
+                    ToolTip.visible: hovered; ToolTip.delay: 400; ToolTip.text: modelData.name
+                    contentItem: Item {}
+                    background: Rectangle {
+                        color: "#"+swatch.modelData.value; radius: 4
+                        border.width: configDialog.draft[colorRow.setting]===swatch.modelData.value || swatch.visualFocus ? 3 : 1
+                        border.color: configDialog.draft[colorRow.setting]===swatch.modelData.value || swatch.visualFocus ? "#73e9ce" : "#7d91a0"
+                        opacity: swatch.enabled ? 1 : .5
+                    }
+                    onClicked: configDialog.edit(colorRow.setting,modelData.value)
+                }
+            }
         }
     }
     component Range: Slider {
@@ -519,8 +558,10 @@ ApplicationWindow {
                         ColorRow { label: "Chữ phụ đề"; setting: "subtitle_color" }
                         ColorRow { label: "Từ đang đọc"; setting: "subtitle_red" }
                         ColorRow { label: "Viền phụ đề"; setting: "subtitle_outline" }
-                        ColorRow { label: "Chữ tiêu đề/PART"; setting: "title_color" }
-                        ColorRow { label: "Nền tiêu đề/PART"; setting: "title_background" }
+                        ColorRow { label: "Chữ tiêu đề"; setting: "title_color" }
+                        ColorRow { label: "Nền tiêu đề"; setting: "title_background" }
+                        ColorRow { label: "Chữ PART"; setting: "part_color" }
+                        ColorRow { label: "Nền PART"; setting: "part_background" }
                         Caption { text: configDialog.draft.subtitle_mode==="auto" ? "Tự nhận lời thoại trên máy. Lần đầu tải bộ nhận giọng nói khoảng 150 MB; những lần sau dùng lại. Kiểm tra lời và thời điểm bằng bản xem thử." : "Draft giữ lời và mốc từng từ, quy đổi về video gốc. Chỉ hỗ trợ Draft dựng từ một nguồn. SRT ước lượng mốc từng từ."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                         Caption { text: "Màu và emoji chọn theo từ khóa, có thể tắt riêng. Font đã chọn được lưu trong dữ liệu app."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     }

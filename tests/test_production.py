@@ -74,9 +74,19 @@ class PresetTests(unittest.TestCase):
         for value in (-1,101,2.5,True):
             with self.subTest(count=value),self.assertRaises(ValueError):
                 normalize(dict(part_count=value))
-        for key in ("subtitle_red","subtitle_color","subtitle_outline","title_color","title_background"):
+        for key in ("subtitle_red","subtitle_color","subtitle_outline","title_color","title_background","part_color","part_background"):
             with self.subTest(key=key),self.assertRaises(ValueError):
                 normalize({key:"#GG0000"})
+
+    def test_old_shared_colors_migrate_and_part_can_be_changed_independently(self):
+        old=normalize(dict(title_color="#12ab34",title_background="#324abc"))
+        self.assertEqual(old['part_color'],'12AB34')
+        self.assertEqual(old['part_background'],'324ABC')
+        separate=normalize(dict(old,part_color='FF0000',part_background='FFFF00'))
+        self.assertEqual(separate['title_color'],'12AB34')
+        self.assertEqual(separate['title_background'],'324ABC')
+        self.assertEqual(separate['part_color'],'FF0000')
+        self.assertEqual(separate['part_background'],'FFFF00')
 
 
 class QueueTests(unittest.TestCase):

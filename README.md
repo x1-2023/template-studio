@@ -44,7 +44,7 @@ Tiêu đề dùng `{video}` để lấy tên file, có thể sửa thành nội 
 
 Preset 1012 có **Nhấn màu từ khóa** và **Emoji theo từ khóa**, tắt riêng được. Đây là quy tắc từ khóa tiếng Anh/Việt và ảnh Twemoji được dựng lại, không phải bộ template CapCut gốc. Thông tin tác giả/giấy phép emoji nằm trong thông báo thành phần và metadata `comment` của MP4. Giữ thông tin ghi công phù hợp khi phân phối video có các biểu tượng này. Intro ngũ giác mặc định chạy ở đầu mỗi part; có thể chỉnh lặp. **Thiết lập video → Độ trễ âm thanh** cho phép bù ±1000 ms; mẫu 1012 dùng +50 ms theo đối chiếu hai clip, các mẫu khác giữ 0 ms. Preview giữa part dùng cùng mốc, không chèn lại độ trễ ở đầu preview.
 
-Trong **Chỉnh cấu hình → Thiết lập đầu ra → Chia video**, chọn **Chọn số part** rồi nhập 2–100 để chia đều toàn bộ nguồn thành đúng số phần đó. Vẫn có chế độ xuất một video hoặc tự chia theo số giây. Mục **Phụ đề karaoke** có bảng chọn màu và ô HEX cho chữ thường, từ đang đọc, viền, chữ tiêu đề/PART và nền tiêu đề/PART. Các màu được lưu cùng preset, dùng chung cho preview và bản xuất. Danh sách video đã xuất có combobox chọn part để mở, kể cả khi xuất nhiều phần.
+Trong **Chỉnh cấu hình → Thiết lập đầu ra → Chia video**, chọn **Chọn số part** rồi nhập 2–100 để chia đều toàn bộ nguồn thành đúng số phần đó. Vẫn có chế độ xuất một video hoặc tự chia theo số giây. Mục **Phụ đề karaoke** có màu riêng cho chữ phụ đề, từ đang đọc, viền, chữ tiêu đề, nền tiêu đề, chữ PART và nền PART. Mỗi mục có 10 màu cơ bản để bấm nhanh, bảng chọn màu tùy ý và ô HEX. Các màu được lưu cùng preset, dùng cho preview và bản xuất. Preset cũ giữ màu PART giống tiêu đề cho tới khi bạn chỉnh riêng. Danh sách video đã xuất có combobox chọn part để mở, kể cả khi xuất nhiều phần.
 
 ## Hàng đợi và dữ liệu
 

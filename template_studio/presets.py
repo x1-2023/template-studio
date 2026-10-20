@@ -39,6 +39,8 @@ BASE = dict(
     subtitle_outline="000000",
     title_color="FFFFFF",
     title_background="A20033",
+    part_color="FFFFFF",
+    part_background="A20033",
     subtitle_title="",
     subtitle_part_label="",
     part_count=1,
@@ -155,6 +157,10 @@ def normalize(value):
         raise ValueError("Preset có trường không được hỗ trợ.")
     s = copy.deepcopy(BASE)
     s.update(copy.deepcopy(value))
+    # Preset cũ dùng chung màu tiêu đề/PART: giữ đúng màu cũ khi tách hai phần.
+    for part, title in (("part_color", "title_color"), ("part_background", "title_background")):
+        if part not in value:
+            s[part] = s[title]
     # Snapshot 1012 trước 1.3.3 chưa có ba trường này. Giữ giá trị người dùng đã lưu rõ ràng.
     if (abs(float(s["rotation_deg"]) + 9.0059) < .0001 and
             abs(float(s["playback_rate"]) - 1.02931464386368) < .000001 and s["subtitle_mode"] != "off"):
@@ -232,7 +238,7 @@ def normalize(value):
         raise ValueError("Tên font phụ đề có ký tự không hợp lệ")
     if not isinstance(s["subtitle_font_file"], str) or len(s["subtitle_font_file"]) > 1024:
         raise ValueError("Đường dẫn font phụ đề không hợp lệ")
-    for key in ("subtitle_red", "subtitle_color", "subtitle_outline", "title_color", "title_background"):
+    for key in ("subtitle_red", "subtitle_color", "subtitle_outline", "title_color", "title_background", "part_color", "part_background"):
         if not isinstance(s[key], str) or not re.fullmatch("#?[0-9a-fA-F]{6}", s[key]):
             raise ValueError("Màu chữ cần có dạng #RRGGBB.")
         s[key] = s[key].removeprefix("#").upper()
