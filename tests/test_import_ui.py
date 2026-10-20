@@ -261,16 +261,21 @@ class ImportUiTests(unittest.TestCase):
     def scroll_to_config_item(self, name):
         item=self.find_item(name)
         flick=self.window.findChild(QQuickItem,'configurationScroll').property('contentItem')
-        self.app.processEvents()
-        y=item.mapToScene(QPointF(item.width()/2,item.height()/2)).y()
-        center=flick.mapToScene(QPointF(flick.width()/2,flick.height()/2)).y()
-        maximum=max(0,flick.property('contentHeight')-flick.height())
-        flick.setProperty('contentY',min(maximum,max(0,flick.property('contentY')+y-center)))
-        QTest.qWait(70)
-        y=item.mapToScene(QPointF(item.width()/2,item.height()/2)).y()
-        top=flick.mapToScene(QPointF(0,0)).y()
-        self.assertTrue(top<y<top+flick.height(),(name,y,top,flick.height()))
-        return item
+        # FoldSection cập nhật chiều cao ở lượt layout sau onOpened.
+        # Đợi tọa độ ổn định, không dùng chiều cao content còn cũ trên CI.
+        deadline=time.monotonic()+2
+        while time.monotonic()<deadline:
+            QTest.qWait(20)
+            y=item.mapToScene(QPointF(item.width()/2,item.height()/2)).y()
+            center=flick.mapToScene(QPointF(flick.width()/2,flick.height()/2)).y()
+            maximum=max(0,flick.property('contentHeight')-flick.height())
+            flick.setProperty('contentY',min(maximum,max(0,flick.property('contentY')+y-center)))
+            QTest.qWait(40)
+            y=item.mapToScene(QPointF(item.width()/2,item.height()/2)).y()
+            top=flick.mapToScene(QPointF(0,0)).y()
+            if top+item.height()/2<y<top+flick.height()-item.height()/2:
+                return item
+        self.fail((name,y,top,flick.height(),flick.property('contentHeight')))
 
     def test_basic_palette_saves_independent_title_and_part_colors_and_cancel_discards(self):
         self.p.choosePreset('karaoke-1012')
