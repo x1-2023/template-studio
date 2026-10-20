@@ -15,6 +15,8 @@ Mã nguồn [công khai GPL-3.0-only](https://github.com/x1-2023/template-studio
 3. Hiệu ứng ngũ giác và bộ lọc Camera đã có sẵn trong gói app, không cần cài CapCut hay nhập RAR/cache thủ công. Gói chỉ chứa 22 shader/LUT/texture renderer sử dụng, có manifest SHA256; không kèm video, project hoặc dữ liệu người dùng. Mục nhập hiệu ứng trong **Cài đặt** được giữ như tùy chọn nâng cao.
 4. Thêm video hoặc thư mục, chọn mẫu, bấm **Xuất video**. Có thể xem thử trước bằng **Xem thử 3 giây**. **Chọn thư mục** để chọn thư mục xuất.
 
+Nếu máy báo thiếu `ffprobe`/`ffmpeg`, bản 1.3.4 kiểm tra và sửa bộ công cụ trước khi đọc video. Lỗi tải runtime hiện ngay ở màn hình chính, không bị thông báo GPU che đi; bấm **Thử lại FFmpeg** khi mạng đã có lại. Sau khi tải thành công, app giữ ZIP đã xác minh trong `cache/` để sửa lại công cụ bị thiếu/hỏng khi offline. Có thể tải [ZIP FFmpeg 7.1.1 essentials của Gyan](https://github.com/GyanD/codexffmpeg/releases/download/7.1.1/ffmpeg-7.1.1-essentials_build.zip) trên máy khác rồi vào **Cài đặt → Cài từ ZIP FFmpeg đã tải…**; app vẫn kiểm tra SHA-256. Các video bản cũ đánh dấu lỗi thiếu công cụ được đọc lại và đưa về hàng chờ sau khi sửa runtime, giữ preset đã chọn. Không cần cài FFmpeg vào PATH.
+
 ## Preset và cấu hình
 
 - Ba preset TikTok xuất **video dọc 9:16, 1080 × 1920, 30 FPS**, MP4/H.264 và âm thanh AAC. [TikTok khuyến nghị video dọc 9:16 và xuất 1080 × 1920](https://ads.tiktok.com/business/en/guides/video-advertising-guide).

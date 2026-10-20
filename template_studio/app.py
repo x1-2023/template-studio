@@ -43,6 +43,7 @@ class Controller(QObject):
         self._hardware = 'Đang nhận diện phần cứng…'
         self._nvenc = False
         self._media_busy, self._media_ready = False, False
+        self._media_notice = 'Đang chuẩn bị FFmpeg/ffprobe…'
         self._update_busy, self._available_update, self._update_plan = False, None, None
         self._update_notice = 'Chưa kiểm tra cập nhật.'
         self._update_timer = QTimer(self)
@@ -76,28 +77,60 @@ class Controller(QObject):
     def mediaReady(self):
         return self._media_ready
 
+    @Property(str, notify=changed)
+    def mediaNotice(self):
+        return self._media_notice
+
+    @Slot()
+    def importMediaArchive(self):
+        if self.busy or self.pool.active:
+            return
+        archive, _ = QFileDialog.getOpenFileName(None, 'Chọn ZIP FFmpeg 7.1.1 essentials của Gyan', '', 'FFmpeg (*.zip)')
+        if archive:
+            self.prepare_media(archive)
+
     @Slot()
     def prepareMedia(self):
+        self.prepare_media()
+
+    def prepare_media(self, archive=None):
         if self.busy or self.pool.active:
             return
         self._media_busy = True
+        self._media_ready = False
+        self._media_notice = 'Đang kiểm tra FFmpeg và ffprobe…'
         self.changed.emit()
         def work(emit):
-            ensure_media(self.home, lambda notice: emit({'notice': notice}))
-            return detect()
+            def progress(notice):
+                emit(dict(media_notice=notice, notice=notice))
+            ensure_media(self.home, progress, archive=archive)
+            return dict(hardware=detect(), recovered=self._production.recover_media_rows())
         def ready(info):
             self._media_ready = True
-            self.hardware_ready(info)
-            self.message('FFmpeg đã sẵn sàng.')
+            self._media_notice = 'FFmpeg và ffprobe đã sẵn sàng.'
+            for event in info['recovered']:
+                self._production.task_event(event)
+            if info['recovered']:
+                self._production.save()
+            self.hardware_ready(info['hardware'])
+            self.message(self._media_notice)
         def failed(error):
             self._media_ready = False
-            self.message('Không cài được FFmpeg: ' + error)
+            self._media_notice = 'Chưa chuẩn bị được FFmpeg/ffprobe: ' + error
+            (self.home / 'media-setup-error.log').write_text(self._media_notice, encoding='utf-8')
+            self.message(self._media_notice)
+        def event(value):
+            if 'media_notice' in value:
+                self._media_notice = value['media_notice']
+            self.task_event(value)
         def finished():
             self._media_busy = False
+            if not self._media_ready and not self._media_notice.startswith('Chưa chuẩn bị được'):
+                self._media_notice = 'FFmpeg/ffprobe chưa sẵn sàng. Bấm Thử lại FFmpeg để tiếp tục.'
             self.changed.emit()
             if self._closing:
                 self.close_when_ready()
-        self.pool.submit(work, result=ready, error=failed, event=self.task_event, finished=finished)
+        self.pool.submit(work, result=ready, error=failed, event=event, finished=finished)
 
     @Property('QVariantList', notify=changed)
     def rows(self):

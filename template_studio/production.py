@@ -4,6 +4,7 @@ import copy
 import csv
 import hashlib
 import json
+import math
 import shutil
 import threading
 import time
@@ -29,8 +30,18 @@ from .presets import (
 )
 from .version import VERSION
 from .worker_client import run_worker
+from .media_setup import ensure_media
 
 EXTENSIONS = {".mp4", ".mov", ".mkv", ".webm", ".avi", ".flv", ".m4v"}
+
+
+def video_metadata(path):
+    data = probe(path)
+    video = next(s for s in data["streams"] if s["codec_type"] == "video")
+    duration = float(video.get("duration", data["format"]["duration"]))
+    if not math.isfinite(duration) or duration <= 0:
+        raise ValueError("Thời lượng nguồn không hợp lệ.")
+    return dict(duration=duration, meta=f"{video['width']}×{video['height']} · {duration:.1f}s")
 
 
 def fingerprint(source, config):
@@ -239,6 +250,8 @@ class Production(QObject):
 
     @Property(str, notify=changed)
     def runtimeNotice(self):
+        if not self.host.mediaReady and hasattr(self.host, "mediaNotice"):
+            return self.host.mediaNotice
         return self._runtime
 
     @Property(bool, notify=changed)
@@ -373,8 +386,8 @@ class Production(QObject):
             )
             self.host.message(
                 ("Sẵn sàng xuất video." if self._rows else "Thêm video để bắt đầu.")
-                if self._ready
-                else self._runtime
+                if self.ready
+                else self.runtimeNotice
             )
 
         def fail(error):
@@ -577,6 +590,8 @@ class Production(QObject):
         title = self.presetName
 
         def work(emit):
+            # Lỗi cài runtime là lỗi chung của app, không biến từng nguồn thành video lỗi.
+            ensure_media(self.home, lambda text: emit(dict(notice=text)))
             rows = []
             for path in sources[: max(0, 200 - len(self._rows))]:
                 check_cancelled()
@@ -594,16 +609,7 @@ class Production(QObject):
                     presetName=title,
                 )
                 try:
-                    data = probe(path)
-                    video = next(
-                        s for s in data["streams"] if s["codec_type"] == "video"
-                    )
-                    row["duration"] = float(video.get("duration", data["format"]["duration"]))
-                    row["meta"] = (
-                        f"{video['width']}×{video['height']} · {row['duration']:.1f}s"
-                    )
-                    if row["duration"] <= 0:
-                        raise ValueError("Thời lượng nguồn không hợp lệ.")
+                    row.update(video_metadata(path))
                 except TaskCancelled:
                     raise
                 except (
@@ -618,14 +624,36 @@ class Production(QObject):
             return rows
 
         def done(rows):
+            self.host._media_ready = True
             self._rows.extend(rows)
             if self._index < 0 and self._rows:
                 self._index = 0
             self.host.message("Đã đọc thông tin video.")
 
+        def failed(error):
+            self.host._media_ready = False
+            self.host._media_notice = "Chưa chuẩn bị được FFmpeg/ffprobe: " + error
+            self.host.message(self.host._media_notice)
+
         self.pool.submit(
-            work, result=done, error=self.host.message, finished=self.finish
+            work, result=done, error=failed, event=self.task_event, finished=self.finish
         )
+
+    def recover_media_rows(self):
+        """Đọc lại đúng các nguồn bản cũ đánh dấu lỗi do thiếu công cụ."""
+        recovered = []
+        for row in copy.deepcopy(self._rows):
+            if row.get("status") != "Lỗi" or not any(
+                    f"Thiếu công cụ local {name}" in row.get("detail", "") for name in ("ffprobe", "ffmpeg")):
+                continue
+            check_cancelled()
+            try:
+                values = video_metadata(row["path"])
+                values.update(status="Chờ xử lý", percent=0, detail="", errorLog="")
+            except (OSError, ValueError, RuntimeError, StopIteration, KeyError) as error:
+                values = dict(status="Lỗi", detail=str(error)[:600])
+            recovered.append(dict(row=row["id"], values=values))
+        return recovered
 
     @Slot(int)
     def select(self, index):
@@ -786,7 +814,7 @@ class Production(QObject):
         if self.host.busy or self._index < 0:
             return
         if not self.ready:
-            self.host.message(self._runtime)
+            self.host.message(self.runtimeNotice)
             return
         source = self._rows[self._index]["path"]
         config = copy.deepcopy(self._config)
@@ -854,7 +882,7 @@ class Production(QObject):
         if self.host.busy:
             return
         if not self.ready:
-            self.host.message(self._runtime)
+            self.host.message(self.runtimeNotice)
             return
         for row in self._rows:
             if (

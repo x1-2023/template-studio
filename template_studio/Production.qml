@@ -420,6 +420,7 @@ ApplicationWindow {
                         Caption { text: p.estimate; visible: text!=="" }
                     }
                     Action { text: "Dừng sau video này"; visible: p.batchRunning; onClicked: p.stopAfterFile() }
+                    Action { objectName: "retryMediaButton"; text: "Thử lại FFmpeg"; visible: !studio.mediaReady; enabled: !studio.busy; onClicked: studio.prepareMedia() }
                     Action { objectName: "exportButton"; text: studio.busy ? "Dừng" : "Xuất video"; primary: !studio.busy; danger: studio.busy; implicitWidth: 160; implicitHeight: 44
                         enabled: studio.busy || (p.ready && p.rows.length>0)
                         onClicked: studio.busy ? studio.stop() : p.runBatch()
@@ -592,6 +593,7 @@ ApplicationWindow {
                 }
                 Action { text: "Kiểm tra GPU"; enabled: !studio.busy; onClicked: p.checkRuntime(); Layout.fillWidth: true }
                 Action { text: "Cài FFmpeg"; visible: !studio.mediaReady; enabled: !studio.busy; onClicked: studio.prepareMedia(); Layout.fillWidth: true }
+                Action { text: "Cài từ ZIP FFmpeg đã tải…"; visible: !studio.mediaReady; enabled: !studio.busy; onClicked: studio.importMediaArchive(); Layout.fillWidth: true }
                 Section { text: "Đối chiếu video mẫu" }
                 Caption { text: "Khung 3:4 dùng để kiểm tra với bản CapCut đã xuất. Chọn preset TikTok ở màn hình chính để xuất video dọc 9:16."; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 Action { text: "Dùng cấu hình video mẫu 3:4"; enabled: !studio.busy; Layout.fillWidth: true; onClicked: {p.choosePreset("reference");settings.close()} }
